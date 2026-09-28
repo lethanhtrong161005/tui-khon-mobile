@@ -1,0 +1,135 @@
+# =============================================================================
+# FLUTTER / DART
+# =============================================================================
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+**/doc/api/
+.widget_preview/
+
+# Dart generated files
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+
+# Symbolication / Obfuscation
+app.*.symbols
+app.*.map.json
+
+# =============================================================================
+# iOS / XCODE
+# =============================================================================
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral/
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/build/
+
+# Xcode user-specific files
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.xccheckout
+*.moved-aside
+DerivedData/
+*.hmap
+*.ipa
+*.xcuserstate
+**/xcshareddata/WorkspaceSettings.xcsettings
+
+# CocoaPods
+Podfile.lock
+
+# =============================================================================
+# ANDROID (reserved for future use)
+# =============================================================================
+**/android/.gradle/
+**/android/captures/
+**/android/local.properties
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+**/android/key.properties
+**/android/**/*.keystore
+**/android/**/*.jks
+
+# =============================================================================
+# SENSITIVE / SECRETS
+# =============================================================================
+# API keys and environment configs
+*.env
+*.env.*
+!*.env.example
+.env.local
+.env.production
+
+# Firebase
+google-services.json
+GoogleService-Info.plist
+firebase_options.dart
+
+# Certificates and provisioning profiles
+*.p12
+*.mobileprovision
+*.cer
+*.certSigningRequest
+AuthKey_*.p8
+
+# =============================================================================
+# macOS SYSTEM
+# =============================================================================
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+
+# =============================================================================
+# IDEs
+# =============================================================================
+# IntelliJ / Android Studio
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code (uncomment if you don't want to share launch config)
+# .vscode/
+
+# =============================================================================
+# MISC
+# =============================================================================
+*.class
+*.log
+*.pyc
+*.swp
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+**/*sync/
+.sconsign.dblite
+.tags*
+**/.vagrant/
+**/DerivedData/
+**/dgph
