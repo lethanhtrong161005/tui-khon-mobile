@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/services/vietnamese_nlp_service.dart';
+import '../../../core/utils/currency_formatter.dart';
+import '../../home/controllers/home_controller.dart';
 import '../../home/models/transaction_model.dart';
 
 /// QuickRecordScreen provides the Gemini Flash multimodal chat UI for natural Vietnamese inputs.
-/// Features voice STT simulation, slang parsing, and transaction confirmation cards.
-class QuickRecordScreen extends StatefulWidget {
+/// Features voice STT simulation, slang parsing, and transaction confirmation cards
+/// connected directly to Riverpod [homeControllerProvider] so saving updates Dashboard immediately.
+class QuickRecordScreen extends ConsumerStatefulWidget {
   const QuickRecordScreen({super.key});
 
   @override
-  State<QuickRecordScreen> createState() => _QuickRecordScreenState();
+  ConsumerState<QuickRecordScreen> createState() => _QuickRecordScreenState();
 }
 
-class _QuickRecordScreenState extends State<QuickRecordScreen> {
+class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _isRecording = false;
@@ -22,7 +26,8 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
   final List<Map<String, dynamic>> _messages = [
     {
       'isUser': false,
-      'text': 'Chào Minh Quân! Bạn vừa chi tiêu gì hay có khoản thu nào mới? Hãy gõ hoặc bấm mic nói tự nhiên bằng tiếng Việt nhé.',
+      'text':
+          'Chào Minh Quân! Bạn vừa chi tiêu gì hay có khoản thu nào mới? Hãy gõ hoặc bấm mic nói tự nhiên bằng tiếng Việt nhé.',
       'time': '12:44',
     },
     {
@@ -33,16 +38,20 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
     },
     {
       'isUser': false,
-      'text': 'Gemini đã nhận diện giao dịch ăn uống của bạn! Vui lòng kiểm tra và bấm Lưu nhé:',
+      'text':
+          'Gemini đã nhận diện giao dịch ăn uống của bạn! Vui lòng kiểm tra và bấm Lưu nhé:',
       'time': '12:45',
       'card': {
         'title': 'Phở bò tái gầu',
+        'category': 'Ăn uống',
         'sub': 'Ăn uống • Chi tiêu cá nhân',
         'amount': '-65.000 ₫',
+        'rawAmount': 65000.0,
         'wallet': 'Ví MoMo',
         'badge': 'Trừ tiền',
         'isIncome': false,
         'icon': Icons.ramen_dining,
+        'saved': false,
       },
     },
     {
@@ -53,16 +62,20 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
     },
     {
       'isUser': false,
-      'text': '🎉 Chúc mừng bạn! Gemini tự động chuẩn hóa "50 củ" = 50.000.000 ₫:',
+      'text':
+          '🎉 Chúc mừng bạn! Gemini tự động chuẩn hóa "50 củ" = 50.000.000 ₫:',
       'time': '12:47',
       'card': {
         'title': 'Tiền trúng thưởng',
+        'category': 'Thưởng',
         'sub': 'Thu nhập khác',
         'amount': '+50.000.000 ₫',
+        'rawAmount': 50000000.0,
         'wallet': 'Tiền mặt / TK Chính',
         'badge': '+ Thu nhập',
         'isIncome': true,
         'icon': Icons.celebration,
+        'saved': false,
       },
     },
   ];
@@ -83,7 +96,8 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
     });
 
     // Simulate on-device NLP processing
-    Future.delayed(const Duration(milliseconds: 600), () {
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
       final parsed = VietnameseNlpService.parseInput(userText);
       final isInc = parsed.type == TransactionType.income;
 
@@ -96,22 +110,74 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
           'time': 'Vừa xong',
           'card': {
             'title': parsed.title,
+            'category': parsed.category,
             'sub': '${parsed.category} • Cá nhân',
-            'amount': '${isInc ? "+" : "-"}${parsed.amount.toInt()} ₫',
+            'amount': CurrencyFormatter.formatVND(
+              isInc ? parsed.amount : -parsed.amount,
+              showSign: true,
+            ),
+            'rawAmount': parsed.amount,
             'wallet': parsed.walletSource,
             'badge': isInc ? '+ Thu nhập' : 'Trừ tiền',
             'isIncome': isInc,
             'icon': parsed.icon,
+            'saved': false,
           },
         });
       });
 
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent + 200,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent + 200,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
     });
+  }
+
+  void _saveCardTransaction(Map<String, dynamic> card) {
+    if (card['saved'] == true) return;
+
+    final isIncome = card['isIncome'] == true;
+    final rawAmount = (card['rawAmount'] as num?)?.toDouble() ??
+        CurrencyFormatter.parseSlangAmount(card['amount'] as String).toDouble();
+    final category = (card['category'] as String?) ??
+        (isIncome ? 'Thu nhập khác' : 'Ăn uống');
+
+    final tx = TransactionModel(
+      id: 'tx-ai-${DateTime.now().millisecondsSinceEpoch}',
+      title: card['title'] as String,
+      category: category,
+      amount: rawAmount,
+      type: isIncome ? TransactionType.income : TransactionType.expense,
+      walletSource: card['wallet'] as String,
+      timestamp: DateTime.now(),
+      badgeText: 'AI Note',
+      icon: card['icon'] as IconData,
+      note: 'Ghi tự động qua Trợ lý Gemini AI',
+    );
+
+    ref.read(homeControllerProvider.notifier).addTransaction(tx);
+    setState(() {
+      card['saved'] = true;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Đã lưu "${tx.title}" (${CurrencyFormatter.formatVND(tx.signedAmount, showSign: true)}) vào Dashboard!',
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -119,7 +185,7 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.surface.withOpacity(0.9),
+        backgroundColor: AppColors.surface.withValues(alpha: 0.9),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.onSurface),
@@ -131,15 +197,23 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
               width: 28,
               height: 28,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.12),
+                color: AppColors.primary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.account_balance_wallet, size: 18, color: AppColors.primary),
+              child: const Icon(
+                Icons.account_balance_wallet,
+                size: 18,
+                color: AppColors.primary,
+              ),
             ),
             const SizedBox(width: 8),
             const Text(
-              'Ghi Nhanh Ai',
-              style: TextStyle(color: AppColors.onSurface, fontSize: 16, fontWeight: FontWeight.bold),
+              'Ghi Nhanh AI',
+              style: TextStyle(
+                color: AppColors.onSurface,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -148,7 +222,9 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
             padding: EdgeInsets.only(right: 16.0),
             child: CircleAvatar(
               radius: 16,
-              backgroundImage: NetworkImage('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150'),
+              backgroundImage: NetworkImage(
+                'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+              ),
             ),
           ),
         ],
@@ -177,20 +253,39 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
                             color: AppColors.secondaryContainer,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.auto_awesome, color: Colors.white, size: 16),
+                          child: const Icon(
+                            Icons.auto_awesome,
+                            color: Colors.white,
+                            size: 16,
+                          ),
                         ),
                         const SizedBox(width: 8),
                         const Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Trợ lý Túi Khôn', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                            Text('Gemini Flash AI Engine', style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant)),
+                            Text(
+                              'Trợ lý Túi Khôn',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              'Gemini Flash AI Engine',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: AppColors.onSurfaceVariant,
+                              ),
+                            ),
                           ],
                         ),
                       ],
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primaryFixed,
                         borderRadius: BorderRadius.circular(20),
@@ -199,14 +294,27 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
                         children: [
                           Icon(Icons.bolt, size: 14, color: AppColors.primary),
                           SizedBox(width: 2),
-                          Text('Tiếng Việt tự nhiên', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                          Text(
+                            'Tiếng Việt tự nhiên',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 10),
-                const Text('Gợi ý nói hoặc gõ mẫu:', style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant)),
+                const Text(
+                  'Gợi ý nói hoặc gõ mẫu:',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
                 const SizedBox(height: 6),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -234,9 +342,17 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
                 final isUser = msg['isUser'] as bool;
 
                 if (isUser) {
-                  return _buildUserBubble(msg['text'] as String, msg['time'] as String, msg['isVoice'] == true);
+                  return _buildUserBubble(
+                    msg['text'] as String,
+                    msg['time'] as String,
+                    msg['isVoice'] == true,
+                  );
                 } else {
-                  return _buildAiBubble(msg['text'] as String, msg['time'] as String, msg['card'] as Map<String, dynamic>?);
+                  return _buildAiBubble(
+                    msg['text'] as String,
+                    msg['time'] as String,
+                    msg['card'] as Map<String, dynamic>?,
+                  );
                 }
               },
             ),
@@ -253,7 +369,10 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
     return Container(
       margin: const EdgeInsets.only(right: 6),
       child: ActionChip(
-        label: Text(text, style: const TextStyle(fontSize: 12, color: AppColors.onSurface)),
+        label: Text(
+          text,
+          style: const TextStyle(fontSize: 12, color: AppColors.onSurface),
+        ),
         backgroundColor: AppColors.surfaceContainerHighest,
         side: BorderSide.none,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -269,7 +388,9 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
       alignment: Alignment.centerRight,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.8,
+        ),
         padding: const EdgeInsets.all(12),
         decoration: const BoxDecoration(
           color: AppColors.primary,
@@ -288,19 +409,36 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
                 children: [
                   Icon(Icons.mic, color: Colors.white70, size: 14),
                   SizedBox(width: 4),
-                  Text('GIỌNG NÓI ĐÃ DỊCH', style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold)),
+                  Text(
+                    'GIỌNG NÓI ĐÃ DỊCH',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 4),
             ],
             Text(
               '"$text"',
-              style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: 2),
             Align(
               alignment: Alignment.bottomRight,
-              child: Text(time, style: const TextStyle(color: AppColors.primaryFixed, fontSize: 10)),
+              child: Text(
+                time,
+                style: const TextStyle(
+                  color: AppColors.primaryFixed,
+                  fontSize: 10,
+                ),
+              ),
             ),
           ],
         ),
@@ -308,7 +446,11 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
     );
   }
 
-  Widget _buildAiBubble(String text, String time, Map<String, dynamic>? card) {
+  Widget _buildAiBubble(
+    String text,
+    String time,
+    Map<String, dynamic>? card,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -337,10 +479,20 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
                     topLeft: Radius.circular(4),
                   ),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 6, offset: const Offset(0, 2)),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
                   ],
                 ),
-                child: Text(text, style: const TextStyle(fontSize: 13, color: AppColors.onSurface)),
+                child: Text(
+                  text,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.onSurface,
+                  ),
+                ),
               ),
             ),
           ],
@@ -357,6 +509,7 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
 
   Widget _buildTransactionCard(Map<String, dynamic> card) {
     final isIncome = card['isIncome'] == true;
+    final isSaved = card['saved'] == true;
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -364,7 +517,11 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
@@ -377,17 +534,35 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: isIncome ? AppColors.primaryFixed : AppColors.tertiaryFixed,
+                      color: isIncome
+                          ? AppColors.primaryFixed
+                          : AppColors.tertiaryFixed,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(card['icon'] as IconData, size: 20, color: isIncome ? AppColors.primary : AppColors.tertiary),
+                    child: Icon(
+                      card['icon'] as IconData,
+                      size: 20,
+                      color: isIncome ? AppColors.primary : AppColors.tertiary,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(card['title'] as String, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                      Text(card['sub'] as String, style: const TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant)),
+                      Text(
+                        card['title'] as String,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        card['sub'] as String,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -395,7 +570,9 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: isIncome ? AppColors.primaryFixed : AppColors.surfaceContainerHigh,
+                  color: isIncome
+                      ? AppColors.primaryFixed
+                      : AppColors.surfaceContainerHigh,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -422,7 +599,14 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('SỐ TIỀN QUY ĐỔI', style: TextStyle(fontSize: 10, color: AppColors.onSurfaceVariant, fontWeight: FontWeight.bold)),
+                    const Text(
+                      'SỐ TIỀN QUY ĐỔI',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: AppColors.onSurfaceVariant,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     Text(
                       card['amount'] as String,
                       style: TextStyle(
@@ -434,17 +618,26 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
                   ],
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4),
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 4,
+                      ),
                     ],
                   ),
                   child: Text(
                     card['wallet'] as String,
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -458,30 +651,42 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
                 child: OutlinedButton(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Mở chỉnh sửa giao dịch...')),
+                      const SnackBar(
+                        content: Text('Mở chỉnh sửa giao dịch...'),
+                      ),
                     );
                   },
                   style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                   ),
-                  child: const Text('Sửa', style: TextStyle(color: AppColors.onSurface)),
+                  child: const Text(
+                    'Sửa',
+                    style: TextStyle(color: AppColors.onSurface),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 flex: 3,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Đã lưu giao dịch vào cơ sở dữ liệu Túi Khôn!')),
-                    );
-                  },
-                  icon: const Icon(Icons.check_circle, size: 16),
-                  label: Text(isIncome ? 'Lưu khoản thu' : 'Lưu giao dịch'),
+                  onPressed: isSaved ? null : () => _saveCardTransaction(card),
+                  icon: Icon(
+                    isSaved ? Icons.done_all : Icons.check_circle,
+                    size: 16,
+                  ),
+                  label: Text(
+                    isSaved
+                        ? 'Đã lưu vào sổ ✓'
+                        : (isIncome ? 'Lưu khoản thu' : 'Lưu giao dịch'),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                   ),
                 ),
               ),
@@ -496,9 +701,13 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.surface.withOpacity(0.95),
+        color: AppColors.surface.withValues(alpha: 0.95),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -4)),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -4),
+          ),
         ],
       ),
       child: SafeArea(
@@ -510,22 +719,45 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
               children: [
                 Row(
                   children: [
-                    Container(width: 6, height: 6, decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle)),
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                     const SizedBox(width: 6),
-                    Text('Hôm nay: $_aiDailyCount/50 lượt AI', style: const TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant)),
+                    Text(
+                      'Hôm nay: $_aiDailyCount/50 lượt AI',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
-                const Text('Gemini 1.5 Flash • 0.3s', style: TextStyle(fontSize: 10, color: AppColors.outline)),
+                const Text(
+                  'Gemini 1.5 Flash • 0.3s',
+                  style: TextStyle(fontSize: 10, color: AppColors.outline),
+                ),
               ],
             ),
             const SizedBox(height: 6),
             Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.document_scanner, color: AppColors.onSurface),
+                  icon: const Icon(
+                    Icons.document_scanner,
+                    color: AppColors.onSurface,
+                  ),
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Kích hoạt camera quét hóa đơn (Receipt OCR)...')),
+                      const SnackBar(
+                        content: Text(
+                          'Kích hoạt camera quét hóa đơn (Receipt OCR)...',
+                        ),
+                      ),
                     );
                   },
                 ),
@@ -541,7 +773,10 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
                       decoration: const InputDecoration(
                         hintText: 'Nhập chi tiêu tự nhiên (vd: cafe 35k)...',
                         border: InputBorder.none,
-                        hintStyle: TextStyle(fontSize: 13, color: AppColors.outline),
+                        hintStyle: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.outline,
+                        ),
                       ),
                       onSubmitted: _sendMessage,
                     ),
@@ -552,9 +787,14 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
                   onTap: () {
                     setState(() => _isRecording = !_isRecording);
                     if (_isRecording) {
-                      _controller.text = 'Đổ xăng xe máy 90k cây xăng Petrolimex';
+                      _controller.text =
+                          'Đổ xăng xe máy 90k cây xăng Petrolimex';
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Đang lắng nghe tiếng Việt tự nhiên...')),
+                        const SnackBar(
+                          content: Text(
+                            'Đang lắng nghe tiếng Việt tự nhiên...',
+                          ),
+                        ),
                       );
                     } else if (_controller.text.isNotEmpty) {
                       _sendMessage(_controller.text);
@@ -569,10 +809,17 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
                       ),
                       shape: BoxShape.circle,
                       boxShadow: [
-                        BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 8),
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                        ),
                       ],
                     ),
-                    child: Icon(_isRecording ? Icons.graphic_eq : Icons.mic, color: Colors.white, size: 22),
+                    child: Icon(
+                      _isRecording ? Icons.graphic_eq : Icons.mic,
+                      color: Colors.white,
+                      size: 22,
+                    ),
                   ),
                 ),
               ],
