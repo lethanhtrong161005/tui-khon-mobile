@@ -155,7 +155,7 @@ class LocalWalletRepository {
         amount: 28670000,
         type: TransactionType.income,
         walletSource: 'Techcombank',
-        timestamp: DateTime(now.year, now.month - 1, 25, 10, 0),
+        timestamp: now.subtract(const Duration(days: 45)),
         icon: Icons.account_balance_wallet,
         note: 'Số dư tích lũy từ lương các kỳ trước',
       ),
@@ -214,16 +214,14 @@ class LocalWalletRepository {
             .where((tx) => !tx.timestamp.isBefore(cutoff))
             .toList();
       case DashboardPeriod.thisMonth:
+        final cutoff = now.subtract(const Duration(days: 30));
         return _transactions
-            .where(
-              (tx) =>
-                  tx.timestamp.year == now.year &&
-                  tx.timestamp.month == now.month,
-            )
+            .where((tx) => !tx.timestamp.isBefore(cutoff))
             .toList();
       case DashboardPeriod.thisYear:
+        final cutoff = now.subtract(const Duration(days: 365));
         return _transactions
-            .where((tx) => tx.timestamp.year == now.year)
+            .where((tx) => !tx.timestamp.isBefore(cutoff))
             .toList();
       case DashboardPeriod.all:
         return List.unmodifiable(_transactions);

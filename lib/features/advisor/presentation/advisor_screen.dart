@@ -21,10 +21,13 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.surface.withOpacity(0.9),
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.onSurface),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: false,
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back, color: AppColors.onSurface),
+                onPressed: () => Navigator.pop(context),
+              )
+            : null,
         title: const Text(
           'Báo cáo & Cố vấn AI',
           style: TextStyle(color: AppColors.onSurface, fontSize: 17, fontWeight: FontWeight.bold),
@@ -69,7 +72,7 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 100),
           ],
         ),
       ),

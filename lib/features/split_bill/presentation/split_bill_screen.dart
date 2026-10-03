@@ -24,10 +24,13 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.surface.withOpacity(0.9),
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.onSurface),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: false,
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back, color: AppColors.onSurface),
+                onPressed: () => Navigator.pop(context),
+              )
+            : null,
         title: const Text(
           'Kế hoạch & Chia tiền',
           style: TextStyle(color: AppColors.onSurface, fontSize: 17, fontWeight: FontWeight.bold),
@@ -60,7 +63,7 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
             _buildGeminiProactiveBanner(),
             const SizedBox(height: 12),
             _buildRecurringList(context),
-            const SizedBox(height: 20),
+            const SizedBox(height: 100),
           ],
         ),
       ),

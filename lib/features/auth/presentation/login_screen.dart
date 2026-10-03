@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../home/presentation/home_screen.dart';
+import '../../home/presentation/main_shell_screen.dart';
 
 /// LoginScreen serves as the entry authentication gate when the app launches.
 /// Supports 1-Tap Google Sign-In, Phone Number + Password authentication,
@@ -58,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _navigateToHome() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
+      MaterialPageRoute(builder: (_) => const MainShellScreen()),
     );
   }
 
