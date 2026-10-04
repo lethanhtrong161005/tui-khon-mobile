@@ -8,6 +8,10 @@ class TransactionModel {
   final String id;
   final String title;
   final String category;
+  final String categoryId;
+  final String description;
+  final String note;
+  final String ownerId;
   final double amount;
   final TransactionType type;
   final String walletSource; // e.g. "Tiền mặt", "Ví MoMo", "Vietcombank"
@@ -19,6 +23,10 @@ class TransactionModel {
     required this.id,
     required this.title,
     required this.category,
+    this.categoryId = '',
+    this.description = '',
+    this.note = '',
+    this.ownerId = 'local:minh-quan',
     required this.amount,
     required this.type,
     required this.walletSource,
@@ -32,6 +40,10 @@ class TransactionModel {
     String? id,
     String? title,
     String? category,
+    String? categoryId,
+    String? description,
+    String? note,
+    String? ownerId,
     double? amount,
     TransactionType? type,
     String? walletSource,
@@ -43,6 +55,10 @@ class TransactionModel {
       id: id ?? this.id,
       title: title ?? this.title,
       category: category ?? this.category,
+      categoryId: categoryId ?? this.categoryId,
+      description: description ?? this.description,
+      note: note ?? this.note,
+      ownerId: ownerId ?? this.ownerId,
       amount: amount ?? this.amount,
       type: type ?? this.type,
       walletSource: walletSource ?? this.walletSource,

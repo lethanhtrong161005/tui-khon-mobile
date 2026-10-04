@@ -4,11 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'core/constants/app_colors.dart';
 import 'features/auth/presentation/login_screen.dart';
+import 'features/home/data/local_wallet_repository.dart';
 
 /// Entry point of the Túi Khôn Flutter application.
 /// Launches directly into the LoginScreen (Google & Phone/Password auth gate).
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await LocalWalletRepository.instance.initialize();
 
   // Edge-to-Edge display configuration for iOS and Android
   SystemChrome.setSystemUIOverlayStyle(
