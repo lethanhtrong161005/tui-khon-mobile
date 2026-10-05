@@ -28,7 +28,8 @@ class LocalWalletRepository extends ChangeNotifier {
   LocalWalletRepository._();
 
   static final LocalWalletRepository instance = LocalWalletRepository._();
-  static const String localUserId = 'local:minh-quan';
+  static const String defaultUserId = 'local:phone:0988123456';
+  static const String _legacyUserId = 'local:minh-quan';
   static const double _openingBalance = 32550000;
   static const double _openingMonthlyIncome = 13500000;
   static const double _openingMonthlyExpense = 9620000;
@@ -36,23 +37,42 @@ class LocalWalletRepository extends ChangeNotifier {
   static const String _categoriesKey = 'wallet.categories.v1';
 
   SharedPreferences? _preferences;
+  String _currentUserId = defaultUserId;
   final List<TransactionModel> _transactions = [];
   final List<TransactionCategory> _categories = [];
+
+  String get currentUserId => _currentUserId;
+
+  /// Selects the active local profile after the login screen identifies it.
+  /// This provides on-device data separation, not server-backed authentication.
+  void setCurrentUser(String userId) {
+    final normalized = userId.trim();
+    if (normalized.isEmpty) throw ArgumentError('Tài khoản không hợp lệ.');
+    if (_currentUserId == normalized) return;
+    _currentUserId = normalized;
+    notifyListeners();
+  }
 
   Future<void> initialize() async {
     _preferences = await SharedPreferences.getInstance();
     final rawTransactions = _preferences!.getStringList(_transactionsKey) ?? [];
+    var migratedLegacyOwner = false;
     for (final raw in rawTransactions) {
       try {
         final json = jsonDecode(raw) as Map<String, dynamic>;
-        final transaction = _transactionFromJson(json);
-        if (transaction.ownerId == localUserId) _transactions.add(transaction);
+        var transaction = _transactionFromJson(json);
+        if (transaction.ownerId == _legacyUserId) {
+          transaction = transaction.copyWith(ownerId: defaultUserId);
+          migratedLegacyOwner = true;
+        }
+        _transactions.add(transaction);
       } on FormatException {
         // Ignore corrupted rows while allowing valid local data to remain available.
       } on TypeError {
         // Ignore rows from an incompatible older schema.
       }
     }
+    if (migratedLegacyOwner) await _persistTransactions();
 
     final rawCategories = _preferences!.getStringList(_categoriesKey) ?? [];
     for (final raw in rawCategories) {
@@ -168,12 +188,24 @@ class LocalWalletRepository extends ChangeNotifier {
     ];
   }
 
-  List<TransactionModel> get transactions => List.unmodifiable(_transactions);
+  List<TransactionModel> get transactions =>
+      List.unmodifiable(_currentTransactions);
   List<TransactionCategory> get categories => List.unmodifiable(_categories);
 
+  List<TransactionModel> get _currentTransactions => _transactions
+      .where((tx) => tx.ownerId == _currentUserId)
+      .toList(growable: false);
+
+  double get _profileOpeningBalance =>
+      _currentUserId == defaultUserId ? _openingBalance : 0;
+  double get _profileOpeningMonthlyIncome =>
+      _currentUserId == defaultUserId ? _openingMonthlyIncome : 0;
+  double get _profileOpeningMonthlyExpense =>
+      _currentUserId == defaultUserId ? _openingMonthlyExpense : 0;
+
   double get currentBalance =>
-      _openingBalance +
-      _transactions.fold<double>(
+      _profileOpeningBalance +
+      _currentTransactions.fold<double>(
         0,
         (balance, tx) =>
             balance +
@@ -181,16 +213,16 @@ class LocalWalletRepository extends ChangeNotifier {
       );
 
   double get monthlyIncome =>
-      _openingMonthlyIncome +
-      _transactions
+      _profileOpeningMonthlyIncome +
+      _currentTransactions
           .where((tx) =>
               tx.type == TransactionType.income &&
               _isCurrentMonth(tx.timestamp))
           .fold<double>(0, (sum, tx) => sum + tx.amount);
 
   double get monthlyExpense =>
-      _openingMonthlyExpense +
-      _transactions
+      _profileOpeningMonthlyExpense +
+      _currentTransactions
           .where((tx) =>
               tx.type == TransactionType.expense &&
               _isCurrentMonth(tx.timestamp))
@@ -209,7 +241,7 @@ class LocalWalletRepository extends ChangeNotifier {
     int? limit,
   }) {
     final filtered = _transactions.where((tx) {
-      if (tx.ownerId != localUserId) return false;
+      if (tx.ownerId != _currentUserId) return false;
       if (type != null && tx.type != type) return false;
       if (categoryId != null &&
           categoryId.isNotEmpty &&
@@ -233,28 +265,33 @@ class LocalWalletRepository extends ChangeNotifier {
 
   TransactionModel? getTransaction(String id) {
     for (final tx in _transactions) {
-      if (tx.id == id && tx.ownerId == localUserId) return tx;
+      if (tx.id == id && tx.ownerId == _currentUserId) return tx;
     }
     return null;
   }
 
   Future<void> addTransaction(TransactionModel transaction) async {
     _validate(transaction);
-    if (transaction.ownerId != localUserId)
+    if (transaction.ownerId != _currentUserId)
       throw ArgumentError('Không thể tạo giao dịch cho tài khoản khác.');
     if (_transactions.any((tx) => tx.id == transaction.id))
       throw ArgumentError('Mã giao dịch đã tồn tại.');
     _transactions.add(transaction);
-    await _persistTransactions();
+    try {
+      await _persistTransactions();
+    } catch (_) {
+      _transactions.removeWhere((tx) => tx.id == transaction.id);
+      rethrow;
+    }
     notifyListeners();
   }
 
   Future<void> updateTransaction(String id, TransactionModel updated) async {
     final index = _transactions
-        .indexWhere((tx) => tx.id == id && tx.ownerId == localUserId);
+        .indexWhere((tx) => tx.id == id && tx.ownerId == _currentUserId);
     if (index < 0) throw StateError('Không tìm thấy giao dịch.');
     final original = _transactions[index];
-    final candidate = updated.copyWith(id: id, ownerId: localUserId);
+    final candidate = updated.copyWith(id: id, ownerId: _currentUserId);
     _validate(candidate);
     _transactions[index] = candidate;
     try {
@@ -268,7 +305,7 @@ class LocalWalletRepository extends ChangeNotifier {
 
   Future<void> deleteTransaction(String id) async {
     final index = _transactions
-        .indexWhere((tx) => tx.id == id && tx.ownerId == localUserId);
+        .indexWhere((tx) => tx.id == id && tx.ownerId == _currentUserId);
     if (index < 0) throw StateError('Không tìm thấy giao dịch.');
     final removed = _transactions.removeAt(index);
     try {
@@ -313,8 +350,7 @@ class LocalWalletRepository extends ChangeNotifier {
     _categories[index] =
         TransactionCategory(id: id, name: normalized, type: category.type);
     for (var i = 0; i < _transactions.length; i++) {
-      if (_transactions[i].categoryId == id &&
-          _transactions[i].ownerId == localUserId) {
+      if (_transactions[i].categoryId == id) {
         _transactions[i] = _transactions[i].copyWith(category: normalized);
       }
     }
@@ -324,8 +360,7 @@ class LocalWalletRepository extends ChangeNotifier {
   }
 
   Future<void> deleteCategory(String id) async {
-    if (_transactions
-        .any((tx) => tx.categoryId == id && tx.ownerId == localUserId)) {
+    if (_transactions.any((tx) => tx.categoryId == id)) {
       throw StateError('Danh mục đang được giao dịch sử dụng, không thể xóa.');
     }
     final index = _categories.indexWhere((c) => c.id == id);
@@ -397,7 +432,7 @@ class LocalWalletRepository extends ChangeNotifier {
         categoryId: json['categoryId'] as String? ?? '',
         description: json['description'] as String? ?? json['title'] as String,
         note: json['note'] as String? ?? '',
-        ownerId: json['ownerId'] as String? ?? localUserId,
+        ownerId: json['ownerId'] as String? ?? _legacyUserId,
         amount: (json['amount'] as num).toDouble(),
         type: TransactionType.values.byName(json['type'] as String),
         walletSource: json['walletSource'] as String? ?? 'Tiền mặt',

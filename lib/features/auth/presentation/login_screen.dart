@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../home/data/local_wallet_repository.dart';
 import '../../home/presentation/home_screen.dart';
 
 /// LoginScreen serves as the entry authentication gate when the app launches.
@@ -24,7 +25,8 @@ class _LoginScreenState extends State<LoginScreen> {
   /// Handles phone & password submission locally
   void _handlePhoneLogin() {
     final phone = _phoneController.text.trim();
-    if (phone.isEmpty) {
+    final normalizedPhone = phone.replaceAll(RegExp(r'\D'), '');
+    if (normalizedPhone.length < 9 || normalizedPhone.length > 12) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Vui lòng nhập số điện thoại hợp lệ')),
       );
@@ -37,7 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
     Future.delayed(const Duration(milliseconds: 700), () {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      _navigateToHome();
+      _navigateToHome('local:phone:$normalizedPhone');
     });
   }
 
@@ -51,11 +53,12 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Đăng nhập Google thành công: oceoheritage@gmail.com!')),
       );
-      _navigateToHome();
+      _navigateToHome('local:google:oceoheritage@gmail.com');
     });
   }
 
-  void _navigateToHome() {
+  void _navigateToHome(String userId) {
+    LocalWalletRepository.instance.setCurrentUser(userId);
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => const HomeScreen()),

@@ -265,12 +265,12 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                       const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(
                       labelText: 'Số tiền (₫)',
+                      hintText: 'Ví dụ: 1.500.000 hoặc 1,5',
                       prefixIcon: Icon(Icons.payments_outlined),
                       border: OutlineInputBorder()),
                   validator: (value) {
-                    final amount = double.tryParse(
-                        (value ?? '').replaceAll(',', '').replaceAll('.', ''));
-                    return amount == null || amount <= 0
+                    final amount = _parseAmount(value ?? '');
+                    return amount == null || !amount.isFinite || amount <= 0
                         ? 'Số tiền phải lớn hơn 0'
                         : null;
                   },
@@ -343,7 +343,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
         initialDate: _date,
         firstDate: DateTime(1970),
         lastDate: DateTime.now().add(const Duration(days: 365)));
-    if (picked != null)
+    if (picked != null && mounted)
       setState(() => _date = DateTime(
           picked.year, picked.month, picked.day, _date.hour, _date.minute));
   }
@@ -363,8 +363,10 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
     setState(() => _saving = true);
     try {
       final previous = widget.transaction;
-      final amount = double.parse(
-          _amountController.text.replaceAll(',', '').replaceAll('.', ''));
+      final amount = _parseAmount(_amountController.text);
+      if (amount == null || !amount.isFinite || amount <= 0) {
+        throw ArgumentError('Số tiền phải lớn hơn 0.');
+      }
       final tx = TransactionModel(
         id: previous?.id ?? 'tx_${DateTime.now().microsecondsSinceEpoch}',
         title: _descriptionController.text.trim(),
@@ -374,7 +376,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
         categoryId: category.id,
         amount: amount,
         type: _type,
-        ownerId: LocalWalletRepository.localUserId,
+        ownerId: _repository.currentUserId,
         walletSource: previous?.walletSource ?? 'Tiền mặt',
         timestamp: _date,
         icon: previous?.icon ??
@@ -669,6 +671,49 @@ Widget _detailRow(String label, String value) => Padding(
 
 String _formatDate(DateTime date) =>
     '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+
+/// Parses plain amounts and common grouped/decimal forms without deleting
+/// punctuation blindly (which used to turn `1.5` into `15`).
+double? _parseAmount(String input) {
+  final value = input.trim().replaceAll(' ', '');
+  if (value.isEmpty || !RegExp(r'^\d+(?:[.,]\d+)*$').hasMatch(value)) {
+    return null;
+  }
+
+  final hasComma = value.contains(',');
+  final hasDot = value.contains('.');
+  if (hasComma && hasDot) {
+    final decimalIndex = value.lastIndexOf(',') > value.lastIndexOf('.')
+        ? value.lastIndexOf(',')
+        : value.lastIndexOf('.');
+    final groupedWhole = value.substring(0, decimalIndex);
+    final validWhole = RegExp(r'^\d+$').hasMatch(groupedWhole) ||
+        RegExp(r'^\d{1,3}(?:[.,]\d{3})+$').hasMatch(groupedWhole);
+    if (!validWhole) return null;
+    final whole = groupedWhole.replaceAll(',', '').replaceAll('.', '');
+    final fraction = value.substring(decimalIndex + 1);
+    return double.tryParse('$whole.$fraction');
+  }
+
+  if (!hasComma && !hasDot) return double.tryParse(value);
+
+  final separator = hasComma ? ',' : '.';
+  final parts = value.split(separator);
+  if (parts.length > 2) {
+    if (parts.first.isEmpty || parts.first.length > 3 ||
+        parts.skip(1).any((part) => part.length != 3)) {
+      return null;
+    }
+    return double.tryParse(parts.join());
+  }
+
+  final whole = parts.first;
+  final fraction = parts.last;
+  if (fraction.length == 3 && whole.length <= 3) {
+    return double.tryParse('$whole$fraction');
+  }
+  return double.tryParse('$whole.$fraction');
+}
 
 String _errorMessage(Object error) {
   final message = error

@@ -26,7 +26,7 @@ class TransactionModel {
     this.categoryId = '',
     this.description = '',
     this.note = '',
-    this.ownerId = 'local:minh-quan',
+    this.ownerId = 'local:phone:0988123456',
     required this.amount,
     required this.type,
     required this.walletSource,
