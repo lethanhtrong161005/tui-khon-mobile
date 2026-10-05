@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'core/constants/app_colors.dart';
-import 'features/auth/presentation/login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-/// Entry point of the Túi Khôn Flutter application.
-/// Launches directly into the LoginScreen (Google & Phone/Password auth gate).
-void main() {
+import 'core/theme/app_theme.dart';
+import 'features/auth/presentation/login_screen.dart';
+import 'features/onboarding/presentation/onboarding_screen.dart';
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Edge-to-Edge display configuration for iOS and Android
+  final prefs = await SharedPreferences.getInstance();
+  final onboardingDone = prefs.getBool('onboarding_done') ?? false;
+
+  await loadAppTheme();
+
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -21,37 +25,28 @@ void main() {
     ),
   );
 
-  runApp(
-    const ProviderScope(
-      child: TuiKhonApp(),
-    ),
-  );
+  runApp(ProviderScope(child: TuiKhonApp(onboardingDone: onboardingDone)));
 }
 
-/// Root widget configuring the application theme and initial route to LoginScreen.
 class TuiKhonApp extends StatelessWidget {
-  const TuiKhonApp({super.key});
+  final bool onboardingDone;
+
+  const TuiKhonApp({super.key, this.onboardingDone = true});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Túi Khôn',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        scaffoldBackgroundColor: AppColors.background,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.primary,
-          primary: AppColors.primary,
-          surface: AppColors.surface,
-          error: AppColors.error,
-        ),
-        textTheme: GoogleFonts.plusJakartaSansTextTheme(
-          Theme.of(context).textTheme,
-        ),
-      ),
-      // Starts directly at LoginScreen when opening the app
-      home: const LoginScreen(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: appThemeMode,
+      builder: (context, themeMode, child) {
+        return MaterialApp(
+          title: 'Túi Khôn',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: themeMode,
+          home: onboardingDone ? const LoginScreen() : const OnboardingScreen(),
+        );
+      },
     );
   }
 }

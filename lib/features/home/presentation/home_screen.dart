@@ -5,7 +5,7 @@ import '../../quick_record/presentation/quick_record_screen.dart';
 import '../../split_bill/presentation/split_bill_screen.dart';
 import '../../advisor/presentation/advisor_screen.dart';
 import '../../pro/presentation/pro_upgrade_screen.dart';
-import '../../profile/presentation/profile_settings_screen.dart';
+import '../../profile/presentation/prm4_profile_screen.dart';
 
 /// HomeScreen renders the primary dashboard conforming to the Túi Khôn UI spec.
 /// Designed adaptively for both iOS (Cupertino/Dynamic Island) and Android (Material 3).
@@ -93,7 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           InkWell(
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileSettingsScreen()));
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const Prm4ProfileScreen()));
             },
             borderRadius: BorderRadius.circular(24),
             child: Padding(
@@ -847,7 +847,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Navigator.push(context, MaterialPageRoute(builder: (_) => const AdvisorScreen()));
           }),
           _navItem(Icons.account_circle, 'Cá nhân', 3, () {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileSettingsScreen()));
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const Prm4ProfileScreen()));
           }),
         ],
       ),
