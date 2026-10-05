@@ -142,8 +142,7 @@ class ProfileRepository {
     }
 
     if (!ProfileSession.isAuthenticated) {
-      // Chế độ chạy độc lập của PRM-4.
-      // Không lưu mật khẩu vào SharedPreferences.
+
       await Future<void>.delayed(const Duration(milliseconds: 500));
       return;
     }
