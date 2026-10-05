@@ -7,8 +7,6 @@ import '../../advisor/presentation/advisor_screen.dart';
 import '../../pro/presentation/pro_upgrade_screen.dart';
 import '../../profile/presentation/prm4_profile_screen.dart';
 
-/// HomeScreen renders the primary dashboard conforming to the Túi Khôn UI spec.
-/// Designed adaptively for both iOS (Cupertino/Dynamic Island) and Android (Material 3).
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 

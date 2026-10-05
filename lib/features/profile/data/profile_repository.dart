@@ -188,9 +188,9 @@ class ProfileRepository {
     if (savedProfile == null || savedProfile.isEmpty) {
       const defaultProfile = UserProfile(
         userId: 'local-user',
-        email: 'user@tuikhon.vn',
-        displayName: 'Nguyễn Anh Quân',
-        phoneNumber: '0988 123 456',
+        email: 'tuikhon@gmail.com',
+        displayName: 'Túi Khôn',
+        phoneNumber: '0987123456',
       );
 
       await _saveLocalProfile(defaultProfile);
