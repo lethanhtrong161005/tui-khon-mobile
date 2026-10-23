@@ -1,0 +1,63 @@
+# Supabase CLI config cho Túi Khôn.
+# Chỉ khai báo những gì khác mặc định; các khoá còn lại CLI tự điền.
+# Phần [auth] áp dụng cho môi trường local; đẩy lên project cloud bằng `supabase config push`.
+
+project_id = "tui-khon"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 17
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:3000"
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+double_confirm_changes = true
+otp_length = 6
+otp_expiry = 600
+max_frequency = "60s"
+
+[auth.email.template.confirmation]
+subject = "Mã xác thực Túi Khôn"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.recovery]
+subject = "Đặt lại mật khẩu Túi Khôn"
+content_path = "./supabase/templates/recovery.html"
+
+# Google Sign-In native (google_sign_in -> signInWithIdToken).
+# client_id: Web client ID đứng đầu, sau đó iOS (và Android nếu có), ngăn cách bằng dấu phẩy.
+[auth.external.google]
+enabled = true
+client_id = "env(GOOGLE_CLIENT_IDS)"
+secret = "env(GOOGLE_CLIENT_SECRET)"
+skip_nonce_check = true
+
+[edge_runtime]
+enabled = true
+policy = "per_worker"
+deno_version = 2
+
+[functions.ai-quick-record]
+verify_jwt = true
+
+[functions.ai-advisor]
+verify_jwt = true

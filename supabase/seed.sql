@@ -1,0 +1,11 @@
+-- Chạy tự động khi `supabase db reset` (local). Không chạy trên project cloud.
+--
+-- Dữ liệu demo gắn với một tài khoản thật, nên tạo theo 2 bước:
+--   1. Đăng ký tài khoản qua app (hoặc Studio → Authentication → Add user).
+--   2. Chạy trong SQL Editor:
+--        select private.seed_demo_data('demo@tuikhon.vn');
+--      Muốn làm mới dữ liệu demo:
+--        select private.seed_demo_data('demo@tuikhon.vn', true);
+--
+-- Chạy tay job định kỳ (thay cho pg_cron khi test):
+--   select private.process_recurring();
