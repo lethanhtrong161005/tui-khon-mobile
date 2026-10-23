@@ -133,3 +133,7 @@ migrate_working_dir/
 **/.vagrant/
 **/DerivedData/
 **/dgph
+
+# Supabase CLI
+supabase/.temp/
+supabase/.branches/
