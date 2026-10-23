@@ -26,6 +26,16 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Túi Khôn dùng Face ID để mở khoá ứng dụng nhanh và an toàn.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Túi Khôn dùng micro để bạn ghi chi tiêu bằng giọng nói.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Túi Khôn chuyển giọng nói tiếng Việt thành chữ để ghi giao dịch.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Túi Khôn dùng camera để chụp và đọc hóa đơn.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Túi Khôn cần truy cập ảnh để bạn chọn hóa đơn đã chụp.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
