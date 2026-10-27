@@ -8,12 +8,14 @@ import '../../../core/utils/error_messages.dart';
 import '../../../core/widgets/form_sheet.dart';
 import '../../home/providers/home_providers.dart';
 import '../data/planning_repository.dart';
+import '../data/debt_history.dart';
 import '../models/planning_models.dart';
 
 extension PlanningRefresh on WidgetRef {
   /// Reloads the debt book and re-schedules the device reminders.
   Future<void> refreshDebts() async {
     invalidate(debtsProvider);
+    invalidate(debtHistoryProvider);
     invalidate(notificationsProvider);
     try {
       final debts = await read(debtsProvider.future);

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -63,7 +64,8 @@ Future<void> showReceiptImage(BuildContext context, Future<String> signedUrl) {
           if (!snapshot.hasData) {
             return const SizedBox(height: 200, child: Center(child: CircularProgressIndicator()));
           }
-          return InteractiveViewer(child: Image.network(snapshot.data!, fit: BoxFit.contain));
+          final url = snapshot.data!;
+          return InteractiveViewer(child: url.startsWith('data:') ? Image.memory(base64Decode(url.split(',').last), fit: BoxFit.contain) : Image.network(url, fit: BoxFit.contain));
         },
       ),
     ),

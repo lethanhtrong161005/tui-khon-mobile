@@ -15,7 +15,8 @@ void showAuthMessage(BuildContext context, String message) {
 
 /// Logo + title + subtitle shown at the top of every auth screen.
 class AuthBrandHeader extends StatelessWidget {
-  const AuthBrandHeader({super.key, required this.title, required this.subtitle, this.icon = Icons.account_balance_wallet});
+  const AuthBrandHeader(
+      {super.key, required this.title, required this.subtitle, this.icon = Icons.account_balance_wallet});
 
   final String title;
   final String subtitle;

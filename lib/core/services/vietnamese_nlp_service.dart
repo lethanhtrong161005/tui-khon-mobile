@@ -9,19 +9,66 @@ import '../utils/currency_formatter.dart';
 class VietnameseNlpService {
   VietnameseNlpService._();
 
+  /// Vietnamese equivalent of NFD accent removal, including precomposed text.
+  static String deaccent(String input) {
+    var result = input;
+    const groups = {
+      'a': 'àáảãạăằắẳẵặâầấẩẫậ',
+      'e': 'èéẻẽẹêềếểễệ',
+      'i': 'ìíỉĩị',
+      'o': 'òóỏõọôồốổỗộơờớởỡợ',
+      'u': 'ùúủũụưừứửữự',
+      'y': 'ỳýỷỹỵ',
+      'd': 'đ',
+    };
+    for (final entry in groups.entries) {
+      result = result.replaceAll(RegExp('[${entry.value}]'), entry.key);
+      result = result.replaceAll(
+          RegExp('[${entry.value.toUpperCase()}]'), entry.key.toUpperCase());
+    }
+    return result.replaceAll(RegExp(r'[\u0300-\u036f]'), '');
+  }
+
+  static String normalizeText(String input) =>
+      deaccent(input.toLowerCase()).trim().replaceAll(RegExp(r'\s+'), ' ');
+
+  /// Split explicit clauses only; commas inside monetary values stay intact.
+  static List<TransactionDraft> parseMultiple(String input,
+          {TransactionSource source = TransactionSource.manual,
+          bool includeIncomplete = false}) =>
+      input
+          .split(RegExp(r'[;\n]+|,\s*(?=\p{L})|\s+(?:và|rồi|sau đó)\s+',
+              caseSensitive: false, unicode: true))
+          .where((part) => part.trim().isNotEmpty)
+          .map((part) => parseInput(part, source: source))
+          .where((draft) => includeIncomplete || draft.amount > 0)
+          .take(10)
+          .toList();
+
   /// Parses user text/voice input into a [TransactionDraft].
   /// `amount` is 0 when no amount could be found.
-  static TransactionDraft parseInput(String input, {TransactionSource source = TransactionSource.manual}) {
+  static TransactionDraft parseInput(String input,
+      {TransactionSource source = TransactionSource.manual}) {
     final lower = input.toLowerCase().trim();
-    final amount = CurrencyFormatter.parseSlangAmount(lower);
+    final parsedAmount = CurrencyFormatter.parseSlangAmount(lower);
+    final explicitUnit = RegExp(
+            r'\d\s*(?:k|nghìn|ngàn|tr|triệu|củ|đồng|vnd|₫)(?!\p{L})',
+            unicode: true)
+        .hasMatch(lower);
+    final amount = parsedAmount > 0 && parsedAmount < 1000 && !explicitUnit
+        ? 0
+        : parsedAmount;
 
     // Whole-word match so that "thuê" is not read as "thu" and "căn hộ" not as "ăn"
     bool has(List<String> words) => words.any(
-          (w) => RegExp('(?<!\\p{L})${RegExp.escape(w)}(?!\\p{L})', unicode: true).hasMatch(lower),
+          (w) =>
+              RegExp('(?<!\\p{L})${RegExp.escape(w)}(?!\\p{L})', unicode: true)
+                  .hasMatch(lower),
         );
 
     // Determine whether this is income or expense
-    final isIncome = has(['trúng', 'lương', 'thưởng', 'nhận', 'thu', 'thu nhập', 'được cho']);
+    final isIncome = has(
+        ['trúng', 'lương', 'thưởng', 'nhận', 'thu', 'thu nhập', 'được cho']);
 
     // Categorization logic based on Vietnamese keywords
     String category = 'Chi tiêu khác';

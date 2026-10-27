@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/offline/local_store.dart';
+import '../../../core/offline/sync_controller.dart';
+import '../../../core/offline/sync_screen.dart';
 import '../../../core/utils/category_icons.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/error_messages.dart';
@@ -11,6 +14,9 @@ import '../../../core/widgets/form_sheet.dart';
 import '../../planning/data/planning_repository.dart';
 import '../../planning/models/planning_models.dart';
 import '../../planning/presentation/debt_actions.dart';
+import '../../planning/presentation/debt_history_screen.dart';
+import '../../reminders/reminders.dart';
+import '../../reports/monthly_report_screen.dart';
 import '../../planning/presentation/planning_screen.dart';
 import '../../quick_record/presentation/quick_record_screen.dart';
 import '../../advisor/presentation/advisor_screen.dart';
@@ -37,11 +43,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _isBalanceVisible = true;
   int _currentNavIndex = 0;
 
-
   @override
   void initState() {
     super.initState();
+    if (ref.read(localStoreProvider) != null) {
+      ref.listenManual<String?>(pendingNotificationRouteProvider, (_, route) => _openNotification(route),
+          fireImmediately: true);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkDebts());
+  }
+
+  void _openNotification(String? route) {
+    if (route == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      ref.read(pendingNotificationRouteProvider.notifier).state = null;
+      if (route.contains('/debts/')) {
+        final id = route.split('/').last;
+        final debt = (await ref.read(debtsProvider.future)).where((d) => d.id == id).firstOrNull;
+        if (!mounted) return;
+        if (debt != null) {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => DebtHistoryScreen(debt: debt)));
+          return;
+        }
+      }
+      final now = DateTime.now().toUtc().add(const Duration(hours: 7));
+      final screen = route == '/reports'
+          ? MonthlyReportScreen(initialMonth: DateTime(now.year, now.month - 1))
+          : route == '/payables'
+              ? const PayablesScreen()
+              : route.contains('/debts')
+                  ? const PlanningScreen(initialTab: PlanningTab.debts)
+                  : const QuickRecordScreen();
+      Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+    });
   }
 
   /// On opening the app: re-schedule device reminders and ask about debts
@@ -62,7 +97,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _editTransaction(TransactionModel tx) async {
-    final draft = await showTransactionFormSheet(context, initial: tx.toDraft());
+    final store = ref.read(localStoreProvider);
+    if (store != null) {
+      final linked = (await store.rows('debt_payments')).where((p) => p['transaction_id'] == tx.id).firstOrNull;
+      if (linked != null) {
+        final debt = (await ref.read(debtsProvider.future)).where((d) => d.id == linked['debt_id']).firstOrNull;
+        if (debt != null && mounted)
+          await Navigator.push(context, MaterialPageRoute(builder: (_) => DebtHistoryScreen(debt: debt)));
+        return;
+      }
+    }
+    final draft = await showTransactionFormSheet(context, initial: tx.toDraft(), excludingId: tx.id);
     if (draft == null || !mounted) return;
     try {
       await ref.read(walletRepositoryProvider).updateTransaction(tx.id, draft);
@@ -73,6 +118,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _refresh() async {
+    if (ref.read(localStoreProvider) != null) await ref.read(syncControllerProvider.notifier).sync();
     ref.refreshWalletData();
     ref.invalidate(profileProvider);
     await ref.read(monthlySummaryProvider.future);
@@ -80,6 +126,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (ref.watch(localStoreProvider) != null) {
+      ref.watch(reminderSyncProvider);
+    }
     final summaryAsync = ref.watch(monthlySummaryProvider);
     final summary = summaryAsync.valueOrNull;
     final profile = ref.watch(profileProvider).valueOrNull;
@@ -107,6 +156,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 12),
+                          const SyncIndicator(),
                           if (summaryAsync.hasError) ...[
                             _buildErrorBanner(summaryAsync.error!),
                             const SizedBox(height: 12),
@@ -325,7 +375,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     const SizedBox(width: 6),
                     const Text(
-                      'ĐÃ ĐỒNG BỘ TRỰC TUYẾN',
+                      'SỔ GHI CHÉP TRÊN THIẾT BỊ',
                       style: TextStyle(
                         color: AppColors.primaryFixed,
                         fontSize: 10,

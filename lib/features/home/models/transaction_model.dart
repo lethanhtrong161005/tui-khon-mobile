@@ -18,8 +18,7 @@ enum TransactionSource {
   ai,
   voice,
   receipt,
-  recurring,
-  split;
+  debt;
 
   static TransactionSource fromValue(String? value) =>
       TransactionSource.values.firstWhere((s) => s.name == value, orElse: () => manual);
@@ -29,8 +28,7 @@ enum TransactionSource {
         TransactionSource.ai => 'AI Note',
         TransactionSource.voice => 'Voice',
         TransactionSource.receipt => 'Hóa đơn',
-        TransactionSource.recurring => 'Định kỳ',
-        TransactionSource.split => 'Chia bill',
+        TransactionSource.debt => 'Trả / Thu nợ',
         TransactionSource.manual => null,
       };
 }

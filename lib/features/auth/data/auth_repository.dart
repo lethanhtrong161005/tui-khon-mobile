@@ -8,9 +8,10 @@ import '../models/user_profile.dart';
 /// Wraps Supabase Auth (email + 6-digit OTP, Google) for the auth screens.
 /// Session persistence and token refresh are handled by supabase_flutter.
 class AuthRepository {
-  AuthRepository(this._client);
+  AuthRepository(this._client, {Future<void> Function()? beforeSignOut}) : _beforeSignOut = beforeSignOut;
 
   final SupabaseClient _client;
+  final Future<void> Function()? _beforeSignOut;
   bool _googleInitialized = false;
 
   GoTrueClient get _auth => _client.auth;
@@ -81,6 +82,7 @@ class AuthRepository {
   }
 
   Future<void> signOut() async {
+    await _beforeSignOut?.call();
     await _auth.signOut();
     if (_googleInitialized) await GoogleSignIn.instance.signOut();
   }

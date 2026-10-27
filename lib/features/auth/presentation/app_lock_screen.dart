@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/services/app_lock_service.dart';
+import '../../../core/offline/local_store.dart';
 import '../providers/auth_providers.dart';
 import 'widgets/auth_widgets.dart';
 
@@ -36,6 +37,25 @@ class _AppLockScreenState extends ConsumerState<AppLockScreen> {
     if (ok) ref.read(appUnlockedProvider.notifier).state = true;
   }
 
+  Future<void> _passwordLogin() async {
+    final pending = await ref.read(localStoreProvider)?.pendingCount() ?? 0;
+    if (!mounted) return;
+    if (pending > 0) {
+      final yes = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+                  title: const Text('Có dữ liệu chưa đồng bộ'),
+                  content: Text('$pending thay đổi sẽ được giữ trên máy để đồng bộ khi đăng nhập lại đúng tài khoản.'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Ở lại')),
+                    FilledButton(
+                        onPressed: () => Navigator.pop(ctx, true), child: const Text('Giữ trên máy và đăng xuất'))
+                  ]));
+      if (yes != true || !mounted) return;
+    }
+    await ref.read(authRepositoryProvider).signOut();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,7 +82,7 @@ class _AppLockScreenState extends ConsumerState<AppLockScreen> {
               const SizedBox(height: 12),
               TextButton(
                 // Signing out returns to LoginScreen; the password login unlocks again.
-                onPressed: () => ref.read(authRepositoryProvider).signOut(),
+                onPressed: _passwordLogin,
                 child: const Text('Đăng nhập bằng mật khẩu'),
               ),
             ],

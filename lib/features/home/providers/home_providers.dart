@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/supabase/supabase_providers.dart';
-import '../data/supabase_wallet_repository.dart';
+import '../../../core/offline/local_store.dart';
+import '../../../core/offline/offline_wallet_repository.dart';
 import '../data/wallet_repository.dart';
 import '../models/category_model.dart';
 import '../models/monthly_summary.dart';
@@ -12,28 +12,44 @@ import '../models/wallet_model.dart';
 /// Recreated whenever the signed-in user changes, which also resets every
 /// provider below so one account never sees another account's cached data.
 final walletRepositoryProvider = Provider<WalletRepository>((ref) {
-  ref.watch(currentUserIdProvider);
-  return SupabaseWalletRepository(ref.watch(supabaseClientProvider));
+  final store = ref.watch(localStoreProvider);
+  if (store == null) throw StateError('Bạn cần đăng nhập');
+  return OfflineWalletRepository(store);
 });
 
 final categoriesProvider = FutureProvider.autoDispose<List<CategoryModel>>(
-  (ref) => ref.watch(walletRepositoryProvider).fetchCategories(),
+  (ref) {
+    ref.watch(localRevisionProvider);
+    return ref.watch(walletRepositoryProvider).fetchCategories();
+  },
 );
 
 final walletsProvider = FutureProvider.autoDispose<List<WalletModel>>(
-  (ref) => ref.watch(walletRepositoryProvider).fetchWallets(),
+  (ref) {
+    ref.watch(localRevisionProvider);
+    return ref.watch(walletRepositoryProvider).fetchWallets();
+  },
 );
 
 final monthlySummaryProvider = FutureProvider.autoDispose<MonthlySummary>(
-  (ref) => ref.watch(walletRepositoryProvider).fetchMonthlySummary(),
+  (ref) {
+    ref.watch(localRevisionProvider);
+    return ref.watch(walletRepositoryProvider).fetchMonthlySummary();
+  },
 );
 
 final recentTransactionsProvider = FutureProvider.autoDispose<List<TransactionModel>>(
-  (ref) => ref.watch(walletRepositoryProvider).fetchRecentTransactions(limit: 10),
+  (ref) {
+    ref.watch(localRevisionProvider);
+    return ref.watch(walletRepositoryProvider).fetchRecentTransactions(limit: 10);
+  },
 );
 
 final notificationsProvider = FutureProvider.autoDispose<List<NotificationModel>>(
-  (ref) => ref.watch(walletRepositoryProvider).fetchNotifications(),
+  (ref) {
+    ref.watch(localRevisionProvider);
+    return ref.watch(walletRepositoryProvider).fetchNotifications();
+  },
 );
 
 final unreadNotificationCountProvider = Provider.autoDispose<int>(

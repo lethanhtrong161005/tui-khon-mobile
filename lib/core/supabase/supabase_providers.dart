@@ -16,6 +16,10 @@ final sessionProvider = Provider<Session?>((ref) {
   return ref.watch(supabaseClientProvider).auth.currentSession;
 });
 
+/// Restored only after a prior authenticated use. Explicit logout clears it;
+/// refresh failures leave the account's offline notebook available.
+final offlineAccountIdProvider = StateProvider<String?>((ref) => null);
+
 /// Id of the signed-in user. Data providers watch this so that they reload
 /// when the account changes, but not on every token refresh.
-final currentUserIdProvider = Provider<String?>((ref) => ref.watch(sessionProvider)?.user.id);
+final currentUserIdProvider = Provider<String?>((ref) => ref.watch(sessionProvider)?.user.id ?? ref.watch(offlineAccountIdProvider));

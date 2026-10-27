@@ -1,5 +1,5 @@
 name: tui_khon_mobile
-description: "Túi Khôn - Standalone Local-First Personal Finance & AI Assistant App for iOS & Android."
+description: "Túi Khôn - Offline personal finance notebook and AI assistant for iOS and Android."
 publish_to: "none"
 version: 1.0.0+1
 
@@ -20,10 +20,10 @@ dependencies:
   # State Management (Self-contained, lightweight & reactive)
   flutter_riverpod: ^2.5.1
 
-  # Local Persistence & Offline-first (No external backend needed!)
+  # Local preferences and offline storage
   shared_preferences: ^2.2.2
 
-  # Device Integration & Social Share
+  # Supabase and device integrations
   supabase_flutter: ^2.18.3
   google_sign_in: ^7.2.0
   speech_to_text: ^7.5.0
@@ -31,6 +31,14 @@ dependencies:
   flutter_local_notifications: ^22.3.2
   timezone: ^0.11.2
   local_auth: ^3.0.2
+  drift: ^2.35.3
+  sqlite3: ^3.8.0
+  path_provider: ^2.1.6
+  connectivity_plus: ^7.3.2
+  crypto: ^3.0.8
+  csv: ^8.0.0
+  file_picker: ^13.3.0
+  share_plus: ^13.3.1
 
 dev_dependencies:
   flutter_test:

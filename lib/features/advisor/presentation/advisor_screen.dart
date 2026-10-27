@@ -64,6 +64,9 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
 
             // AI Advisor Hero Banner
             _buildAdvisorHeroBanner(reportAsync),
+            if (reportAsync.valueOrNull?.cached == true) const Text('Đang xem nhận xét đã lưu trên máy'),
+            if (ref.watch(advisorStaleProvider(_range)).valueOrNull == true || reportAsync.valueOrNull?.stale == true)
+              const Text('Dữ liệu đã thay đổi. Đồng bộ rồi phân tích lại để cập nhật nhận xét.'),
             const SizedBox(height: 16),
 
             // Category Breakdown (Donut Chart representation)
@@ -83,7 +86,8 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const QuickRecordScreen()));
                 },
                 icon: const Icon(Icons.forum, size: 20),
-                label: const Text('Trò chuyện chi tiết với Cố vấn AI', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                label: const Text('Trò chuyện chi tiết với Cố vấn AI',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.secondary,
                   foregroundColor: Colors.white,
@@ -160,7 +164,8 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
           SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
           SizedBox(width: 12),
           Expanded(
-            child: Text('Gemini đang phân tích chi tiêu của bạn...', style: TextStyle(color: Colors.white, fontSize: 15)),
+            child:
+                Text('Gemini đang phân tích chi tiêu của bạn...', style: TextStyle(color: Colors.white, fontSize: 15)),
           ),
         ],
       ));
@@ -185,8 +190,7 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
           _adviceCard(insight),
           const SizedBox(height: 8),
         ],
-        if (report.forecastNextMonth > 0)
-          _forecastAdvice(report),
+        if (report.forecastNextMonth > 0) _forecastAdvice(report),
         if (report.quotaUsed != null && report.quotaLimit != null) ...[
           const SizedBox(height: 8),
           Text(
@@ -227,7 +231,8 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
                   children: [
                     Icon(Icons.smart_toy, size: 14, color: AppColors.tertiaryFixed),
                     SizedBox(width: 4),
-                    Text('Phân tích chuyên sâu bởi Gemini AI', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                    Text('Phân tích chuyên sâu bởi Gemini AI',
+                        style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
@@ -248,7 +253,8 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
         : change > 0
             ? ('⚠️', 'Cảnh báo', AppColors.error)
             : ('✅', 'Tích cực', AppColors.primaryFixed);
-    final title = change == null ? '$icon ${insight.category}' : '$icon ${insight.category} (${change > 0 ? '+' : ''}$change%)';
+    final title =
+        change == null ? '$icon ${insight.category}' : '$icon ${insight.category} (${change > 0 ? '+' : ''}$change%)';
     return _adviceTile(title, badge, '${CurrencyFormatter.formatVND(insight.total)} • ${insight.advice}', badgeColor);
   }
 
@@ -276,7 +282,8 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Text(title, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                child:
+                    Text(title, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -331,7 +338,6 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
             ],
           ),
           const SizedBox(height: 16),
-
           if (period == null)
             Center(
               child: periodAsync.hasError
@@ -340,7 +346,8 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
             )
           else if (categories.isEmpty)
             const Center(
-              child: Text('Chưa có khoản chi nào trong giai đoạn này', style: TextStyle(color: AppColors.onSurfaceVariant)),
+              child: Text('Chưa có khoản chi nào trong giai đoạn này',
+                  style: TextStyle(color: AppColors.onSurfaceVariant)),
             )
           else ...[
             // Donut: share of the largest category
@@ -361,9 +368,13 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('$_range NGÀY', style: const TextStyle(fontSize: 10, color: AppColors.outline, fontWeight: FontWeight.bold)),
-                      Text(_millions(total), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.onSurface)),
-                      Text('${categories.length} danh mục', style: const TextStyle(fontSize: 10, color: AppColors.primary, fontWeight: FontWeight.bold)),
+                      Text('$_range NGÀY',
+                          style: const TextStyle(fontSize: 10, color: AppColors.outline, fontWeight: FontWeight.bold)),
+                      Text(_millions(total),
+                          style:
+                              const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.onSurface)),
+                      Text('${categories.length} danh mục',
+                          style: const TextStyle(fontSize: 10, color: AppColors.primary, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ],
@@ -372,8 +383,7 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
             const SizedBox(height: 16),
 
             // Detail rows
-            for (final cat in categories.take(6))
-              _categoryRow(cat, total, changeByName[cat.name]),
+            for (final cat in categories.take(6)) _categoryRow(cat, total, changeByName[cat.name]),
           ],
         ],
       ),
@@ -418,7 +428,8 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(CurrencyFormatter.formatVND(cat.total), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+              Text(CurrencyFormatter.formatVND(cat.total),
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
               Text(badge, style: TextStyle(fontSize: 10, color: badgeColor, fontWeight: FontWeight.bold)),
             ],
           ),
@@ -456,7 +467,8 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Dòng tiền & Dự báo AI', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                  Text('Chi tiêu 4 tuần qua đối chiếu dự báo', style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant)),
+                  Text('Chi tiêu 4 tuần qua đối chiếu dự báo',
+                      style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant)),
                 ],
               ),
               Row(

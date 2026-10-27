@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/offline/duplicate_service.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../models/category_model.dart';
 import '../../models/transaction_model.dart';
@@ -11,19 +12,21 @@ import '../../providers/home_providers.dart';
 
 /// Bottom sheet to enter a transaction by hand or correct an AI draft.
 /// Returns the edited [TransactionDraft], or null when dismissed.
-Future<TransactionDraft?> showTransactionFormSheet(BuildContext context, {TransactionDraft? initial}) {
+Future<TransactionDraft?> showTransactionFormSheet(BuildContext context,
+    {TransactionDraft? initial, String? excludingId}) {
   return showModalBottomSheet<TransactionDraft>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => _TransactionFormSheet(initial: initial),
+    builder: (_) => _TransactionFormSheet(initial: initial, excludingId: excludingId),
   );
 }
 
 class _TransactionFormSheet extends ConsumerStatefulWidget {
-  const _TransactionFormSheet({this.initial});
+  const _TransactionFormSheet({this.initial, this.excludingId});
 
   final TransactionDraft? initial;
+  final String? excludingId;
 
   @override
   ConsumerState<_TransactionFormSheet> createState() => _TransactionFormSheetState();
@@ -54,7 +57,7 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
     }
   }
 
-  void _submit(List<CategoryModel> categories, List<WalletModel> wallets) {
+  Future<void> _submit(List<CategoryModel> categories, List<WalletModel> wallets) async {
     if (_amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng nhập số tiền lớn hơn 0')));
       return;
@@ -65,6 +68,19 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
     }
     final category = categories.firstWhere((c) => c.id == _categoryId);
     final wallet = wallets.firstWhere((w) => w.id == _walletId);
+    final checker = ref.read(duplicateServiceProvider);
+    if (checker != null) {
+      final matches = await checker.find(
+          TransactionDraft(
+              type: _type,
+              amount: _amount,
+              walletId: wallet.id,
+              occurredAt: _date,
+              receiptPath: widget.initial?.receiptPath),
+          excludingId: widget.excludingId);
+      if (!mounted) return;
+      if (!await confirmPossibleDuplicate(context, matches) || !mounted) return;
+    }
     Navigator.pop(
       context,
       TransactionDraft(

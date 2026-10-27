@@ -8,6 +8,7 @@ import '../../../core/widgets/form_sheet.dart';
 import '../data/planning_repository.dart';
 import '../models/planning_models.dart';
 import 'debt_actions.dart';
+import 'debt_history_screen.dart';
 
 /// Sổ nợ: notes of "tôi nợ ai" / "ai nợ tôi" with due dates and reminders.
 class DebtsTab extends ConsumerWidget {
@@ -22,7 +23,8 @@ class DebtsTab extends ConsumerWidget {
     if (debts == null) {
       return Center(
         child: debtsAsync.hasError
-            ? Text(friendlyError(debtsAsync.error!), style: const TextStyle(color: AppColors.onSurfaceVariant))
+            ? Text(friendlyError(debtsAsync.error!),
+                style: const TextStyle(color: AppColors.onSurfaceVariant))
             : const CircularProgressIndicator(color: AppColors.primary),
       );
     }
@@ -41,9 +43,13 @@ class DebtsTab extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Expanded(child: _totalCard('Tôi đang nợ', total(borrow), AppColors.error)),
+              Expanded(
+                  child: _totalCard(
+                      'Tôi đang nợ', total(borrow), AppColors.error)),
               const SizedBox(width: 10),
-              Expanded(child: _totalCard('Người khác nợ tôi', total(lend), AppColors.primary)),
+              Expanded(
+                  child: _totalCard(
+                      'Người khác nợ tôi', total(lend), AppColors.primary)),
             ],
           ),
           const SizedBox(height: 12),
@@ -63,12 +69,16 @@ class DebtsTab extends ConsumerWidget {
           ],
           if (settled.isNotEmpty)
             Theme(
-              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              data:
+                  Theme.of(context).copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
                 tilePadding: EdgeInsets.zero,
                 title: Text('Đã tất toán (${settled.length})',
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                children: [for (final d in settled) DebtTile(debt: d, today: today)],
+                    style: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.bold)),
+                children: [
+                  for (final d in settled) DebtTile(debt: d, today: today)
+                ],
               ),
             ),
         ],
@@ -86,10 +96,13 @@ class DebtsTab extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant)),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 12, color: AppColors.onSurfaceVariant)),
           const SizedBox(height: 4),
           Text(CurrencyFormatter.formatVND(amount),
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: color)),
+              style: TextStyle(
+                  fontSize: 16, fontWeight: FontWeight.w800, color: color)),
         ],
       ),
     );
@@ -97,7 +110,8 @@ class DebtsTab extends ConsumerWidget {
 
   Widget _sectionTitle(String text) => Padding(
         padding: const EdgeInsets.only(top: 8, bottom: 8),
-        child: Text(text, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+        child: Text(text,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
       );
 
   Widget _empty() => Container(
@@ -110,8 +124,11 @@ class DebtsTab extends ConsumerWidget {
           children: [
             Icon(Icons.handshake, color: AppColors.outline, size: 32),
             SizedBox(height: 8),
-            Text('Chưa có khoản nợ nào đang mở.\nBấm "Thêm khoản nợ" để ghi lại.',
-                style: TextStyle(fontSize: 13, color: AppColors.onSurfaceVariant), textAlign: TextAlign.center),
+            Text(
+                'Chưa có khoản nợ nào đang mở.\nBấm "Thêm khoản nợ" để ghi lại.',
+                style:
+                    TextStyle(fontSize: 13, color: AppColors.onSurfaceVariant),
+                textAlign: TextAlign.center),
           ],
         ),
       );
@@ -143,7 +160,10 @@ class DebtTile extends ConsumerWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => showDebtForm(context, initial: debt),
+        onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+                builder: (_) => DebtHistoryScreen(debt: debt))),
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
@@ -154,8 +174,12 @@ class DebtTile extends ConsumerWidget {
                     radius: 18,
                     backgroundColor: color.withOpacity(0.12),
                     child: Text(
-                      debt.personName.isEmpty ? '?' : String.fromCharCode(debt.personName.runes.first).toUpperCase(),
-                      style: TextStyle(color: color, fontWeight: FontWeight.bold),
+                      debt.personName.isEmpty
+                          ? '?'
+                          : String.fromCharCode(debt.personName.runes.first)
+                              .toUpperCase(),
+                      style:
+                          TextStyle(color: color, fontWeight: FontWeight.bold),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -164,16 +188,26 @@ class DebtTile extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isBorrow ? 'Tôi nợ ${debt.personName}' : '${debt.personName} nợ tôi',
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                          isBorrow
+                              ? 'Tôi nợ ${debt.personName}'
+                              : '${debt.personName} nợ tôi',
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.bold),
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
                           [
-                            if (debt.isSettled) 'Đã tất toán' else if (debt.dueLabel(today) != null) debt.dueLabel(today)!,
+                            if (debt.isSettled)
+                              'Đã tất toán'
+                            else if (debt.dueLabel(today) != null)
+                              debt.dueLabel(today)!,
                             if (debt.note != null) debt.note!,
                           ].join(' • '),
-                          style: TextStyle(fontSize: 11, color: debt.isSettled ? AppColors.primary : dueColor),
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: debt.isSettled
+                                  ? AppColors.primary
+                                  : dueColor),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
@@ -182,39 +216,57 @@ class DebtTile extends ConsumerWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(CurrencyFormatter.formatVND(debt.isSettled ? debt.amount : debt.remaining),
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: color)),
+                      Text(
+                          CurrencyFormatter.formatVND(
+                              debt.isSettled ? debt.amount : debt.remaining),
+                          style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: color)),
                       if (debt.paidAmount > 0 && !debt.isSettled)
                         Text('/ ${CurrencyFormatter.formatVND(debt.amount)}',
-                            style: const TextStyle(fontSize: 10, color: AppColors.onSurfaceVariant)),
+                            style: const TextStyle(
+                                fontSize: 10,
+                                color: AppColors.onSurfaceVariant)),
                     ],
                   ),
                   PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert, size: 18, color: AppColors.onSurfaceVariant),
+                    icon: const Icon(Icons.more_vert,
+                        size: 18, color: AppColors.onSurfaceVariant),
                     onSelected: (value) async {
                       switch (value) {
                         case 'partial':
-                          await showSettleDebtDialog(context, ref, debt, partial: true);
+                          await showSettleDebtDialog(context, ref, debt,
+                              partial: true);
                         case 'settle':
                           await showSettleDebtDialog(context, ref, debt);
                         case 'edit':
                           await showDebtForm(context, initial: debt);
                         case 'delete':
                           if (await confirmDialog(context,
-                              title: 'Xoá khoản nợ?', message: 'Xoá ghi chú nợ với ${debt.personName}?')) {
+                              title: 'Xoá khoản nợ?',
+                              message:
+                                  'Xoá ghi chú nợ với ${debt.personName}?')) {
                             try {
-                              await ref.read(planningRepositoryProvider).deleteDebt(debt.id!);
+                              await ref
+                                  .read(planningRepositoryProvider)
+                                  .deleteDebt(debt.id!);
                               await ref.refreshDebts();
                             } catch (e) {
-                              if (context.mounted) showToast(context, friendlyError(e));
+                              if (context.mounted)
+                                showToast(context, friendlyError(e));
                             }
                           }
                       }
                     },
                     itemBuilder: (_) => [
                       if (!debt.isSettled) ...[
-                        PopupMenuItem(value: 'settle', child: Text(isBorrow ? 'Đã trả hết' : 'Đã nhận đủ')),
-                        const PopupMenuItem(value: 'partial', child: Text('Ghi trả một phần')),
+                        PopupMenuItem(
+                            value: 'settle',
+                            child:
+                                Text(isBorrow ? 'Đã trả hết' : 'Đã nhận đủ')),
+                        const PopupMenuItem(
+                            value: 'partial', child: Text('Ghi trả một phần')),
                         const PopupMenuItem(value: 'edit', child: Text('Sửa')),
                       ],
                       const PopupMenuItem(value: 'delete', child: Text('Xoá')),
@@ -240,7 +292,8 @@ class DebtTile extends ConsumerWidget {
 }
 
 /// Add / edit a debt note.
-Future<void> showDebtForm(BuildContext context, {DebtModel? initial, DebtType type = DebtType.borrow}) {
+Future<void> showDebtForm(BuildContext context,
+    {DebtModel? initial, DebtType type = DebtType.borrow}) {
   return showFormSheet<void>(context, _DebtForm(initial: initial, type: type));
 }
 
@@ -256,16 +309,19 @@ class _DebtForm extends ConsumerStatefulWidget {
 
 class _DebtFormState extends ConsumerState<_DebtForm> {
   late DebtType _type = widget.initial?.type ?? widget.type;
-  late final _name = TextEditingController(text: widget.initial?.personName ?? '');
+  late final _name =
+      TextEditingController(text: widget.initial?.personName ?? '');
   late final _phone = TextEditingController(text: widget.initial?.phone ?? '');
-  late final _amount = TextEditingController(text: widget.initial == null ? '' : '${widget.initial!.amount}');
+  late final _amount = TextEditingController(
+      text: widget.initial == null ? '' : '${widget.initial!.amount}');
   late final _note = TextEditingController(text: widget.initial?.note ?? '');
   late DateTime? _dueDate = widget.initial?.dueDate;
   bool _busy = false;
 
   Future<void> _save() async {
     final amount = MoneyField.valueOf(_amount);
-    if (_name.text.trim().isEmpty) return showToast(context, 'Nhập tên người cho vay / đi vay');
+    if (_name.text.trim().isEmpty)
+      return showToast(context, 'Nhập tên người cho vay / đi vay');
     if (amount <= 0) return showToast(context, 'Nhập số tiền lớn hơn 0');
     if (widget.initial != null && amount < widget.initial!.paidAmount) {
       return showToast(context, 'Số tiền không được nhỏ hơn phần đã trả');
@@ -278,6 +334,8 @@ class _DebtFormState extends ConsumerState<_DebtForm> {
             type: _type,
             personName: _name.text,
             phone: _phone.text,
+            paidAmount: widget.initial?.paidAmount ?? 0,
+            isSettled: widget.initial?.isSettled ?? false,
             amount: amount,
             dueDate: _dueDate,
             note: _note.text,
@@ -310,8 +368,14 @@ class _DebtFormState extends ConsumerState<_DebtForm> {
       children: [
         SegmentedButton<DebtType>(
           segments: const [
-            ButtonSegment(value: DebtType.borrow, label: Text('Tôi nợ'), icon: Icon(Icons.call_made)),
-            ButtonSegment(value: DebtType.lend, label: Text('Nợ tôi'), icon: Icon(Icons.call_received)),
+            ButtonSegment(
+                value: DebtType.borrow,
+                label: Text('Tôi nợ'),
+                icon: Icon(Icons.call_made)),
+            ButtonSegment(
+                value: DebtType.lend,
+                label: Text('Nợ tôi'),
+                icon: Icon(Icons.call_received)),
           ],
           selected: {_type},
           onSelectionChanged: (s) => setState(() => _type = s.first),
@@ -319,7 +383,8 @@ class _DebtFormState extends ConsumerState<_DebtForm> {
         const SizedBox(height: 12),
         TextField(
           controller: _name,
-          decoration: sheetInputDecoration(_type == DebtType.borrow ? 'Tôi nợ ai?' : 'Ai nợ tôi?'),
+          decoration: sheetInputDecoration(
+              _type == DebtType.borrow ? 'Tôi nợ ai?' : 'Ai nợ tôi?'),
         ),
         const SizedBox(height: 12),
         MoneyField(controller: _amount, label: 'Số tiền (VND)'),
@@ -330,7 +395,10 @@ class _DebtFormState extends ConsumerState<_DebtForm> {
           decoration: sheetInputDecoration('Số điện thoại (tuỳ chọn)'),
         ),
         const SizedBox(height: 12),
-        TextField(controller: _note, maxLength: 255, decoration: sheetInputDecoration('Ghi chú (tuỳ chọn)')),
+        TextField(
+            controller: _note,
+            maxLength: 255,
+            decoration: sheetInputDecoration('Ghi chú (tuỳ chọn)')),
         DatePickerTile(
           label: 'Hạn trả',
           value: _dueDate,

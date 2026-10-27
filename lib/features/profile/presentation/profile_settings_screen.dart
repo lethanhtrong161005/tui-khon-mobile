@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/offline/local_store.dart';
+import '../../../core/offline/sync_screen.dart';
+import '../../data_exchange/data_exchange_screen.dart';
+import '../../reports/monthly_report_screen.dart';
+import '../../reminders/reminders.dart';
+import '../../quick_record/presentation/category_rules_screen.dart';
 import '../../../core/services/app_lock_service.dart';
 import '../../../core/utils/error_messages.dart';
 import '../../../core/widgets/form_sheet.dart';
@@ -16,7 +22,9 @@ class ProfileSettingsScreen extends ConsumerWidget {
   const ProfileSettingsScreen({super.key});
 
   /// Confirmation sheet to prevent accidental logouts.
-  void _showLogoutConfirmation(BuildContext context, WidgetRef ref) {
+  Future<void> _showLogoutConfirmation(BuildContext context, WidgetRef ref) async {
+    final pending = await ref.read(localStoreProvider)?.pendingCount() ?? 0;
+    if (!context.mounted) return;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -49,8 +57,10 @@ class ProfileSettingsScreen extends ConsumerWidget {
               const Text('Đăng xuất khỏi Túi Khôn?',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.onSurface)),
               const SizedBox(height: 6),
-              const Text(
-                'Dữ liệu của bạn vẫn được lưu trên máy chủ Túi Khôn. Bạn có thể đăng nhập lại bất kỳ lúc nào.',
+              Text(
+                pending > 0
+                    ? 'Có $pending thay đổi chưa đồng bộ. Đăng xuất sẽ giữ dữ liệu trên máy cho lần đăng nhập sau.'
+                    : 'Dữ liệu trên máy được giữ riêng cho tài khoản này. Bạn có thể đăng nhập lại bất kỳ lúc nào.',
                 style: TextStyle(fontSize: 13, color: AppColors.onSurfaceVariant, height: 1.4),
                 textAlign: TextAlign.center,
               ),
@@ -139,6 +149,31 @@ class ProfileSettingsScreen extends ConsumerWidget {
           _sectionTitle('QUẢN LÝ SỔ'),
           _menuGroup([
             _menuItem(
+                icon: Icons.cloud_sync,
+                title: 'Dữ liệu & Đồng bộ',
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SyncScreen()))),
+            _menuItem(
+                icon: Icons.import_export,
+                title: 'Nhập / xuất CSV',
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DataExchangeScreen()))),
+            _menuItem(
+                icon: Icons.summarize,
+                title: 'Báo cáo tháng',
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MonthlyReportScreen()))),
+            _menuItem(
+                icon: Icons.notifications_active,
+                title: 'Cài đặt nhắc nhở',
+                onTap: () =>
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const ReminderSettingsScreen()))),
+            _menuItem(
+                icon: Icons.event_note,
+                title: 'Khoản phải trả',
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PayablesScreen()))),
+            _menuItem(
+                icon: Icons.auto_awesome,
+                title: 'Quy tắc phân loại đã học',
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CategoryRulesScreen()))),
+            _menuItem(
               icon: Icons.account_balance_wallet,
               title: 'Nguồn tiền',
               subtitle: 'Tiền mặt, tài khoản, ví điện tử bạn tự khai',
@@ -182,7 +217,8 @@ class ProfileSettingsScreen extends ConsumerWidget {
   Widget _sectionTitle(String text) => Padding(
         padding: const EdgeInsets.only(left: 4, bottom: 8),
         child: Text(text,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.outline, letterSpacing: 0.5)),
+            style: const TextStyle(
+                fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.outline, letterSpacing: 0.5)),
       );
 
   Widget _menuGroup(List<Widget> children) => Card(
@@ -203,7 +239,8 @@ class ProfileSettingsScreen extends ConsumerWidget {
   }) =>
       ListTile(
         leading: Icon(icon, color: color),
-        title: Text(title, style: TextStyle(fontWeight: FontWeight.w600, color: color == AppColors.error ? color : null)),
+        title:
+            Text(title, style: TextStyle(fontWeight: FontWeight.w600, color: color == AppColors.error ? color : null)),
         subtitle: subtitle == null ? null : Text(subtitle, style: const TextStyle(fontSize: 12)),
         trailing: const Icon(Icons.chevron_right),
         onTap: onTap,

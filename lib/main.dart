@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'core/supabase/supabase_providers.dart';
 import 'core/config/env.dart';
 import 'core/constants/app_colors.dart';
 import 'features/auth/presentation/auth_gate.dart';
@@ -12,6 +14,8 @@ import 'features/auth/presentation/auth_gate.dart';
 /// AuthGate shows Login or the dashboard depending on the saved session.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final preferences = await SharedPreferences.getInstance();
+  final offlineAccount = preferences.getString('offline_account_id');
 
   if (Env.isSupabaseConfigured) {
     await Supabase.initialize(url: Env.supabaseUrl, publishableKey: Env.supabaseAnonKey);
@@ -29,8 +33,9 @@ Future<void> main() async {
   );
 
   runApp(
-    const ProviderScope(
-      child: TuiKhonApp(),
+    ProviderScope(
+      overrides: [offlineAccountIdProvider.overrideWith((ref) => offlineAccount)],
+      child: const TuiKhonApp(),
     ),
   );
 }

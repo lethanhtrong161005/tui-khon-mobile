@@ -46,9 +46,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     setState(() => _isLoading = true);
     try {
-      final needsOtp = await ref
-          .read(authRepositoryProvider)
-          .signUp(email: email, password: password, displayName: name);
+      final needsOtp =
+          await ref.read(authRepositoryProvider).signUp(email: email, password: password, displayName: name);
       if (!mounted) return;
       // Without email confirmation Supabase signs in right away and AuthGate takes over.
       if (needsOtp) {

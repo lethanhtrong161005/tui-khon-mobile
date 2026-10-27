@@ -18,6 +18,8 @@ class AdvisorReport {
   final List<String> riskCategories;
   final int? quotaUsed;
   final int? quotaLimit;
+  final bool cached;
+  final bool stale;
 
   const AdvisorReport({
     required this.range,
@@ -32,6 +34,8 @@ class AdvisorReport {
     this.riskCategories = const [],
     this.quotaUsed,
     this.quotaLimit,
+    this.cached = false,
+    this.stale = false,
   });
 
   factory AdvisorReport.fromJson(Map<String, dynamic> json) {
@@ -54,6 +58,8 @@ class AdvisorReport {
       riskCategories: ((forecast['riskCategories'] as List?) ?? const []).cast<String>(),
       quotaUsed: _intOrNull(quota?['used']),
       quotaLimit: _intOrNull(quota?['limit']),
+      cached: json['cached'] == true,
+      stale: json['stale'] == true,
     );
   }
 }
@@ -140,8 +146,6 @@ class PeriodSummary {
   int expenseBetween(DateTime from, DateTime to) {
     final start = DateTime(from.year, from.month, from.day);
     final end = DateTime(to.year, to.month, to.day);
-    return byDay
-        .where((d) => !d.day.isBefore(start) && !d.day.isAfter(end))
-        .fold(0, (sum, d) => sum + d.expense);
+    return byDay.where((d) => !d.day.isBefore(start) && !d.day.isAfter(end)).fold(0, (sum, d) => sum + d.expense);
   }
 }

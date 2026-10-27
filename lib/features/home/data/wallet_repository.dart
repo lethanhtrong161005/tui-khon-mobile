@@ -4,9 +4,8 @@ import '../models/notification_model.dart';
 import '../models/transaction_model.dart';
 import '../models/wallet_model.dart';
 
-/// WalletRepository is the single source of truth for the user's wallet data.
-/// [SupabaseWalletRepository] talks to the backend; [LocalWalletRepository]
-/// is an in-memory implementation used for tests and offline UI work.
+/// Reads and writes the user's notebook. The production implementation uses
+/// durable SQLite and an outbox; test implementations can stay in memory.
 abstract class WalletRepository {
   Future<List<CategoryModel>> fetchCategories();
 

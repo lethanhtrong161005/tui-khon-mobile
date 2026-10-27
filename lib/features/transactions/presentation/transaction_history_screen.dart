@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/offline/local_store.dart';
+import '../../planning/data/planning_repository.dart';
+import '../../planning/presentation/debt_history_screen.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/category_icons.dart';
@@ -68,9 +71,8 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
     setState(() => _loading = true);
     final filter = _filter;
     try {
-      final page = await ref
-          .read(walletRepositoryProvider)
-          .fetchTransactions(filter, offset: _items.length, limit: _pageSize);
+      final page =
+          await ref.read(walletRepositoryProvider).fetchTransactions(filter, offset: _items.length, limit: _pageSize);
       if (!mounted || filter != _filter) return; // filter changed while loading
       setState(() {
         _items.addAll(page);
@@ -91,7 +93,19 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
   }
 
   Future<void> _edit(TransactionModel tx) async {
-    final draft = await showTransactionFormSheet(context, initial: tx.toDraft());
+    final store = ref.read(localStoreProvider);
+    if (store != null) {
+      final payment = (await store.rows('debt_payments')).where((p) => p['transaction_id'] == tx.id).firstOrNull;
+      if (payment != null) {
+        final debt = (await ref.read(debtsProvider.future)).where((d) => d.id == payment['debt_id']).firstOrNull;
+        if (debt != null && mounted) {
+          await Navigator.push(context, MaterialPageRoute(builder: (_) => DebtHistoryScreen(debt: debt)));
+          if (mounted) await _reload();
+        }
+        return;
+      }
+    }
+    final draft = await showTransactionFormSheet(context, initial: tx.toDraft(), excludingId: tx.id);
     if (draft == null || !mounted) return;
     try {
       await ref.read(walletRepositoryProvider).updateTransaction(tx.id, draft);
@@ -147,8 +161,9 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             child: Row(
               children: [
-                Expanded(child: Text('Thu: ${CurrencyFormatter.formatVND(income)}',
-                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 12))),
+                Expanded(
+                    child: Text('Thu: ${CurrencyFormatter.formatVND(income)}',
+                        style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 12))),
                 Text('Chi: ${CurrencyFormatter.formatVND(expense)}',
                     style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.bold, fontSize: 12)),
               ],
@@ -197,8 +212,7 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
 
   Widget _buildFilters(List<CategoryModel> categories, List<WalletModel> wallets) {
     final m = _filter.month;
-    final visibleCategories =
-        categories.where((c) => _filter.type == null || c.type == _filter.type).toList();
+    final visibleCategories = categories.where((c) => _filter.type == null || c.type == _filter.type).toList();
     return Container(
       color: AppColors.surface,
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
@@ -342,7 +356,9 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
             decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
             child: Icon(tx.icon, color: color, size: 20),
           ),
-          title: Text(tx.title, maxLines: 1, overflow: TextOverflow.ellipsis,
+          title: Text(tx.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
           subtitle: Text(
             [tx.categoryName ?? 'Chưa phân loại', tx.walletName ?? '', time].where((s) => s.isNotEmpty).join(' • '),

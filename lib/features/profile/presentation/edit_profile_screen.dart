@@ -124,7 +124,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         ? const CircularProgressIndicator(color: AppColors.primary)
                         : profile?.avatarUrl == null
                             ? Text(profile?.initials ?? '',
-                                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primary))
+                                style: const TextStyle(
+                                    fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primary))
                             : null,
                   ),
                   Positioned(

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/services/app_lock_service.dart';
+import '../../../core/offline/local_store.dart';
+import '../../../core/offline/sync_controller.dart';
 import '../../../core/supabase/supabase_providers.dart';
 import '../../home/presentation/home_screen.dart';
 import '../providers/auth_providers.dart';
@@ -51,6 +54,14 @@ class _AuthGateState extends ConsumerState<AuthGate> with WidgetsBindingObserver
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(sessionProvider, (previous, next) {
+      if (next == null) return;
+      Future.microtask(() async {
+        if (!mounted) return;
+        ref.read(offlineAccountIdProvider.notifier).state = next.user.id;
+        await (await SharedPreferences.getInstance()).setString('offline_account_id', next.user.id);
+      });
+    });
     ref.listen<String?>(currentUserIdProvider, (previous, next) {
       if (previous == next) return;
       // A fresh password / Google / OTP sign-in already proved who the user is.
@@ -63,6 +74,25 @@ class _AuthGateState extends ConsumerState<AuthGate> with WidgetsBindingObserver
     final userId = ref.watch(currentUserIdProvider);
     final recovering = ref.watch(passwordRecoveryPendingProvider);
     if (userId == null || recovering) return const LoginScreen();
+
+    if (ref.watch(localStoreProvider) != null) {
+      final sync = ref.watch(syncControllerProvider);
+      if (!sync.initialized) {
+        return Scaffold(
+            body: Center(
+                child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      if (sync.running) const CircularProgressIndicator(),
+                      const SizedBox(height: 16),
+                      Text(sync.error ?? 'Đang tải dữ liệu lần đầu để dùng offline…', textAlign: TextAlign.center),
+                      if (!sync.running)
+                        FilledButton(
+                            onPressed: () => ref.read(syncControllerProvider.notifier).sync(),
+                            child: const Text('Thử lại')),
+                    ]))));
+      }
+    }
 
     final lockEnabled = ref.watch(appLockEnabledProvider);
     final unlocked = ref.watch(appUnlockedProvider);
