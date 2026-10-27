@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tui_khon_mobile/core/offline/local_store.dart';
 import 'package:tui_khon_mobile/core/services/app_lock_service.dart';
 import 'package:tui_khon_mobile/core/services/debt_reminder_service.dart';
 import 'package:tui_khon_mobile/core/services/voice_input_service.dart';
@@ -38,6 +39,8 @@ void main() {
   });
 
   List<Override> overrides({String? userId = 'user-1'}) => [
+        localStoreProvider.overrideWithValue(null),
+        sessionProvider.overrideWithValue(null),
         currentUserIdProvider.overrideWithValue(userId),
         walletRepositoryProvider.overrideWithValue(wallet),
         quickRecordRepositoryProvider.overrideWithValue(FakeQuickRecordRepository()),
@@ -206,8 +209,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Thú cưng'), findsOneWidget);
-    expect((await wallet.fetchCategories()).any((c) => c.name == 'Thú cưng' && c.type == TransactionType.expense),
-        isTrue);
+    expect(
+        (await wallet.fetchCategories()).any((c) => c.name == 'Thú cưng' && c.type == TransactionType.expense), isTrue);
   });
 
   testWidgets('Advisor shows the AI report and spending breakdown', (tester) async {

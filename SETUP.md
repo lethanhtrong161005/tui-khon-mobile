@@ -3,6 +3,8 @@
 Repo này chứa cả **app Flutter** (`lib/`) và **backend Supabase** (`supabase/`).
 Nghiệp vụ xem ở [docs/NGHIEP_VU.md](docs/NGHIEP_VU.md).
 
+**Nâng cấp bản offline từ project có sẵn dữ liệu:** đọc [docs/OFFLINE_UPGRADE.md](docs/OFFLINE_UPGRADE.md). App dùng SQLite/Drift và RPC đồng bộ, cần áp migration bổ sung trước khi chạy bản mới. Không reset DB cần giữ.
+
 ```
 tui-khon-mobile/
 ├── lib/                    # App Flutter (iOS + Android)
@@ -88,11 +90,12 @@ Có 2 cách. **Cách A** để dev hằng ngày trên máy, không tốn gì. **
    ```
    GEMINI_API_KEY=<key lấy ở https://aistudio.google.com/app/apikey>
    ```
-   Sau đó chạy `npx supabase stop` rồi `npx supabase start`. Không có key thì Ghi nhanh vẫn chạy bằng bộ phân tích offline.
-4. Khi sửa migration, áp lại từ đầu (**xoá sạch dữ liệu local**):
+   Chạy `npx supabase functions serve --env-file supabase/functions/.env`. Không có key thì Ghi nhanh vẫn chạy bằng bộ phân tích offline.
+4. Có migration mới thì áp bổ sung, giữ dữ liệu local:
    ```bash
-   npx supabase db reset
+   npx supabase migration up --local
    ```
+   Chỉ dùng `npx supabase db reset` cho môi trường test trống mà bạn chủ động muốn xoá hết dữ liệu.
 5. Tạo file `.env.local` cho app (đã nằm trong `.gitignore`):
    ```
    # Android emulator truy cập máy host qua 10.0.2.2; iOS Simulator dùng 127.0.0.1
@@ -196,10 +199,8 @@ Chạy từ Android Studio / VS Code: thêm `--dart-define-from-file=.env.local`
 2. Mở SQL Editor (Studio local hoặc Dashboard cloud), chạy:
    ```sql
    select private.seed_demo_data('<email vừa đăng ký>');
-   -- làm mới dữ liệu demo:
-   select private.seed_demo_data('<email>', true);
    ```
-   Lệnh này tạo 60 ngày giao dịch, 3 nguồn tiền, ngân sách, mục tiêu và các khoản nợ (có khoản đến hạn hôm nay và đã quá hạn).
+   Chỉ chạy cho tài khoản demo mới, chưa sửa dữ liệu. Bản nâng cấp từ chối reset hoặc nạp lại để giữ dữ liệu đã ghi. Lệnh tạo 60 ngày giao dịch, 3 nguồn tiền, ngân sách, mục tiêu và các khoản nợ (có khoản đến hạn hôm nay và đã quá hạn).
 3. Kéo màn hình Trang chủ xuống để tải lại. Hộp "Khoản nợ đã đến hạn" sẽ hiện.
 4. Chạy tay job nhắc nợ của server (thay cho cron lúc 08:00):
    ```sql

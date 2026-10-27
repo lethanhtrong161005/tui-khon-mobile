@@ -53,11 +53,23 @@
 - **Khoá bằng Face ID / vân tay** (bật trong Cá nhân): mỗi lần mở app, hoặc quay lại sau hơn 60 giây ở nền, phải xác thực sinh trắc học. Nút "Đăng nhập bằng mật khẩu" sẽ đăng xuất và quay về màn đăng nhập.
 - Mỗi user chỉ đọc/ghi được dữ liệu của chính mình (Row Level Security trên Supabase). Ảnh hóa đơn nằm trong kho riêng tư, chỉ xem qua link có hạn 15 phút.
 
-## 3. Ngoài phạm vi
+## 3. Ghi chép offline và tính năng mở rộng
+
+- Toàn bộ thu/chi, nguồn tiền, danh mục, ngân sách, nợ và mục tiêu được đọc/ghi SQLite sau lần tải dữ liệu đầu. Hàng đợi tự đồng bộ khi có mạng; xung đột hai thiết bị được giữ để người dùng chọn bản đúng.
+- Sổ nợ lưu từng lần trả: ngày, số tiền và ghi chú. Sửa/hoàn tác cập nhật cả khoản thu/chi liên kết nếu có. Lịch sử cũ được giữ thành bản tổng trước nâng cấp, không tự tạo thêm giao dịch.
+- AI hiểu tối đa 10 khoản mỗi câu, có thẻ hỏi bổ sung riêng và lưu các mục được chọn. Quy tắc phân loại học từ bản sửa đã lưu, có thể tắt/xoá. Mọi đề xuất vẫn cần xác nhận.
+- Khoản phải trả (một lần, tuần, tháng) chỉ nhắc người dùng. Khi xác nhận, có thể chỉ đánh dấu hoặc mở form chi điền sẵn. Ngày cuối tháng được điều chỉnh theo lịch, không tự trừ tiền.
+- Nhắc ghi chép hằng ngày mặc định tắt; mặc định 21:00 khi bật, có thể đổi giờ. Báo cáo nhắc đầu tháng; thu/chi, danh mục, ngân sách và so sánh tháng trước tính offline. Nhận xét AI cần mạng và dữ liệu đã đồng bộ; bản lưu có nhãn cần cập nhật khi dữ liệu đổi.
+- CSV chỉ trao đổi giao dịch, có xem trước, kiểm tra lỗi/trùng và ánh xạ danh mục/nguồn tiền. Không ghi đè ID đã có. Dữ liệu nhập được lưu offline trước khi đồng bộ.
+- Từ chối quyền thông báo không chặn dùng app. Sinh trắc học là khoá truy cập app, không thay thế Supabase Auth cho đồng bộ.
+
+Chi tiết kỹ thuật, cài key Gemini và quy trình nâng cấp giữ dữ liệu: [OFFLINE_UPGRADE.md](OFFLINE_UPGRADE.md).
+
+## 4. Ngoài phạm vi
 
 Những thứ sau **không làm** vì app chỉ là sổ ghi chép:
 - Liên kết tài khoản ngân hàng hoặc ví điện tử, đọc số dư thật.
 - Chuyển khoản, thanh toán, mã VietQR. Luồng "chọn ngân hàng → mở app ngân hàng → đọc thông báo biến động số dư" bị loại vì rủi ro bảo mật, cần quyền đọc thông báo của app khác và phụ thuộc API từng ngân hàng.
 - Chia tiền nhóm.
 - Giao dịch định kỳ tự động.
-- Gói trả phí (PRO), sao lưu cục bộ, trang quản trị (admin).
+- Gói trả phí (PRO), xuất bản backup toàn bộ tài khoản, trang quản trị (admin).

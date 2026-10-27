@@ -40,7 +40,7 @@ class LocalWalletRepository implements WalletRepository {
       ('Highlands Coffee', 'cat-food', 'wallet-momo', 55000, TransactionType.expense, TransactionSource.receipt, const Duration(hours: 3)),
       ('Đổ xăng Petrolimex', 'cat-move', 'wallet-vcb', 80000, TransactionType.expense, TransactionSource.voice, const Duration(days: 1)),
       ('Tạm ứng lương', 'cat-salary', 'wallet-vcb', 15000000, TransactionType.income, TransactionSource.manual, const Duration(days: 2)),
-      ('Tiền thuê căn hộ', 'cat-home', 'wallet-vcb', 4500000, TransactionType.expense, TransactionSource.recurring, const Duration(days: 4)),
+      ('Tiền thuê căn hộ', 'cat-home', 'wallet-vcb', 4500000, TransactionType.expense, TransactionSource.manual, const Duration(days: 4)),
     ];
     for (final (note, categoryId, walletId, amount, type, source, ago) in seed) {
       _transactions.add(_build(
