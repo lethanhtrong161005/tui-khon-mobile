@@ -77,11 +77,17 @@ void main() {
           child: const MaterialApp(home: MonthlyReportScreen())));
       await tester.pumpAndSettle();
       expect(find.text('${month.month}/${month.year}'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('Góc nhìn từ AI'), 250,
+          scrollable: find.byType(Scrollable).first);
+      await tester.pumpAndSettle();
       expect(find.text('Nhận xét đúng tháng'), findsOneWidget);
       final button = find.widgetWithText(FilledButton, 'Tạo lại nhận xét AI');
       expect(tester.widget<FilledButton>(button).onPressed, isNotNull);
       await store.put('transactions',
           tx('unsynced', '${reportMonthKey(month)}T00:00:00Z', 'expense', 10));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.text('Góc nhìn từ AI'), 250,
+          scrollable: find.byType(Scrollable).first);
       await tester.pumpAndSettle();
       expect(find.text('Nhận xét đúng tháng'), findsOneWidget);
       expect(find.textContaining('Nhận xét đã cũ'), findsOneWidget);
@@ -102,7 +108,12 @@ void main() {
       ));
       await tester.pumpAndSettle();
       expect(find.text('12/2025'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('Góc nhìn từ AI'), 250,
+          scrollable: find.byType(Scrollable).first);
+      await tester.pumpAndSettle();
       expect(find.text('Nhận xét đúng tháng'), findsOneWidget);
+      await tester.drag(find.byType(ListView).first, const Offset(0, 2000));
+      await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.chevron_right));
       await tester.pumpAndSettle();
       expect(find.text('1/2026'), findsOneWidget);

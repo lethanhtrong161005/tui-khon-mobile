@@ -118,15 +118,33 @@ class LocalStore {
       data['client_id'] ??= id;
     }
     if (m.entity == 'debt_payments' && !m.deleted) {
-      if ((data['amount'] as num? ?? 0) <= 0) throw StateError('Số tiền trả phải lớn hơn 0');
+      if ((data['amount'] as num? ?? 0) <= 0)
+        throw StateError('Số tiền trả phải lớn hơn 0');
+      data['is_legacy'] ??= false;
+      if (data['record_transaction'] == true)
+        data['transaction_id'] ??= debtPaymentTransactionId(id);
+      final firstLink = previous['transaction_id'] == null &&
+          data['transaction_id'] == debtPaymentTransactionId(id) &&
+          data['record_transaction'] == true;
       if (previous.isNotEmpty &&
           (data['debt_id'] != previous['debt_id'] ||
-              data['transaction_id'] != previous['transaction_id'] ||
-              data['is_legacy'] != previous['is_legacy'])) throw StateError('Không thể đổi liên kết của lần trả nợ');
+              (data['transaction_id'] != previous['transaction_id'] &&
+                  !firstLink) ||
+              data['is_legacy'] != previous['is_legacy']))
+        throw StateError('Không thể đổi liên kết của lần trả nợ');
+      if (data['is_legacy'] == true &&
+          (data['record_transaction'] == true ||
+              data['transaction_id'] != null)) {
+        throw StateError('Số tiền trước nâng cấp không được tạo thu/chi');
+      }
+      if (firstLink &&
+          await record('transactions', data['transaction_id'] as String) !=
+              null) {
+        throw StateError('Giao dịch liên kết đã tồn tại');
+      }
       data['paid_at'] ??= now;
       data['record_transaction'] ??= false;
       data['is_legacy'] ??= false;
-      if (data['record_transaction'] == true) data['transaction_id'] ??= newUuidV4();
     }
     if (m.entity == 'debts' && !m.deleted) {
       if ((data['amount'] as num? ?? 0) <= 0) throw StateError('Số tiền nợ phải lớn hơn 0');
@@ -218,7 +236,14 @@ class LocalStore {
         continue;
       }
       final borrow = debt['type'] == 'borrow';
-      final category = categories.where((c) => c['name'] == (borrow ? 'Cho vay & Trả nợ' : 'Thu nợ')).firstOrNull;
+      final matchingCategories = categories.where((c) =>
+          c['type'] == (borrow ? 'expense' : 'income') &&
+          c['name'] == (borrow ? 'Cho vay & Trả nợ' : 'Thu nợ')).toList()
+        ..sort((a, b) {
+          final order = '${a['created_at'] ?? ''}'.compareTo('${b['created_at'] ?? ''}');
+          return order == 0 ? '${a['id']}'.compareTo('${b['id']}') : order;
+        });
+      final category = matchingCategories.firstOrNull;
       await _derived('transactions', {
         ...?oldTx,
         'id': txId,
@@ -228,7 +253,9 @@ class LocalStore {
         'type': borrow ? 'expense' : 'income',
         'amount': p['amount'],
         'occurred_at': p['paid_at'],
-        'note': '${borrow ? 'Trả nợ' : 'Thu nợ từ'} ${debt['person_name']}',
+        'note': (p['note'] as String?)?.trim().isNotEmpty == true
+            ? (p['note'] as String).trim()
+            : '${borrow ? 'Trả nợ' : 'Thu nợ từ'} ${debt['person_name']}',
         'source': 'debt',
         'client_id': txId,
         'debt_payment_id': p['id'],

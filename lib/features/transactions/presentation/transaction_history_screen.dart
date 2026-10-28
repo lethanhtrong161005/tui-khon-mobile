@@ -11,6 +11,7 @@ import '../../../core/utils/category_icons.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/error_messages.dart';
 import '../../../core/widgets/form_sheet.dart';
+import '../../../core/widgets/glass.dart';
 import '../../home/models/category_model.dart';
 import '../../home/models/transaction_model.dart';
 import '../../home/models/wallet_model.dart';
@@ -25,13 +26,16 @@ class TransactionHistoryScreen extends ConsumerStatefulWidget {
   const TransactionHistoryScreen({super.key});
 
   @override
-  ConsumerState<TransactionHistoryScreen> createState() => _TransactionHistoryScreenState();
+  ConsumerState<TransactionHistoryScreen> createState() =>
+      _TransactionHistoryScreenState();
 }
 
-class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScreen> {
+class _TransactionHistoryScreenState
+    extends ConsumerState<TransactionHistoryScreen> {
   static const _pageSize = 50;
 
-  late TransactionFilter _filter = TransactionFilter(month: DateTime(DateTime.now().year, DateTime.now().month));
+  late TransactionFilter _filter = TransactionFilter(
+      month: DateTime(DateTime.now().year, DateTime.now().month));
   final List<TransactionModel> _items = [];
   final _scroll = ScrollController();
   final _searchController = TextEditingController();
@@ -44,7 +48,8 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
   void initState() {
     super.initState();
     _scroll.addListener(() {
-      if (_scroll.position.pixels > _scroll.position.maxScrollExtent - 300) _loadMore();
+      if (_scroll.position.pixels > _scroll.position.maxScrollExtent - 300)
+        _loadMore();
     });
     _reload();
   }
@@ -71,8 +76,9 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
     setState(() => _loading = true);
     final filter = _filter;
     try {
-      final page =
-          await ref.read(walletRepositoryProvider).fetchTransactions(filter, offset: _items.length, limit: _pageSize);
+      final page = await ref
+          .read(walletRepositoryProvider)
+          .fetchTransactions(filter, offset: _items.length, limit: _pageSize);
       if (!mounted || filter != _filter) return; // filter changed while loading
       setState(() {
         _items.addAll(page);
@@ -95,17 +101,23 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
   Future<void> _edit(TransactionModel tx) async {
     final store = ref.read(localStoreProvider);
     if (store != null) {
-      final payment = (await store.rows('debt_payments')).where((p) => p['transaction_id'] == tx.id).firstOrNull;
+      final payment = (await store.rows('debt_payments'))
+          .where((p) => p['transaction_id'] == tx.id)
+          .firstOrNull;
       if (payment != null) {
-        final debt = (await ref.read(debtsProvider.future)).where((d) => d.id == payment['debt_id']).firstOrNull;
+        final debt = (await ref.read(debtsProvider.future))
+            .where((d) => d.id == payment['debt_id'])
+            .firstOrNull;
         if (debt != null && mounted) {
-          await Navigator.push(context, MaterialPageRoute(builder: (_) => DebtHistoryScreen(debt: debt)));
+          await Navigator.push(context,
+              MaterialPageRoute(builder: (_) => DebtHistoryScreen(debt: debt)));
           if (mounted) await _reload();
         }
         return;
       }
     }
-    final draft = await showTransactionFormSheet(context, initial: tx.toDraft(), excludingId: tx.id);
+    final draft = await showTransactionFormSheet(context,
+        initial: tx.toDraft(), excludingId: tx.id);
     if (draft == null || !mounted) return;
     try {
       await ref.read(walletRepositoryProvider).updateTransaction(tx.id, draft);
@@ -136,15 +148,23 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
 
   @override
   Widget build(BuildContext context) {
-    final categories = ref.watch(categoriesProvider).valueOrNull ?? const <CategoryModel>[];
-    final wallets = ref.watch(walletsProvider).valueOrNull ?? const <WalletModel>[];
-    final income = _items.where((t) => t.isIncome).fold(0, (s, t) => s + t.amount);
-    final expense = _items.where((t) => !t.isIncome).fold(0, (s, t) => s + t.amount);
+    final categories =
+        ref.watch(categoriesProvider).valueOrNull ?? const <CategoryModel>[];
+    final wallets =
+        ref.watch(walletsProvider).valueOrNull ?? const <WalletModel>[];
+    final income =
+        _items.where((t) => t.isIncome).fold(0, (s, t) => s + t.amount);
+    final expense =
+        _items.where((t) => !t.isIncome).fold(0, (s, t) => s + t.amount);
 
     // Group by calendar day, newest first (items are already sorted).
     final groups = <DateTime, List<TransactionModel>>{};
     for (final t in _items) {
-      groups.putIfAbsent(DateTime(t.occurredAt.year, t.occurredAt.month, t.occurredAt.day), () => []).add(t);
+      groups
+          .putIfAbsent(
+              DateTime(t.occurredAt.year, t.occurredAt.month, t.occurredAt.day),
+              () => [])
+          .add(t);
     }
 
     return Scaffold(
@@ -152,7 +172,8 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         elevation: 0,
-        title: const Text('Lịch sử giao dịch', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+        title: const Text('Giao dịch',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
       ),
       body: Column(
         children: [
@@ -163,9 +184,15 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
               children: [
                 Expanded(
                     child: Text('Thu: ${CurrencyFormatter.formatVND(income)}',
-                        style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 12))),
+                        style: const TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12))),
                 Text('Chi: ${CurrencyFormatter.formatVND(expense)}',
-                    style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.bold, fontSize: 12)),
+                    style: const TextStyle(
+                        color: AppColors.error,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12)),
               ],
             ),
           ),
@@ -185,21 +212,26 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
                   if (_loading)
                     const Padding(
                       padding: EdgeInsets.all(20),
-                      child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                      child: Center(
+                          child: CircularProgressIndicator(
+                              color: AppColors.primary)),
                     )
                   else if (_error != null)
                     Padding(
                       padding: const EdgeInsets.all(20),
                       child: Column(children: [
-                        Text(friendlyError(_error!), textAlign: TextAlign.center),
-                        TextButton(onPressed: _reload, child: const Text('Thử lại')),
+                        Text(friendlyError(_error!),
+                            textAlign: TextAlign.center),
+                        TextButton(
+                            onPressed: _reload, child: const Text('Thử lại')),
                       ]),
                     )
                   else if (_items.isEmpty)
                     const Padding(
                       padding: EdgeInsets.all(32),
                       child: Text('Không có giao dịch nào khớp bộ lọc.',
-                          textAlign: TextAlign.center, style: TextStyle(color: AppColors.onSurfaceVariant)),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: AppColors.onSurfaceVariant)),
                     ),
                 ],
               ),
@@ -210,9 +242,12 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
     );
   }
 
-  Widget _buildFilters(List<CategoryModel> categories, List<WalletModel> wallets) {
+  Widget _buildFilters(
+      List<CategoryModel> categories, List<WalletModel> wallets) {
     final m = _filter.month;
-    final visibleCategories = categories.where((c) => _filter.type == null || c.type == _filter.type).toList();
+    final visibleCategories = categories
+        .where((c) => _filter.type == null || c.type == _filter.type)
+        .toList();
     return Container(
       color: AppColors.surface,
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
@@ -223,13 +258,16 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
             children: [
               IconButton(
                 icon: const Icon(Icons.chevron_left),
-                onPressed: () => _setFilter(_filter.copyWith(month: DateTime(m.year, m.month - 1))),
+                onPressed: () => _setFilter(
+                    _filter.copyWith(month: DateTime(m.year, m.month - 1))),
               ),
               Text('Tháng ${m.month.toString().padLeft(2, '0')}/${m.year}',
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                  style: const TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.bold)),
               IconButton(
                 icon: const Icon(Icons.chevron_right),
-                onPressed: () => _setFilter(_filter.copyWith(month: DateTime(m.year, m.month + 1))),
+                onPressed: () => _setFilter(
+                    _filter.copyWith(month: DateTime(m.year, m.month + 1))),
               ),
             ],
           ),
@@ -239,7 +277,8 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
               isDense: true,
               hintText: 'Tìm theo ghi chú...',
               prefixIcon: const Icon(Icons.search, size: 20),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
             ),
             onChanged: (text) {
               _searchDebounce?.cancel();
@@ -255,15 +294,24 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
               children: [
                 for (final (label, type) in [
                   ('Tất cả', null),
-                  ('Chi', TransactionType.expense),
-                  ('Thu', TransactionType.income),
+                  ('Chi tiêu', TransactionType.expense),
+                  ('Thu nhập', TransactionType.income),
                 ])
                   Padding(
                     padding: const EdgeInsets.only(right: 6),
                     child: ChoiceChip(
+                      showCheckmark: false,
+                      selectedColor: AppColors.primary,
+                      backgroundColor: Colors.white.withValues(alpha: .6),
+                      side: BorderSide.none,
+                      labelStyle: TextStyle(
+                          color: _filter.type == type
+                              ? Colors.white
+                              : AppColors.onSurfaceVariant),
                       label: Text(label),
                       selected: _filter.type == type,
-                      onSelected: (_) => _setFilter(_filter.copyWith(type: () => type, categoryId: () => null)),
+                      onSelected: (_) => _setFilter(_filter.copyWith(
+                          type: () => type, categoryId: () => null)),
                     ),
                   ),
                 const SizedBox(width: 4),
@@ -271,14 +319,16 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
                   label: 'Danh mục',
                   value: _filter.categoryId,
                   items: {for (final c in visibleCategories) c.id: c.name},
-                  onChanged: (v) => _setFilter(_filter.copyWith(categoryId: () => v)),
+                  onChanged: (v) =>
+                      _setFilter(_filter.copyWith(categoryId: () => v)),
                 ),
                 const SizedBox(width: 6),
                 _dropdownChip<String>(
                   label: 'Nguồn tiền',
                   value: _filter.walletId,
                   items: {for (final w in wallets) w.id: w.name},
-                  onChanged: (v) => _setFilter(_filter.copyWith(walletId: () => v)),
+                  onChanged: (v) =>
+                      _setFilter(_filter.copyWith(walletId: () => v)),
                 ),
               ],
             ),
@@ -297,13 +347,16 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
     return PopupMenuButton<T?>(
       onSelected: onChanged,
       itemBuilder: (_) => [
-        PopupMenuItem<T?>(value: null, child: Text('Tất cả ${label.toLowerCase()}')),
-        for (final e in items.entries) PopupMenuItem<T?>(value: e.key, child: Text(e.value)),
+        PopupMenuItem<T?>(
+            value: null, child: Text('Tất cả ${label.toLowerCase()}')),
+        for (final e in items.entries)
+          PopupMenuItem<T?>(value: e.key, child: Text(e.value)),
       ],
       child: Chip(
         avatar: const Icon(Icons.filter_list, size: 16),
         label: Text(value == null ? label : (items[value] ?? label)),
-        backgroundColor: value == null ? null : AppColors.primaryFixed.withOpacity(0.5),
+        backgroundColor:
+            value == null ? null : AppColors.primaryFixed.withOpacity(0.5),
       ),
     );
   }
@@ -321,17 +374,25 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
       padding: const EdgeInsets.only(top: 14, bottom: 6),
       child: Row(
         children: [
-          Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold))),
+          Expanded(
+              child: Text(label,
+                  style: const TextStyle(fontWeight: FontWeight.bold))),
           Text(CurrencyFormatter.formatVND(net, showSign: true),
-              style: TextStyle(fontSize: 12, color: net >= 0 ? AppColors.primary : AppColors.onSurfaceVariant)),
+              style: TextStyle(
+                  fontSize: 12,
+                  color: net >= 0
+                      ? AppColors.primary
+                      : AppColors.onSurfaceVariant)),
         ],
       ),
     );
   }
 
   Widget _tile(TransactionModel tx) {
-    final color = colorFromHex(tx.categoryColor) ?? (tx.isIncome ? AppColors.primary : AppColors.tertiary);
-    final time = '${tx.occurredAt.hour.toString().padLeft(2, '0')}:${tx.occurredAt.minute.toString().padLeft(2, '0')}';
+    final color = colorFromHex(tx.categoryColor) ??
+        (tx.isIncome ? AppColors.primary : AppColors.tertiary);
+    final time =
+        '${tx.occurredAt.hour.toString().padLeft(2, '0')}:${tx.occurredAt.minute.toString().padLeft(2, '0')}';
     return Dismissible(
       key: ValueKey(tx.id),
       direction: DismissDirection.endToStart,
@@ -340,51 +401,61 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         margin: const EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(color: AppColors.error, borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(
+            color: AppColors.error, borderRadius: BorderRadius.circular(16)),
         child: const Icon(Icons.delete, color: Colors.white),
       ),
-      child: Card(
-        elevation: 0,
-        color: AppColors.surfaceContainerLowest,
-        margin: const EdgeInsets.only(bottom: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: ListTile(
-          onTap: () => _edit(tx),
-          leading: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
-            child: Icon(tx.icon, color: color, size: 20),
-          ),
-          title: Text(tx.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-          subtitle: Text(
-            [tx.categoryName ?? 'Chưa phân loại', tx.walletName ?? '', time].where((s) => s.isNotEmpty).join(' • '),
-            style: const TextStyle(fontSize: 11),
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (tx.receiptPath != null)
-                IconButton(
-                  tooltip: 'Xem hóa đơn',
-                  icon: const Icon(Icons.receipt_long, size: 18, color: AppColors.secondary),
-                  onPressed: () =>
-                      showReceiptImage(context, ref.read(receiptRepositoryProvider).signedUrl(tx.receiptPath!)),
-                ),
-              Text(
-                CurrencyFormatter.formatVND(tx.signedAmount, showSign: true),
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: tx.isIncome ? AppColors.primary : AppColors.onSurface,
-                ),
+      child: Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: GlassCard(
+            radius: 18,
+            child: ListTile(
+              onTap: () => _edit(tx),
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                    color: color.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(12)),
+                child: Icon(tx.icon, color: color, size: 20),
               ),
-            ],
-          ),
-        ),
-      ),
+              title: Text(tx.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 14)),
+              subtitle: Text(
+                [tx.categoryName ?? 'Chưa phân loại', tx.walletName ?? '', time]
+                    .where((s) => s.isNotEmpty)
+                    .join(' • '),
+                style: const TextStyle(fontSize: 11),
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (tx.receiptPath != null)
+                    IconButton(
+                      tooltip: 'Xem hóa đơn',
+                      icon: const Icon(Icons.receipt_long,
+                          size: 18, color: AppColors.secondary),
+                      onPressed: () => showReceiptImage(
+                          context,
+                          ref
+                              .read(receiptRepositoryProvider)
+                              .signedUrl(tx.receiptPath!)),
+                    ),
+                  Text(
+                    CurrencyFormatter.formatVND(tx.signedAmount,
+                        showSign: true),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: tx.isIncome ? AppColors.primary : AppColors.error,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )),
     );
   }
 }

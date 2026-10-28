@@ -11,7 +11,9 @@ String friendlyError(Object error) {
   if (error is FunctionException) {
     // Edge Functions reply with { success: false, error: { code, message } }
     final details = error.details;
-    if (details is Map && details['error'] is Map && details['error']['message'] is String) {
+    if (details is Map &&
+        details['error'] is Map &&
+        details['error']['message'] is String) {
       return details['error']['message'] as String;
     }
     if (error.status == 404) return 'Tính năng AI chưa được bật trên server';
@@ -20,12 +22,14 @@ String friendlyError(Object error) {
 
   if (error is PostgrestException) {
     if (error.code == '23505') return 'Dữ liệu này đã tồn tại';
-    if (error.code == '42501') return 'Bạn không có quyền thực hiện thao tác này';
+    if (error.code == '42501')
+      return 'Bạn không có quyền thực hiện thao tác này';
     return 'Không thể lưu dữ liệu, vui lòng thử lại';
   }
 
   if (error is GoogleSignInException) {
-    if (error.code == GoogleSignInExceptionCode.canceled) return 'Bạn đã huỷ đăng nhập Google';
+    if (error.code == GoogleSignInExceptionCode.canceled)
+      return 'Bạn đã huỷ đăng nhập Google';
     if (error.code == GoogleSignInExceptionCode.clientConfigurationError) {
       return 'Đăng nhập Google chưa được cấu hình cho ứng dụng';
     }
@@ -33,7 +37,7 @@ String friendlyError(Object error) {
   }
 
   if (error is SocketException || error is TimeoutException) {
-    return 'Không có kết nối mạng, vui lòng kiểm tra lại';
+    return 'Không kết nối được máy chủ. Hãy kiểm tra kết nối và thử lại.';
   }
 
   if (error is StateError) return error.message;
@@ -42,7 +46,8 @@ String friendlyError(Object error) {
 }
 
 String _authMessage(AuthException e) {
-  if (e is AuthRetryableFetchException) return 'Không có kết nối mạng, vui lòng kiểm tra lại';
+  if (e is AuthRetryableFetchException)
+    return 'Không kết nối được máy chủ. Hãy kiểm tra kết nối và thử lại.';
 
   switch (e.code) {
     case 'invalid_credentials':
@@ -67,6 +72,7 @@ String _authMessage(AuthException e) {
     case 'validation_failed':
       return 'Email không hợp lệ';
   }
-  if (e.statusCode == '429') return 'Bạn thao tác quá nhanh, vui lòng đợi một lát rồi thử lại';
+  if (e.statusCode == '429')
+    return 'Bạn thao tác quá nhanh, vui lòng đợi một lát rồi thử lại';
   return 'Không thể xác thực, vui lòng thử lại';
 }

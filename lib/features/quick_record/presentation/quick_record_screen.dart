@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/widgets/glass.dart';
 import '../../../core/offline/offline_wallet_repository.dart';
 import '../../../core/offline/duplicate_service.dart';
 import '../data/quick_record_learning.dart';
@@ -588,7 +589,7 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.surface.withOpacity(0.9),
+        backgroundColor: const Color(0xFFF7F7FC),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.onSurface),
@@ -643,124 +644,88 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Sub-header Banner & Quick chips
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: const BoxDecoration(
-                            color: AppColors.secondaryContainer,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.auto_awesome,
-                              color: Colors.white, size: 16),
-                        ),
-                        const SizedBox(width: 8),
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Trợ lý Túi Khôn',
-                                style: TextStyle(
-                                    fontSize: 14, fontWeight: FontWeight.bold)),
-                            Text('Gemini Flash AI Engine',
-                                style: TextStyle(
-                                    fontSize: 11,
-                                    color: AppColors.onSurfaceVariant)),
-                          ],
-                        ),
-                      ],
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryFixed,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.bolt, size: 14, color: AppColors.primary),
-                          SizedBox(width: 2),
-                          Text('Tiếng Việt tự nhiên',
-                              style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                const Text('Gợi ý nói hoặc gõ mẫu:',
-                    style: TextStyle(
-                        fontSize: 11, color: AppColors.onSurfaceVariant)),
-                const SizedBox(height: 6),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _quickChip('Ăn phở 65k'),
-                      _quickChip('Cho Lan mượn 2 tr'),
-                      _quickChip('Tôi trúng số 50 củ'),
-                      _quickChip('Đổ xăng 80 nghìn'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+      body: NotebookBackground(
+          ai: true,
+          child: Column(
+            children: [
+              _introCard(),
 
-          // Message stream
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: _messages.length + (_isThinking ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == _messages.length) return _buildThinkingBubble();
-                final msg = _messages[index];
-                return msg.isUser
-                    ? _buildUserBubble(msg)
-                    : _buildAiBubble(msg, categories);
-              },
-            ),
-          ),
+              // Message stream
+              Expanded(
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  itemCount: _messages.length + (_isThinking ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == _messages.length)
+                      return _buildThinkingBubble();
+                    final msg = _messages[index];
+                    return msg.isUser
+                        ? _buildUserBubble(msg)
+                        : _buildAiBubble(msg, categories);
+                  },
+                ),
+              ),
 
-          // Sticky bottom input bar
-          if (_activeFollowUp != null)
-            ListTile(
-              title: Text(
-                  'Bổ sung: ${_activeFollowUp!.item?.sourceText ?? _activeFollowUp!.draft?.note ?? ''}'),
-              subtitle: Text(_activeFollowUp!.item?.question ??
-                  'Khoản này bao nhiêu tiền?'),
-              trailing: IconButton(
-                  tooltip: 'Hủy bổ sung',
-                  onPressed: _isThinking
-                      ? null
-                      : () => setState(() => _activeFollowUp = null),
-                  icon: const Icon(Icons.close)),
-            ),
-          _buildInputBar(context),
-        ],
-      ),
+              // Sticky bottom input bar
+              if (_activeFollowUp != null)
+                ListTile(
+                  title: Text(
+                      'Bổ sung: ${_activeFollowUp!.item?.sourceText ?? _activeFollowUp!.draft?.note ?? ''}'),
+                  subtitle: Text(_activeFollowUp!.item?.question ??
+                      'Khoản này bao nhiêu tiền?'),
+                  trailing: IconButton(
+                      tooltip: 'Hủy bổ sung',
+                      onPressed: _isThinking
+                          ? null
+                          : () => setState(() => _activeFollowUp = null),
+                      icon: const Icon(Icons.close)),
+                ),
+              _buildInputBar(context),
+            ],
+          )),
     );
   }
+
+  Widget _introCard() => Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      child: GlassCard(
+          radius: 22,
+          tint: const Color(0xFFF0EEFF),
+          padding: const EdgeInsets.all(14),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              const TintedIcon(Icons.auto_awesome_rounded,
+                  color: AppColors.secondary, size: 36),
+              const SizedBox(width: 10),
+              const Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    Text('Trợ lý Túi Khôn',
+                        style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.w800)),
+                    SizedBox(height: 3),
+                    Text('Ghi nhiều khoản, duyệt trước khi lưu',
+                        style: TextStyle(
+                            fontSize: 10, color: AppColors.onSurfaceVariant)),
+                  ]))
+            ]),
+            const SizedBox(height: 12),
+            const Text('Gõ hoặc nói tự nhiên bằng tiếng Việt',
+                style:
+                    TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant)),
+            const SizedBox(height: 6),
+            SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(children: [
+                  _quickChip('Ăn phở 65k'),
+                  _quickChip('Cà phê 35k, đổ xăng 80k'),
+                  _quickChip('Nhận lương 12 triệu'),
+                ])),
+          ])));
 
   Widget _quickChip(String text) {
     return Container(
@@ -1146,104 +1111,93 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
     );
   }
 
-  Widget _buildInputBar(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.surface.withOpacity(0.95),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -4)),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                            color: AppColors.primary, shape: BoxShape.circle)),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Hôm nay: ${_aiDailyCount ?? '–'}/$_aiDailyLimit lượt AI',
-                      style: const TextStyle(
-                          fontSize: 11, color: AppColors.onSurfaceVariant),
-                    ),
-                  ],
-                ),
-                const Text('Gemini Flash',
-                    style: TextStyle(fontSize: 10, color: AppColors.outline)),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                IconButton(
-                  tooltip: 'Quét hóa đơn',
-                  icon: const Icon(Icons.document_scanner,
-                      color: AppColors.onSurface),
-                  onPressed: _isThinking || _isRecording ? null : _scanReceipt,
-                ),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: TextField(
-                      controller: _controller,
-                      enabled: !_isThinking,
-                      textInputAction: TextInputAction.send,
-                      decoration: InputDecoration(
-                        hintText: _isRecording
-                            ? 'Đang nghe... hãy nói tự nhiên'
-                            : 'Nhập chi tiêu tự nhiên (vd: cafe 35k)...',
-                        border: InputBorder.none,
-                        hintStyle: const TextStyle(
-                            fontSize: 13, color: AppColors.outline),
-                      ),
-                      onSubmitted: (text) => _sendMessage(text),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: _toggleVoice,
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [AppColors.primary, AppColors.secondary],
-                      ),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                            color: AppColors.primary.withOpacity(0.3),
-                            blurRadius: 8),
-                      ],
-                    ),
-                    child: Icon(_isRecording ? Icons.stop_rounded : Icons.mic,
-                        color: Colors.white, size: 22),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget _buildInputBar(BuildContext context) => Padding(
+      padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
+      child: GlassCard(
+          blur: true,
+          radius: 26,
+          padding: const EdgeInsets.fromLTRB(10, 10, 10, 6),
+          child: SafeArea(
+              top: false,
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Row(children: [
+                  Container(
+                      width: 5,
+                      height: 5,
+                      decoration: const BoxDecoration(
+                          color: AppColors.primary, shape: BoxShape.circle)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                      child: Text(
+                          'Hôm nay: ${_aiDailyCount ?? '–'}/$_aiDailyLimit lượt AI',
+                          style: const TextStyle(
+                              fontSize: 10,
+                              color: AppColors.onSurfaceVariant))),
+                  const Text('Gemini',
+                      style: TextStyle(fontSize: 10, color: AppColors.outline)),
+                ]),
+                const SizedBox(height: 7),
+                Row(children: [
+                  IconButton(
+                      tooltip: 'Quét hóa đơn',
+                      icon:
+                          const Icon(Icons.document_scanner_outlined, size: 22),
+                      onPressed:
+                          _isThinking || _isRecording ? null : _scanReceipt),
+                  Expanded(
+                      child: TextField(
+                          controller: _controller,
+                          enabled: !_isThinking,
+                          textInputAction: TextInputAction.send,
+                          decoration: InputDecoration(
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 14),
+                              hintText: _isRecording
+                                  ? 'Đang nghe…'
+                                  : 'Ví dụ: cà phê 35k…',
+                              hintStyle: const TextStyle(fontSize: 12),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                  borderSide: BorderSide.none),
+                              enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                  borderSide: BorderSide.none)),
+                          onSubmitted: (text) => _sendMessage(text))),
+                  const SizedBox(width: 8),
+                  ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: _controller,
+                      builder: (context, value, _) {
+                        final send =
+                            value.text.trim().isNotEmpty && !_isRecording;
+                        return DecoratedBox(
+                            decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(colors: [
+                                  AppColors.primary,
+                                  AppColors.secondary
+                                ])),
+                            child: IconButton(
+                                tooltip: _isRecording
+                                    ? 'Dừng ghi âm'
+                                    : send
+                                        ? 'Gửi ghi chép'
+                                        : 'Ghi bằng giọng nói',
+                                onPressed: _isThinking
+                                    ? null
+                                    : send
+                                        ? () => _sendMessage(value.text)
+                                        : _toggleVoice,
+                                icon: Icon(
+                                    _isRecording
+                                        ? Icons.stop_rounded
+                                        : send
+                                            ? Icons.arrow_upward_rounded
+                                            : Icons.mic_none_rounded,
+                                    color: Colors.white)));
+                      }),
+                ]),
+              ]))));
 }
 
 class _OfflineBatchWriter implements QuickRecordBatchWriter {

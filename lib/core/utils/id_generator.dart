@@ -1,4 +1,16 @@
 import 'dart:math';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
+
+/// Matches private.debt_payment_transaction_id in PostgreSQL. Existing linked
+/// transaction IDs are always retained, including while recording is disabled.
+String debtPaymentTransactionId(String paymentId) {
+  final h = md5
+      .convert(utf8.encode('tuikhon:debt-payment:${paymentId.toLowerCase()}'))
+      .toString();
+  return '${h.substring(0, 8)}-${h.substring(8, 12)}-${h.substring(12, 16)}-'
+      '${h.substring(16, 20)}-${h.substring(20)}';
+}
 
 final Random _random = Random.secure();
 

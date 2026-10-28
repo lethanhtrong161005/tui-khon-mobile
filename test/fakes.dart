@@ -145,7 +145,7 @@ class FakePlanningRepository implements PlanningRepository {
   Future<void> deleteDebt(String id) async => debts.removeWhere((d) => d.id == id);
 
   @override
-  Future<void> settleDebt(String id, {int? amount, bool recordTransaction = false}) async {
+  Future<void> settleDebt(String id, {int? amount, bool recordTransaction = false, DateTime? paidAt, String? note, String? walletId}) async {
     settleCalls.add((id, amount, recordTransaction));
     final i = debts.indexWhere((d) => d.id == id);
     final d = debts[i];
@@ -160,6 +160,12 @@ class FakePlanningRepository implements PlanningRepository {
       isSettled: paid >= d.amount,
     );
   }
+
+  @override
+  Future<void> updateDebtPayment(String id, {required int amount, required DateTime paidAt,
+    String? note, required bool recordTransaction, String? walletId}) async => throw UnimplementedError();
+  @override
+  Future<void> undoDebtPayment(String id) async => throw UnimplementedError();
 
   @override
   Future<List<GoalModel>> fetchGoals() async => List.of(goals);

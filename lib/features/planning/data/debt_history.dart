@@ -9,6 +9,10 @@ final debtHistoryProvider = FutureProvider.autoDispose
   final rows = (await store.rows('debt_payments'))
       .where((r) => r['debt_id'] == id)
       .toList();
-  rows.sort((a, b) => '${b['paid_at']}'.compareTo('${a['paid_at']}'));
+  rows.sort((a, b) {
+    final order = DateTime.parse('${b['paid_at']}')
+        .compareTo(DateTime.parse('${a['paid_at']}'));
+    return order == 0 ? '${a['id']}'.compareTo('${b['id']}') : order;
+  });
   return rows;
 });

@@ -5,7 +5,7 @@ const path = require('node:path');
 const { PGlite } = require('@electric-sql/pglite');
 const read = name => fs.readFileSync(path.join(__dirname, name), 'utf8').replace(/^\uFEFF/, '');
 const migration = name => read('../migrations/' + name);
-const suites = ['offline_history.sql', 'offline_history_integration.sql', 'offline_history_occurrences.sql', 'offline_history_demo.sql'];
+const suites = ['offline_history.sql', 'offline_history_integration.sql', 'offline_history_occurrences.sql', 'offline_history_demo.sql', 'debt_payment_editing.sql'];
 const selected = process.argv.slice(2);
 if (selected.some(name => !suites.includes(name))) {
   console.error('Usage: node run-offline-history.cjs [' + suites.join(' | ') + ']');
@@ -86,6 +86,7 @@ async function run(suite) {
     assert.equal(before.money.debt_paid, '700');
     assert.equal(before.money.total_balance, '3580');
     await db.exec(migration('20261028000001_offline_history.sql'));
+    await db.exec(migration('20261028000002_debt_payment_editing.sql'));
     assert.deepEqual(await snapshot(db, true), before, 'Migration changed original data or money totals');
     const history = await db.query(`select sum(amount)::text as paid,count(*)::text as count,
       bool_and(is_legacy and not record_transaction and transaction_id is null) as no_cash
@@ -119,6 +120,7 @@ async function withoutOptionalSeeder() {
     await bootstrap(db, false);
     const before = await snapshot(db, false);
     await db.exec(migration('20261028000001_offline_history.sql'));
+    await db.exec(migration('20261028000002_debt_payment_editing.sql'));
     assert.deepEqual(await snapshot(db, true), before);
     const result = await db.query("select to_regprocedure('private.seed_demo_data(text,boolean)') is null as absent");
     assert.equal(result.rows[0].absent, true);
@@ -128,7 +130,7 @@ async function withoutOptionalSeeder() {
 (async () => {
   for (const suite of selected.length ? selected : suites) await run(suite);
   await withoutOptionalSeeder();
-  console.log('Multi-session advisory-lock concurrency: NOT RUN (manual PostgreSQL schedule provided).');
+  console.log('In-memory suites are single-session. Run run-debt-concurrency.cjs for real local PostgreSQL concurrency.');
 })().catch(error => {
   console.error(error.message);
   if (error.where) console.error(error.where);

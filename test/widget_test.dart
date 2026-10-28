@@ -43,35 +43,41 @@ void main() {
         sessionProvider.overrideWithValue(null),
         currentUserIdProvider.overrideWithValue(userId),
         walletRepositoryProvider.overrideWithValue(wallet),
-        quickRecordRepositoryProvider.overrideWithValue(FakeQuickRecordRepository()),
+        quickRecordRepositoryProvider
+            .overrideWithValue(FakeQuickRecordRepository()),
         planningRepositoryProvider.overrideWithValue(planning),
         advisorRepositoryProvider.overrideWithValue(advisor),
         debtRemindersProvider.overrideWithValue(reminders),
         appLockProvider.overrideWithValue(lock),
         voiceInputProvider.overrideWithValue(FakeVoiceInput('Đổ xăng 80k')),
         profileProvider.overrideWith(
-          (ref) async => const UserProfile(id: 'user-1', email: 'quan@test.vn', displayName: 'Minh Quân'),
+          (ref) async => const UserProfile(
+              id: 'user-1', email: 'quan@test.vn', displayName: 'Minh Quân'),
         ),
       ];
 
-  Future<void> pumpApp(WidgetTester tester, Widget home, {String? userId = 'user-1'}) async {
+  Future<void> pumpApp(WidgetTester tester, Widget home,
+      {String? userId = 'user-1'}) async {
     // Tall viewport so bottom sheets fit. Kept 800 wide: the test font draws every
     // glyph as a full square, so phone widths report overflows real fonts don't have.
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(ProviderScope(overrides: overrides(userId: userId), child: MaterialApp(home: home)));
+    await tester.pumpWidget(ProviderScope(
+        overrides: overrides(userId: userId), child: MaterialApp(home: home)));
     await tester.pumpAndSettle();
   }
 
-  testWidgets('AuthGate shows the login screen without a session', (tester) async {
+  testWidgets('AuthGate shows the login screen without a session',
+      (tester) async {
     await pumpApp(tester, const AuthGate(), userId: null);
 
-    expect(find.text('Đăng Nhập'), findsOneWidget);
+    expect(find.text('Đăng nhập'), findsOneWidget);
     expect(find.text('Tiếp tục với Google'), findsOneWidget);
   });
 
-  testWidgets('App lock hides the dashboard until biometrics pass', (tester) async {
+  testWidgets('App lock hides the dashboard until biometrics pass',
+      (tester) async {
     lock
       ..enabled = true
       ..passes = false;
@@ -86,7 +92,8 @@ void main() {
     expect(find.text('Minh Quân'), findsWidgets);
   });
 
-  testWidgets('Dashboard renders data and asks about due debts', (tester) async {
+  testWidgets('Dashboard renders data and asks about due debts',
+      (tester) async {
     await pumpApp(tester, const AuthGate());
 
     // Opening the app re-schedules device reminders and asks about Lan's debt due today.
@@ -105,7 +112,8 @@ void main() {
     expect(find.textContaining('PRO'), findsNothing);
   });
 
-  testWidgets('Quick record turns text into a card and saves it', (tester) async {
+  testWidgets('Quick record turns text into a card and saves it',
+      (tester) async {
     await pumpApp(tester, const QuickRecordScreen());
 
     await tester.enterText(find.byType(TextField), 'Ăn bún chả 45k');
@@ -117,25 +125,31 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Đã lưu vào sổ'), findsOneWidget);
     final saved = await wallet.fetchRecentTransactions(limit: 1);
-    expect((saved.single.amount, saved.single.categoryName), (45000, 'Ăn uống'));
+    expect(
+        (saved.single.amount, saved.single.categoryName), (45000, 'Ăn uống'));
   });
 
-  testWidgets('Voice quick action sends the transcript as a voice record', (tester) async {
-    await pumpApp(tester, const QuickRecordScreen(initialAction: QuickRecordStart.voice));
+  testWidgets('Voice quick action sends the transcript as a voice record',
+      (tester) async {
+    await pumpApp(
+        tester, const QuickRecordScreen(initialAction: QuickRecordStart.voice));
 
     expect(find.text('"Đổ xăng 80k"'), findsOneWidget);
     await tester.tap(find.text('Lưu giao dịch'));
     await tester.pumpAndSettle();
     final saved = await wallet.fetchRecentTransactions(limit: 1);
-    expect((saved.single.source, saved.single.amount), (TransactionSource.voice, 80000));
+    expect((saved.single.source, saved.single.amount),
+        (TransactionSource.voice, 80000));
   });
 
-  testWidgets('Budgets: add a month-wide budget and see progress', (tester) async {
+  testWidgets('Budgets: add a month-wide budget and see progress',
+      (tester) async {
     await pumpApp(tester, const PlanningScreen());
 
     await tester.tap(find.text('Thêm ngân sách'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.widgetWithText(TextField, 'Hạn mức trong tháng (VND)'), '1000000');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Hạn mức trong tháng (VND)'), '1000000');
     await tester.tap(find.text('Lưu'));
     await tester.pumpAndSettle();
 
@@ -149,11 +163,13 @@ void main() {
     expect(find.text('Lan nợ tôi'), findsOneWidget);
     expect(find.text('Tôi nợ Minh'), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.more_vert).first); // Minh (Tôi nợ) is listed first
+    await tester.tap(
+        find.byIcon(Icons.more_vert).first); // Minh (Tôi nợ) is listed first
     await tester.pumpAndSettle();
     await tester.tap(find.text('Ghi trả một phần'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.widgetWithText(TextField, 'Số tiền đã trả'), '500000');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Số tiền đã trả'), '500000');
     await tester.tap(find.text('Xác nhận'));
     await tester.pumpAndSettle();
     expect(planning.settleCalls, [('d2', 500000, false)]);
@@ -161,14 +177,17 @@ void main() {
 
     await tester.tap(find.text('Thêm khoản nợ'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.widgetWithText(TextField, 'Tôi nợ ai?'), 'Hương');
-    await tester.enterText(find.widgetWithText(TextField, 'Số tiền (VND)'), '300000');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Tôi nợ ai?'), 'Hương');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Số tiền (VND)'), '300000');
     await tester.tap(find.text('Lưu'));
     await tester.pumpAndSettle();
     expect(find.text('Tôi nợ Hương'), findsOneWidget);
   });
 
-  testWidgets('Goals: saving up to the target completes the goal', (tester) async {
+  testWidgets('Goals: saving up to the target completes the goal',
+      (tester) async {
     await pumpApp(tester, const PlanningScreen(initialTab: PlanningTab.goals));
 
     expect(find.text('80%'), findsOneWidget);
@@ -186,7 +205,8 @@ void main() {
     await pumpApp(tester, const TransactionHistoryScreen());
 
     expect(find.text('Ăn phở Thìn Lò Đúc'), findsOneWidget);
-    await tester.enterText(find.widgetWithText(TextField, 'Tìm theo ghi chú...'), 'phở');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Tìm theo ghi chú...'), 'phở');
     await tester.pump(const Duration(milliseconds: 500));
     await tester.pumpAndSettle();
     expect(find.text('Highlands Coffee'), findsNothing);
@@ -196,7 +216,10 @@ void main() {
     await tester.tap(find.text('Xoá'));
     await tester.pumpAndSettle();
     expect(find.text('Ăn phở Thìn Lò Đúc'), findsNothing);
-    expect((await wallet.fetchRecentTransactions(limit: 20)).any((t) => t.title == 'Ăn phở Thìn Lò Đúc'), isFalse);
+    expect(
+        (await wallet.fetchRecentTransactions(limit: 20))
+            .any((t) => t.title == 'Ăn phở Thìn Lò Đúc'),
+        isFalse);
   });
 
   testWidgets('Categories: add a new expense category', (tester) async {
@@ -204,19 +227,24 @@ void main() {
 
     await tester.tap(find.text('Thêm danh mục'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.widgetWithText(TextField, 'Tên danh mục'), 'Thú cưng');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Tên danh mục'), 'Thú cưng');
     await tester.tap(find.text('Lưu'));
     await tester.pumpAndSettle();
 
     expect(find.text('Thú cưng'), findsOneWidget);
     expect(
-        (await wallet.fetchCategories()).any((c) => c.name == 'Thú cưng' && c.type == TransactionType.expense), isTrue);
+        (await wallet.fetchCategories()).any(
+            (c) => c.name == 'Thú cưng' && c.type == TransactionType.expense),
+        isTrue);
   });
 
-  testWidgets('Advisor shows the AI report and spending breakdown', (tester) async {
+  testWidgets('Advisor shows the AI report and spending breakdown',
+      (tester) async {
     await pumpApp(tester, const AdvisorScreen());
 
-    expect(find.text('Tháng này bạn chi nhiều hơn cho ăn uống.'), findsOneWidget);
+    expect(
+        find.text('Tháng này bạn chi nhiều hơn cho ăn uống.'), findsOneWidget);
     expect(find.text('75% tổng chi'), findsOneWidget);
     await tester.tap(find.text('90 ngày qua'));
     await tester.pumpAndSettle();

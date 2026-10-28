@@ -12,7 +12,8 @@ abstract class PlanningRepository {
 
   /// Creates or updates (same category + month) a monthly limit.
   /// [categoryId] null = the month-wide budget.
-  Future<void> saveBudget({required DateTime month, String? categoryId, required int limitAmount});
+  Future<void> saveBudget(
+      {required DateTime month, String? categoryId, required int limitAmount});
 
   Future<void> deleteBudget(String id);
 
@@ -26,9 +27,23 @@ abstract class PlanningRepository {
 
   Future<void> deleteDebt(String id);
 
-  /// `settle_debt` RPC: [amount] null = pay everything left. When
+  /// Atomic local payment and outbox write: [amount] null = pay everything left. When
   /// [recordTransaction], a matching income / expense is written too.
-  Future<void> settleDebt(String id, {int? amount, bool recordTransaction = false});
+  Future<void> settleDebt(String id,
+      {int? amount,
+      bool recordTransaction = false,
+      DateTime? paidAt,
+      String? note,
+      String? walletId});
+
+  Future<void> updateDebtPayment(String id,
+      {required int amount,
+      required DateTime paidAt,
+      String? note,
+      required bool recordTransaction,
+      String? walletId});
+
+  Future<void> undoDebtPayment(String id);
 
   Future<List<GoalModel>> fetchGoals();
 
@@ -40,7 +55,8 @@ abstract class PlanningRepository {
   Future<void> deleteGoal(String id);
 }
 
-String monthKey(DateTime d) => '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-01';
+String monthKey(DateTime d) =>
+    '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-01';
 
 final planningRepositoryProvider = Provider<PlanningRepository>((ref) {
   final store = ref.watch(localStoreProvider);
@@ -48,7 +64,8 @@ final planningRepositoryProvider = Provider<PlanningRepository>((ref) {
   return OfflinePlanningRepository(store);
 });
 
-final budgetsProvider = FutureProvider.autoDispose.family<List<BudgetProgress>, DateTime>(
+final budgetsProvider =
+    FutureProvider.autoDispose.family<List<BudgetProgress>, DateTime>(
   (ref, month) {
     ref.watch(localRevisionProvider);
     return ref.watch(planningRepositoryProvider).fetchBudgets(month);

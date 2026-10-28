@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/widgets/glass.dart';
 import '../models/planning_models.dart';
 import 'budgets_tab.dart';
 import 'debts_tab.dart';
@@ -10,16 +11,22 @@ enum PlanningTab { budgets, debts, goals }
 
 /// "Kế hoạch": monthly budgets, the debt book and savings goals.
 class PlanningScreen extends StatefulWidget {
-  const PlanningScreen({super.key, this.initialTab = PlanningTab.budgets});
+  const PlanningScreen(
+      {super.key,
+      this.initialTab = PlanningTab.budgets,
+      this.embedded = false});
 
   final PlanningTab initialTab;
+  final bool embedded;
 
   @override
   State<PlanningScreen> createState() => _PlanningScreenState();
 }
 
-class _PlanningScreenState extends State<PlanningScreen> with SingleTickerProviderStateMixin {
-  late final TabController _tabs = TabController(length: 3, vsync: this, initialIndex: widget.initialTab.index)
+class _PlanningScreenState extends State<PlanningScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabs = TabController(
+      length: 3, vsync: this, initialIndex: widget.initialTab.index)
     ..addListener(() => setState(() {}));
 
   @override
@@ -31,7 +38,8 @@ class _PlanningScreenState extends State<PlanningScreen> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     final fab = switch (PlanningTab.values[_tabs.index]) {
-      PlanningTab.budgets => null, // the budgets tab has its own buttons (month-specific)
+      PlanningTab.budgets =>
+        null, // the budgets tab has its own buttons (month-specific)
       PlanningTab.debts => FloatingActionButton.extended(
           onPressed: () => showDebtForm(context, type: DebtType.borrow),
           backgroundColor: AppColors.primary,
@@ -49,13 +57,21 @@ class _PlanningScreenState extends State<PlanningScreen> with SingleTickerProvid
     };
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.surface.withValues(alpha: .85),
+        automaticallyImplyLeading: !widget.embedded,
         elevation: 0,
-        title: const Text('Kế hoạch', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+        title: const Text('Kế hoạch',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
         bottom: TabBar(
           controller: _tabs,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          indicatorSize: TabBarIndicatorSize.tab,
+          indicator: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: .1),
+              borderRadius: BorderRadius.circular(20)),
+          dividerColor: Colors.transparent,
           labelColor: AppColors.primary,
           indicatorColor: AppColors.primary,
           unselectedLabelColor: AppColors.onSurfaceVariant,
@@ -66,11 +82,16 @@ class _PlanningScreenState extends State<PlanningScreen> with SingleTickerProvid
           ],
         ),
       ),
-      floatingActionButton: fab,
-      body: TabBarView(
+      floatingActionButton: fab == null
+          ? null
+          : Padding(
+              padding: EdgeInsets.only(bottom: widget.embedded ? 100 : 0),
+              child: fab),
+      body: NotebookBackground(
+          child: TabBarView(
         controller: _tabs,
         children: const [BudgetsTab(), DebtsTab(), GoalsTab()],
-      ),
+      )),
     );
   }
 }

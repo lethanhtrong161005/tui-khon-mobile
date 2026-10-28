@@ -211,8 +211,6 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Sửa').first);
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(DropdownButtonFormField<String>).first);
-    await tester.pumpAndSettle();
     await tester.tap(find.text('Other').last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Lưu giao dịch').last);

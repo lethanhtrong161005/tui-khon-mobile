@@ -11,6 +11,7 @@ class MonthlyReport {
       required this.previousIncome,
       required this.previousExpense,
       required this.byCategory,
+      this.categoryDetails = const [],
       required this.budgets,
       required this.grounding,
       required this.fingerprint,
@@ -18,6 +19,7 @@ class MonthlyReport {
   final DateTime month, generatedAt;
   final int income, expense, previousIncome, previousExpense;
   final Map<String, int> byCategory;
+  final List<ReportRow> categoryDetails;
   final List<ReportRow> budgets;
   final ReportRow grounding;
   final String fingerprint;
@@ -30,6 +32,7 @@ class MonthlyReport {
     final end = DateTime.utc(month.year, month.month + 1);
     final previous = DateTime.utc(month.year, month.month - 1);
     final relevant = transactions.where((r) {
+      if (r['deleted'] == true) return false;
       final d = DateTime.tryParse('${r['occurred_at']}')
           ?.toUtc()
           .add(const Duration(hours: 7));
@@ -57,6 +60,7 @@ class MonthlyReport {
       }
     }
     final budgets = allBudgets.where((r) {
+      if (r['deleted'] == true) return false;
       final d = DateTime.tryParse('${r['month']}');
       return d != null && d.year == month.year && d.month == month.month;
     }).toList();
@@ -133,11 +137,31 @@ class MonthlyReport {
         previousIncome: previousIncome,
         previousExpense: previousExpense,
         byCategory: grouped,
+        categoryDetails: [
+          for (final entry in byId.entries)
+            {
+              'id': entry.key,
+              'name': name(entry.key),
+              'amount': entry.value,
+              'color': categories
+                  .where((c) => c['id'] == entry.key)
+                  .firstOrNull?['color'],
+              'icon': categories
+                  .where((c) => c['id'] == entry.key)
+                  .firstOrNull?['icon'],
+            }
+        ],
         grounding: {'current': evidence(true), 'previous': evidence(false)},
         budgets: [
           for (final b in budgets)
             {
               ...b,
+              'icon': categories
+                  .where((c) => c['id'] == b['category_id'])
+                  .firstOrNull?['icon'],
+              'color': categories
+                  .where((c) => c['id'] == b['category_id'])
+                  .firstOrNull?['color'],
               'name': b['category_id'] == null
                   ? 'Tổng chi tiêu'
                   : name(b['category_id']),

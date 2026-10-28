@@ -47,5 +47,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: PlusJakartaSans
+      fonts:
+        - asset: assets/fonts/PlusJakartaSans.ttf
   assets:
     - assets/images/
+    - assets/fonts/OFL.txt
