@@ -177,3 +177,23 @@ The wrapper verifies each debt's history total and unchanged cash transaction
 counts/income/expense across the backfill. All writes are journaled and atomic;
 failure rolls back the whole seed. The helper is a privileged implementation
 detail, never a client API or an approved way to reset existing data.
+
+## Debt payment editing regression
+
+The harness also loads `20261028000002_debt_payment_editing.sql` before every
+suite, with the same pre/post monetary and row integrity checks.
+`debt_payment_editing.sql` covers first attachment, immutable existing IDs,
+note/date/wallet updates, recording off/on, archived wallets, optimistic
+conflicts, replay, overpayment rollback and undo.
+
+For real simultaneous sessions, start the local Supabase Docker stack, apply
+all migrations, then run from the repository root:
+
+```sh
+node supabase/tests/run-debt-concurrency.cjs
+```
+
+This command targets only `supabase_db_tui-khon`, creates a uniquely identified
+disposable account, and cleans only its fixtures in `finally`. It tests
+simultaneous payments, stale edits and identical operation retries.
+The in-memory runner does not claim to test multi-session concurrency.
