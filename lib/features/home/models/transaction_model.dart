@@ -1,3 +1,4 @@
+import '../../../core/utils/app_failure.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/utils/category_icons.dart';
@@ -9,7 +10,8 @@ enum TransactionType {
   income,
   expense;
 
-  static TransactionType fromValue(String? value) => value == 'income' ? income : expense;
+  static TransactionType fromValue(String? value) =>
+      value == 'income' ? income : expense;
 }
 
 /// Where a transaction came from (DB enum `tx_source`).
@@ -20,8 +22,8 @@ enum TransactionSource {
   receipt,
   debt;
 
-  static TransactionSource fromValue(String? value) =>
-      TransactionSource.values.firstWhere((s) => s.name == value, orElse: () => manual);
+  static TransactionSource fromValue(String? value) => TransactionSource.values
+      .firstWhere((s) => s.name == value, orElse: () => manual);
 
   /// Small badge shown next to the transaction in lists.
   String? get badgeText => switch (this) {
@@ -98,7 +100,9 @@ class TransactionModel {
   /// Signed amount: positive for income, negative for expense.
   int get signedAmount => isIncome ? amount : -amount;
 
-  String get title => (note != null && note!.trim().isNotEmpty) ? note!.trim() : (categoryName ?? 'Giao dịch');
+  String get title => (note != null && note!.trim().isNotEmpty)
+      ? note!.trim()
+      : (categoryName ?? 'Giao dịch');
 
   IconData get icon => CategoryIcons.resolve(categoryIcon);
 
@@ -127,7 +131,12 @@ class TransactionFilter {
   final String? walletId;
   final String search;
 
-  const TransactionFilter({required this.month, this.type, this.categoryId, this.walletId, this.search = ''});
+  const TransactionFilter(
+      {required this.month,
+      this.type,
+      this.categoryId,
+      this.walletId,
+      this.search = ''});
 
   TransactionFilter copyWith({
     DateTime? month,
@@ -200,7 +209,8 @@ class TransactionDraft {
       categoryId: json['category_id'] as String?,
       categoryName: json['category_name'] as String?,
       note: json['note'] as String?,
-      occurredAt: occurredAt == null ? null : DateTime.parse(occurredAt).toLocal(),
+      occurredAt:
+          occurredAt == null ? null : DateTime.parse(occurredAt).toLocal(),
       source: TransactionSource.fromValue(json['source'] as String?),
       merchant: json['merchant'] as String?,
     );
@@ -212,7 +222,8 @@ class TransactionDraft {
 
   /// Row for `insert` into `public.transactions` (user_id is filled by the database).
   Map<String, dynamic> toInsertJson({String? clientId}) {
-    if (walletId == null) throw StateError('Chưa chọn nguồn tiền cho giao dịch');
+    if (walletId == null)
+      throw AppFailure('failure30', [], 'Chưa chọn nguồn tiền cho giao dịch');
     return {
       'type': type.name,
       'amount': amount,

@@ -1,9 +1,10 @@
+import '../../../core/utils/localized_format.dart';
+import '../../../core/theme/semantic_colors.dart';
+import '../../../l10n/app_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/constants/app_colors.dart';
 import '../../../core/services/debt_reminder_service.dart';
-import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/error_messages.dart';
 import '../../../core/widgets/form_sheet.dart';
 import '../../home/providers/home_providers.dart';
@@ -28,7 +29,9 @@ extension PlanningRefresh on WidgetRef {
 
 /// Confirms "đã trả" / "đã nhận" (whole remaining amount) or a partial payment,
 /// optionally recording the matching income / expense transaction.
-Future<bool> showSettleDebtDialog(BuildContext context, WidgetRef ref, DebtModel debt, {bool partial = false}) async {
+Future<bool> showSettleDebtDialog(
+    BuildContext context, WidgetRef ref, DebtModel debt,
+    {bool partial = false}) async {
   final result = await showDialog<(int?, bool)>(
     context: context,
     builder: (_) => _SettleDialog(debt: debt, partial: partial),
@@ -44,11 +47,16 @@ Future<bool> showSettleDebtDialog(BuildContext context, WidgetRef ref, DebtModel
     if (result.$2) ref.refreshWalletData();
     await ref.refreshDebts();
     if (context.mounted) {
-      showToast(context, result.$1 == null ? 'Đã tất toán khoản nợ với ${debt.personName}' : 'Đã ghi nhận khoản trả');
+      showToast(
+          context,
+          result.$1 == null
+              ? appL10n(context)
+                  .msgSettledTheDebtWith257((debt.personName).toString())
+              : appL10n(context).msgPaymentRecorded258);
     }
     return true;
   } catch (e) {
-    if (context.mounted) showToast(context, friendlyError(e));
+    if (context.mounted) showToast(context, friendlyError(e, context: context));
     return false;
   }
 }
@@ -79,7 +87,11 @@ class _SettleDialogState extends State<_SettleDialog> {
   Widget build(BuildContext context) {
     final debt = widget.debt;
     final isBorrow = debt.type == DebtType.borrow;
-    final title = widget.partial ? 'Ghi trả một phần' : (isBorrow ? 'Xác nhận đã trả nợ' : 'Xác nhận đã nhận tiền');
+    final title = widget.partial
+        ? appL10n(context).msgRecordPartialPayment243
+        : (isBorrow
+            ? appL10n(context).msgConfirmDebtRepayment259
+            : appL10n(context).msgConfirmMoneyCollected260);
     return AlertDialog(
       title: Text(title),
       content: SingleChildScrollView(
@@ -89,21 +101,31 @@ class _SettleDialogState extends State<_SettleDialog> {
           children: [
             Text(
               isBorrow
-                  ? 'Bạn nợ ${debt.personName}: còn ${CurrencyFormatter.formatVND(debt.remaining)}'
-                  : '${debt.personName} nợ bạn: còn ${CurrencyFormatter.formatVND(debt.remaining)}',
+                  ? appL10n(context).msgYouOweRemaining261(
+                      (debt.personName).toString(),
+                      (formatMoney(context, debt.remaining)).toString())
+                  : appL10n(context).msgOwesYouRemaining262(
+                      (debt.personName).toString(),
+                      (formatMoney(context, debt.remaining)).toString()),
             ),
             if (widget.partial) ...[
               const SizedBox(height: 12),
-              MoneyField(controller: _amount, label: 'Số tiền đã trả', autofocus: true),
+              MoneyField(
+                  controller: _amount,
+                  label: appL10n(context).msgAmountPaid263,
+                  autofocus: true),
             ],
             CheckboxListTile(
               contentPadding: EdgeInsets.zero,
               value: _recordTransaction,
-              activeColor: AppColors.primary,
+              activeColor: appPalette(context).primary,
               controlAffinity: ListTileControlAffinity.leading,
-              title: const Text('Ghi kèm vào giao dịch', style: TextStyle(fontSize: 13)),
+              title: Text(appL10n(context).msgRecordAMatchingTransaction264,
+                  style: const TextStyle(fontSize: 13)),
               subtitle: Text(
-                isBorrow ? 'Thêm một khoản chi "Trả nợ"' : 'Thêm một khoản thu "Thu nợ"',
+                isBorrow
+                    ? appL10n(context).msgAddADebtRepaymentExpense265
+                    : appL10n(context).msgAddADebtCollectionIncome266,
                 style: const TextStyle(fontSize: 11),
               ),
               onChanged: (v) => setState(() => _recordTransaction = v ?? false),
@@ -112,19 +134,27 @@ class _SettleDialogState extends State<_SettleDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Huỷ')),
+        TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(appL10n(context).msgCancel42)),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+          style: ElevatedButton.styleFrom(
+              backgroundColor: appPalette(context).primary,
+              foregroundColor: appPalette(context).onPrimary),
           onPressed: () {
-            if (!widget.partial) return Navigator.pop(context, (null, _recordTransaction));
+            if (!widget.partial)
+              return Navigator.pop(context, (null, _recordTransaction));
             final value = MoneyField.valueOf(_amount);
             if (value <= 0 || value > debt.remaining) {
-              showToast(context, 'Số tiền phải từ 1đ đến ${CurrencyFormatter.formatVND(debt.remaining)}');
+              showToast(
+                  context,
+                  appL10n(context).msgAmountMustBeBetweenAnd267(
+                      (formatMoney(context, debt.remaining)).toString()));
               return;
             }
             Navigator.pop(context, (value, _recordTransaction));
           },
-          child: const Text('Xác nhận'),
+          child: Text(appL10n(context).msgConfirm268),
         ),
       ],
     );

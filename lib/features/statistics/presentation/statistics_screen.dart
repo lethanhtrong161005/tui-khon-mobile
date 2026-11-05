@@ -1,9 +1,12 @@
+import 'package:intl/intl.dart';
+import '../../../core/utils/localized_format.dart';
+import '../../../core/theme/semantic_colors.dart';
+import '../../../l10n/app_l10n.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/offline/local_store.dart';
-import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/error_messages.dart';
 import '../../../core/widgets/glass.dart';
 import '../../home/models/monthly_summary.dart';
@@ -39,10 +42,8 @@ final statisticsProvider = FutureProvider.autoDispose
         offset: offset,
         limit: 500);
     for (final tx in page) {
-      final category = grouped.putIfAbsent(
-          tx.categoryId,
-          () => SpendingCategory(
-              tx.categoryId, tx.categoryName ?? 'Chưa phân loại', 0));
+      final category = grouped.putIfAbsent(tx.categoryId,
+          () => SpendingCategory(tx.categoryId, tx.categoryName ?? '', 0));
       category.amount += tx.amount;
     }
     if (page.length < 500) break;
@@ -52,13 +53,13 @@ final statisticsProvider = FutureProvider.autoDispose
       grouped.values.toList()..sort((a, b) => b.amount.compareTo(a.amount)));
 });
 
-const _chartColors = [
+final _chartColors = [
   AppColors.primary,
-  Color(0xFF4998F3),
-  Color(0xFFFFBA46),
-  Color(0xFFFF8A4C),
-  Color(0xFF8B80D9),
-  Color(0xFF9CB0A6)
+  const Color(0xFF4998F3),
+  const Color(0xFFFFBA46),
+  const Color(0xFFFF8A4C),
+  const Color(0xFF8B80D9),
+  const Color(0xFF9CB0A6)
 ];
 
 class StatisticsScreen extends ConsumerStatefulWidget {
@@ -82,7 +83,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
         initialDate: _month,
         firstDate: DateTime(2000),
         lastDate: DateTime(2100),
-        helpText: 'Chọn tháng thống kê');
+        helpText: appL10n(context).msgSelectStatisticsMonth442);
     if (date != null && mounted) {
       setState(() => _month = DateTime(date.year, date.month));
     }
@@ -92,13 +93,13 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
   Widget build(BuildContext context) {
     final data = ref.watch(statisticsProvider(_month));
     return Scaffold(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
             backgroundColor: Colors.transparent,
-            title: const Text('Thống kê'),
+            title: Text(appL10n(context).statistics),
             actions: [
               IconButton(
-                  tooltip: 'Báo cáo tháng',
+                  tooltip: appL10n(context).monthlyReport,
                   onPressed: () => Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -119,30 +120,39 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
-                            tooltip: 'Tháng trước',
+                            tooltip: appL10n(context).msgPreviousMonth444,
                             onPressed: () => _move(-1),
                             icon: const Icon(Icons.chevron_left_rounded)),
-                        GlassCard(
-                            radius: 24,
-                            child: InkWell(
-                                onTap: _pickMonth,
-                                borderRadius: BorderRadius.circular(24),
-                                child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 9),
-                                    child: Row(children: [
-                                      Text(
-                                          'Tháng ${_month.month.toString().padLeft(2, '0')}/${_month.year}',
-                                          style: const TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600)),
-                                      const SizedBox(width: 6),
-                                      const Icon(
-                                          Icons.keyboard_arrow_down_rounded,
-                                          size: 16),
-                                    ])))),
+                        Expanded(
+                            child: GlassCard(
+                                radius: 24,
+                                child: InkWell(
+                                    onTap: _pickMonth,
+                                    borderRadius: BorderRadius.circular(24),
+                                    child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16, vertical: 9),
+                                        child: Row(children: [
+                                          Expanded(
+                                              child: Text(
+                                                  appL10n(context).msgMonth219(
+                                                      (_month.month
+                                                              .toString()
+                                                              .padLeft(2, '0'))
+                                                          .toString(),
+                                                      (_month.year).toString()),
+                                                  textAlign: TextAlign.center,
+                                                  style: const TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.w600))),
+                                          const SizedBox(width: 6),
+                                          const Icon(
+                                              Icons.keyboard_arrow_down_rounded,
+                                              size: 16),
+                                        ]))))),
                         IconButton(
-                            tooltip: 'Tháng sau',
+                            tooltip: appL10n(context).msgNextMonth445,
                             onPressed: () => _move(1),
                             icon: const Icon(Icons.chevron_right_rounded)),
                       ]),
@@ -151,8 +161,11 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                       radius: 24,
                       padding: const EdgeInsets.all(4),
                       child: Row(children: [
-                        for (final (i, label)
-                            in ['Tổng quan', 'Danh mục', 'Xu hướng'].indexed)
+                        for (final (i, label) in [
+                          appL10n(context).msgOverview446,
+                          appL10n(context).categories,
+                          appL10n(context).msgTrends447
+                        ].indexed)
                           Expanded(
                               child: InkWell(
                                   onTap: () => setState(() => _tab = i),
@@ -166,7 +179,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                                           vertical: 10),
                                       decoration: BoxDecoration(
                                           color: _tab == i
-                                              ? AppColors.primary
+                                              ? appPalette(context).primary
                                               : Colors.transparent,
                                           borderRadius:
                                               BorderRadius.circular(22)),
@@ -178,22 +191,26 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                                                   ? FontWeight.w700
                                                   : FontWeight.w500,
                                               color: _tab == i
-                                                  ? Colors.white
-                                                  : AppColors.onSurface))))),
+                                                  ? appPalette(context)
+                                                      .onPrimary
+                                                  : appPalette(context)
+                                                      .onSurface))))),
                       ])),
                   const SizedBox(height: 16),
                   data.when(
                       loading: () => const Padding(
-                          padding: EdgeInsets.all(48),
-                          child: Center(child: CircularProgressIndicator())),
+                          padding: const EdgeInsets.all(48),
+                          child: const Center(
+                              child: const CircularProgressIndicator())),
                       error: (e, _) => GlassCard(
                           padding: const EdgeInsets.all(24),
                           child: Column(children: [
-                            Text(friendlyError(e), textAlign: TextAlign.center),
+                            Text(friendlyError(e, context: context),
+                                textAlign: TextAlign.center),
                             TextButton(
                                 onPressed: () =>
                                     ref.invalidate(statisticsProvider(_month)),
-                                child: const Text('Thử lại'))
+                                child: Text(appL10n(context).msgRetry50))
                           ])),
                       data: (d) => Column(children: [
                             if (_tab != 2) _categoryCard(d),
@@ -206,12 +223,13 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                               _totals(d.summary)
                             ],
                             const SizedBox(height: 16),
-                            const Text(
-                                'Tính từ ghi chép trên thiết bị, bao gồm mục đang chờ đồng bộ.',
+                            Text(
+                                appL10n(context)
+                                    .msgCalculatedFromRecordsOnThisDevice448,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                     fontSize: 10,
-                                    color: AppColors.onSurfaceVariant,
+                                    color: appPalette(context).onSurfaceVariant,
                                     height: 1.5)),
                           ])),
                 ])));
@@ -226,43 +244,48 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
         padding: const EdgeInsets.all(17),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            const TintedIcon(Icons.south_rounded,
-                color: AppColors.error, size: 43),
+            TintedIcon(Icons.south_rounded,
+                color: appPalette(context).error, size: 43),
             const SizedBox(width: 12),
             Expanded(
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                  const Text('Tổng chi tiêu', style: TextStyle(fontSize: 12)),
+                  Text(appL10n(context).msgTotalSpending449,
+                      style: const TextStyle(fontSize: 12)),
                   const SizedBox(height: 3),
-                  Text(CurrencyFormatter.formatVND(summary.expense),
+                  Text(formatMoney(context, summary.expense),
                       style: const TextStyle(
                           fontSize: 23, fontWeight: FontWeight.w800)),
                   const SizedBox(height: 4),
                   Text(
                       change == null
-                          ? 'Tháng trước chưa có chi tiêu để so sánh'
-                          : '${change > 0 ? '↑' : '↓'} ${change.abs()}% so với tháng trước',
+                          ? appL10n(context)
+                              .msgNoSpendingLastMonthForComparison450
+                          : appL10n(context).msgComparedWithLastMonth451(
+                              (change > 0 ? '↑' : '↓').toString(),
+                              (change.abs()).toString()),
                       style: TextStyle(
                           fontSize: 10,
                           color: change != null && change > 0
-                              ? AppColors.error
-                              : AppColors.primary)),
+                              ? appPalette(context).error
+                              : appPalette(context).primary)),
                 ])),
           ]),
           const SizedBox(height: 22),
           if (categories.isEmpty)
-            const Padding(
-                padding: EdgeInsets.symmetric(vertical: 32),
+            Padding(
+                padding: const EdgeInsets.symmetric(vertical: 32),
                 child: Center(
-                    child: Text('Chưa có chi tiêu trong tháng này.',
+                    child: Text(appL10n(context).msgNoExpensesThisMonthYet452,
                         style: TextStyle(
-                            fontSize: 12, color: AppColors.onSurfaceVariant))))
+                            fontSize: 12,
+                            color: appPalette(context).onSurfaceVariant))))
           else
             LayoutBuilder(builder: (context, bounds) {
               final chart = Semantics(
-                  label:
-                      'Cơ cấu chi tiêu theo danh mục, tổng ${CurrencyFormatter.formatVND(summary.expense)}',
+                  label: appL10n(context).msgSpendingByCategoryTotal453(
+                      (formatMoney(context, summary.expense)).toString()),
                   child: SizedBox(
                       width: 148,
                       height: 148,
@@ -272,19 +295,22 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                               child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                const Text('Tổng chi',
+                                Text(appL10n(context).msgTotalSpending454,
                                     style: TextStyle(
                                         fontSize: 10,
-                                        color: AppColors.onSurfaceVariant)),
+                                        color: appPalette(context)
+                                            .onSurfaceVariant)),
                                 const SizedBox(height: 3),
-                                Text(_compact(summary.expense),
+                                Text(
+                                    _compact(summary.expense, context: context),
                                     style: const TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.w800)),
-                                const Text('đồng',
+                                Text(appL10n(context).msgVnd455,
                                     style: TextStyle(
                                         fontSize: 10,
-                                        color: AppColors.onSurfaceVariant)),
+                                        color: appPalette(context)
+                                            .onSurfaceVariant)),
                               ])))));
               final legend = Column(children: [
                 for (final (i, c) in categories.indexed)
@@ -299,10 +325,13 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                                 shape: BoxShape.circle)),
                         const SizedBox(width: 7),
                         Expanded(
-                            child: Text(c.name,
+                            child: Text(
+                                c.id == null
+                                    ? appL10n(context).msgUncategorized441
+                                    : c.name,
                                 style: const TextStyle(fontSize: 10))),
                         const SizedBox(width: 8),
-                        Text(CurrencyFormatter.formatVND(c.amount),
+                        Text(formatMoney(context, c.amount),
                             style: const TextStyle(
                                 fontSize: 10, fontWeight: FontWeight.w600)),
                       ])),
@@ -330,15 +359,17 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
         radius: 24,
         padding: const EdgeInsets.all(17),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Chi tiêu theo thời gian',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+          Text(appL10n(context).msgSpendingOverTime456,
+              style:
+                  const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
           const SizedBox(height: 4),
           Text(
               highest == 0
-                  ? 'Chưa có ghi chép chi tiêu'
-                  : 'Ngày cao nhất: ${CurrencyFormatter.formatVND(highest)}',
-              style: const TextStyle(
-                  fontSize: 10, color: AppColors.onSurfaceVariant)),
+                  ? appL10n(context).msgNoExpenseRecordsYet457
+                  : appL10n(context).msgHighestDay458(
+                      (formatMoney(context, highest)).toString()),
+              style: TextStyle(
+                  fontSize: 10, color: appPalette(context).onSurfaceVariant)),
           const SizedBox(height: 20),
           SizedBox(
               height: 126,
@@ -347,10 +378,11 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                   Expanded(
                       child: Tooltip(
                           message:
-                              '${i + 1}/${_month.month}: ${CurrencyFormatter.formatVND(days[i])}',
+                              '${i + 1}/${_month.month}: ${formatMoney(context, days[i])}',
                           child: Semantics(
-                              label:
-                                  'Ngày ${i + 1}: ${CurrencyFormatter.formatVND(days[i])}',
+                              label: appL10n(context).msgDate306(
+                                  (i + 1).toString(),
+                                  (formatMoney(context, days[i])).toString()),
                               child: Padding(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 1.8),
@@ -366,7 +398,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                                           gradient: const LinearGradient(
                                               begin: Alignment.bottomCenter,
                                               end: Alignment.topCenter,
-                                              colors: [
+                                              colors: const [
                                                 Color(0xFF89DCC0),
                                                 Color(0xFF36B68A)
                                               ]))))))),
@@ -375,8 +407,9 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             for (final day in [1, 8, 15, 22, count])
               Text('$day/${_month.month}',
-                  style: const TextStyle(
-                      fontSize: 9, color: AppColors.onSurfaceVariant)),
+                  style: TextStyle(
+                      fontSize: 9,
+                      color: appPalette(context).onSurfaceVariant)),
           ]),
         ]));
   }
@@ -385,28 +418,36 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
       radius: 24,
       padding: const EdgeInsets.all(16),
       child: Column(children: [
-        _total('Thu nhập', s.income, AppColors.primary),
+        _total(appL10n(context).msgIncome163, s.income,
+            appPalette(context).primary),
         const Divider(height: 22),
-        _total('Thu − chi', s.income - s.expense,
-            s.income >= s.expense ? AppColors.primary : AppColors.error),
+        _total(
+            appL10n(context).msgNetIncomeExpenses504,
+            s.income - s.expense,
+            s.income >= s.expense
+                ? appPalette(context).primary
+                : appPalette(context).error),
         if (s.totalBudget != null) ...[
           const Divider(height: 22),
-          _total('Ngân sách tháng', s.totalBudget!.limitAmount,
-              AppColors.onSurface)
+          _total(appL10n(context).msgMonthlyBudgets459,
+              s.totalBudget!.limitAmount, appPalette(context).onSurface)
         ],
       ]));
   Widget _total(String title, int amount, Color color) => Row(children: [
         Expanded(child: Text(title, style: const TextStyle(fontSize: 12))),
-        Text(CurrencyFormatter.formatVND(amount, showSign: amount < 0),
+        Text(formatMoney(context, amount, showSign: amount < 0),
             style: TextStyle(
                 fontSize: 13, fontWeight: FontWeight.w700, color: color))
       ]);
 }
 
-String _compact(int amount) => amount >= 1000000
-    ? '${(amount / 1000000).toStringAsFixed(2)} tr'
+String _compact(int amount, {BuildContext? context}) => amount >= 1000000
+    ? appL10n(context).compactMillion(
+        NumberFormat('0.00', appL10n(context).localeName)
+            .format(amount / 1000000))
     : amount >= 1000
-        ? '${(amount / 1000).toStringAsFixed(0)} nghìn'
+        ? appL10n(context)
+            .msgThousand460(((amount / 1000).toStringAsFixed(0)).toString())
         : '$amount';
 
 class _DonutPainter extends CustomPainter {

@@ -1,3 +1,4 @@
+import '../utils/app_failure.dart';
 import '../../features/planning/data/planning_repository.dart';
 import '../../features/planning/models/planning_models.dart';
 import '../../features/home/models/monthly_summary.dart';
@@ -17,7 +18,8 @@ class OfflinePlanningRepository implements PlanningRepository {
       {required DateTime month,
       String? categoryId,
       required int limitAmount}) async {
-    if (limitAmount <= 0) throw StateError('Hạn mức phải lớn hơn 0');
+    if (limitAmount <= 0)
+      throw AppFailure('failure8', [], 'Hạn mức phải lớn hơn 0');
     final key = monthKey(month);
     final old = (await store.rows('budgets'))
         .where((r) => r['month'] == key && r['category_id'] == categoryId)
@@ -66,7 +68,7 @@ class OfflinePlanningRepository implements PlanningRepository {
   @override
   Future<void> saveDebt(DebtModel debt) async {
     if (debt.amount <= 0 || debt.personName.trim().isEmpty)
-      throw StateError('Khoản nợ không hợp lệ');
+      throw AppFailure('failure11', [], 'Khoản nợ không hợp lệ');
     await store.put('debts', {
       'id': debt.id ?? newUuidV4(),
       'paid_amount': debt.paidAmount,
@@ -85,12 +87,13 @@ class OfflinePlanningRepository implements PlanningRepository {
       String? note,
       String? walletId}) async {
     final debt = await store.record('debts', id);
-    if (debt == null) throw StateError('Không tìm thấy khoản nợ');
+    if (debt == null)
+      throw AppFailure('failure12', [], 'Không tìm thấy khoản nợ');
     final remaining = (debt['amount'] as num).toInt() -
         (debt['paid_amount'] as num? ?? 0).toInt();
     final pay = amount ?? remaining;
     if (pay <= 0 || pay > remaining)
-      throw StateError('Số tiền trả vượt khoản nợ còn lại');
+      throw AppFailure('failure9', [], 'Số tiền trả vượt khoản nợ còn lại');
     final selectedWallet = recordTransaction ? await _wallet(walletId) : null;
     final paymentId = newUuidV4();
     await store.put('debt_payments', {
@@ -117,7 +120,8 @@ class OfflinePlanningRepository implements PlanningRepository {
         : wallets.where((w) => w['id'] == id).firstOrNull;
     if (selected == null ||
         (selected['is_archived'] == true && selected['id'] != retained)) {
-      throw StateError('Chọn nguồn tiền đang hoạt động để ghi kèm giao dịch');
+      throw AppFailure('failure13', [],
+          'Chọn nguồn tiền đang hoạt động để ghi kèm giao dịch');
     }
     return selected['id'] as String;
   }
@@ -130,9 +134,11 @@ class OfflinePlanningRepository implements PlanningRepository {
       required bool recordTransaction,
       String? walletId}) async {
     final previous = await store.record('debt_payments', id);
-    if (previous == null) throw StateError('Lần trả nợ không còn tồn tại');
+    if (previous == null)
+      throw AppFailure('failure14', [], 'Lần trả nợ không còn tồn tại');
     if (previous['is_legacy'] == true && recordTransaction) {
-      throw StateError('Số tiền trước nâng cấp không được tạo thu/chi');
+      throw AppFailure(
+          'failure3', [], 'Số tiền trước nâng cấp không được tạo thu/chi');
     }
     final wallet = recordTransaction
         ? await _wallet(walletId ?? previous['wallet_id'] as String?,
@@ -155,7 +161,7 @@ class OfflinePlanningRepository implements PlanningRepository {
   @override
   Future<void> undoDebtPayment(String id) async {
     if (await store.record('debt_payments', id) == null)
-      throw StateError('Lần trả nợ không còn tồn tại');
+      throw AppFailure('failure14', [], 'Lần trả nợ không còn tồn tại');
     await store.remove('debt_payments', id);
   }
 
@@ -173,7 +179,8 @@ class OfflinePlanningRepository implements PlanningRepository {
       });
   @override
   Future<void> setGoalSaved(String id, int savedAmount) async {
-    if (savedAmount < 0) throw StateError('Số đã để dành không được âm');
+    if (savedAmount < 0)
+      throw AppFailure('failure15', [], 'Số đã để dành không được âm');
     await store.put('goals', {'id': id, 'saved_amount': savedAmount});
   }
 

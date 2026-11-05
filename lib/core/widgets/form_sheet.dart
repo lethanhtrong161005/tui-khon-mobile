@@ -1,14 +1,15 @@
+import '../utils/localized_format.dart';
+import '../utils/vnd_amount_input.dart';
+import '../theme/semantic_colors.dart';
+import '../../l10n/app_l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
-import '../constants/app_colors.dart';
-import '../utils/currency_formatter.dart';
 
 /// Opens [child] as a rounded bottom sheet that moves above the keyboard.
 Future<T?> showFormSheet<T>(BuildContext context, Widget child) {
   return showModalBottomSheet<T>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (_) => child,
   );
@@ -39,12 +40,19 @@ class FormSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Material(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        color: appPalette(context).surfaceContainerLowest,
+        borderRadius:
+            const BorderRadius.vertical(top: const Radius.circular(28)),
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.9),
+          constraints: BoxConstraints(
+              maxHeight: (MediaQuery.sizeOf(context).height -
+                          MediaQuery.viewInsetsOf(context).bottom -
+                          MediaQuery.paddingOf(context).top)
+                      .clamp(0.0, double.infinity) *
+                  0.9),
           child: SafeArea(
             top: false,
             child: SingleChildScrollView(
@@ -58,7 +66,8 @@ class FormSheet extends StatelessWidget {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: AppColors.outlineVariant.withOpacity(0.5),
+                        color:
+                            appPalette(context).outlineVariant.withOpacity(0.5),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -67,7 +76,9 @@ class FormSheet extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        child: Text(title,
+                            style: const TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold)),
                       ),
                       if (trailing != null) trailing!,
                     ],
@@ -76,21 +87,28 @@ class FormSheet extends StatelessWidget {
                   ...children,
                   const SizedBox(height: 12),
                   SizedBox(
-                    height: 50,
+                    width: double.infinity,
                     child: ElevatedButton(
                       onPressed: busy ? null : onSubmit,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        backgroundColor: appPalette(context).primary,
+                        foregroundColor: appPalette(context).onPrimary,
+                        minimumSize: const Size(0, 50),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
                       ),
                       child: busy
                           ? const SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: const CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
                             )
-                          : Text(submitLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          : Text(submitLabel,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -103,7 +121,9 @@ class FormSheet extends StatelessWidget {
   }
 }
 
-InputDecoration sheetInputDecoration(String label, {String? helper, String? hint}) => InputDecoration(
+InputDecoration sheetInputDecoration(String label,
+        {String? helper, String? hint}) =>
+    InputDecoration(
       labelText: label,
       helperText: helper,
       hintText: hint,
@@ -112,13 +132,18 @@ InputDecoration sheetInputDecoration(String label, {String? helper, String? hint
 
 /// Whole-VND amount input showing the formatted value underneath.
 class MoneyField extends StatefulWidget {
-  const MoneyField({super.key, required this.controller, required this.label, this.autofocus = false});
+  const MoneyField(
+      {super.key,
+      required this.controller,
+      required this.label,
+      this.autofocus = false});
 
   final TextEditingController controller;
   final String label;
   final bool autofocus;
 
-  static int valueOf(TextEditingController controller) => int.tryParse(controller.text) ?? 0;
+  static int valueOf(TextEditingController controller) =>
+      parseVndInput(controller.text);
 
   @override
   State<MoneyField> createState() => _MoneyFieldState();
@@ -126,15 +151,30 @@ class MoneyField extends StatefulWidget {
 
 class _MoneyFieldState extends State<MoneyField> {
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    formatVndController(widget.controller, appL10n(context).localeName);
+  }
+
+  @override
+  void didUpdateWidget(covariant MoneyField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      formatVndController(widget.controller, appL10n(context).localeName);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final value = MoneyField.valueOf(widget.controller);
     return TextField(
       controller: widget.controller,
       autofocus: widget.autofocus,
       keyboardType: TextInputType.number,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(13)],
+      inputFormatters: [VndAmountInputFormatter(appL10n(context).localeName)],
       style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-      decoration: sheetInputDecoration(widget.label, helper: value > 0 ? CurrencyFormatter.formatVND(value) : null),
+      decoration: sheetInputDecoration(widget.label,
+          helper: value > 0 ? formatMoney(context, value) : null),
       onChanged: (_) => setState(() {}),
     );
   }
@@ -162,11 +202,14 @@ class DatePickerTile extends StatelessWidget {
     final now = DateTime.now();
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: const Icon(Icons.event, color: AppColors.primary),
-      title: Text(value == null ? label : '$label: ${formatDate(value!)}', style: const TextStyle(fontSize: 14)),
+      leading: Icon(Icons.event, color: appPalette(context).primary),
+      title: Text(value == null ? label : '$label: ${formatDate(value!)}',
+          style: const TextStyle(fontSize: 14)),
       trailing: value == null
           ? const Icon(Icons.chevron_right)
-          : IconButton(icon: const Icon(Icons.close, size: 18), onPressed: () => onChanged(null)),
+          : IconButton(
+              icon: const Icon(Icons.close, size: 18),
+              onPressed: () => onChanged(null)),
       onTap: () async {
         final picked = await showDatePicker(
           context: context,
@@ -183,17 +226,21 @@ class DatePickerTile extends StatelessWidget {
 String formatDate(DateTime d) =>
     '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
 
-Future<bool> confirmDialog(BuildContext context, {required String title, required String message, String confirm = 'Xoá'}) async {
+Future<bool> confirmDialog(BuildContext context,
+    {required String title, required String message, String? confirm}) async {
   final ok = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
       title: Text(title),
       content: Text(message),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Huỷ')),
+        TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(appL10n(context).msgCancel42)),
         TextButton(
           onPressed: () => Navigator.pop(ctx, true),
-          child: Text(confirm, style: const TextStyle(color: AppColors.error)),
+          child: Text(confirm ?? appL10n(context).msgDelete41,
+              style: TextStyle(color: appPalette(context).error)),
         ),
       ],
     ),
@@ -209,8 +256,12 @@ void showToast(BuildContext context, String message) {
 
 /// Asks for a single amount; returns null when cancelled.
 /// The dialog owns its controller so the closing animation never touches a disposed one.
-Future<int?> showAmountDialog(BuildContext context, {required String title, String label = 'Số tiền'}) {
-  return showDialog<int>(context: context, builder: (_) => _AmountDialog(title: title, label: label));
+Future<int?> showAmountDialog(BuildContext context,
+    {required String title, String? label}) {
+  return showDialog<int>(
+      context: context,
+      builder: (_) => _AmountDialog(
+          title: title, label: label ?? appL10n(context).msgAmount26));
 }
 
 class _AmountDialog extends StatefulWidget {
@@ -236,13 +287,19 @@ class _AmountDialogState extends State<_AmountDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(widget.title),
-      content: MoneyField(controller: _controller, label: widget.label, autofocus: true),
+      content: MoneyField(
+          controller: _controller, label: widget.label, autofocus: true),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Huỷ')),
+        TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(appL10n(context).msgCancel42)),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
-          onPressed: () => Navigator.pop(context, MoneyField.valueOf(_controller)),
-          child: const Text('Lưu'),
+          style: ElevatedButton.styleFrom(
+              backgroundColor: appPalette(context).primary,
+              foregroundColor: appPalette(context).onPrimary),
+          onPressed: () =>
+              Navigator.pop(context, MoneyField.valueOf(_controller)),
+          child: Text(appL10n(context).msgSave43),
         ),
       ],
     );

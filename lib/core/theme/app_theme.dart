@@ -2,6 +2,48 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 
 class AppTheme {
+  static ThemeData get dark {
+    final scheme = ColorScheme.fromSeed(
+        seedColor: const Color(0xFF68DBA9),
+        brightness: Brightness.dark,
+        surface: const Color(0xFF142820));
+    return ThemeData(
+        useMaterial3: true,
+        colorScheme: scheme,
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF0C1B16),
+        fontFamily: 'PlusJakartaSans',
+        textTheme: Typography.material2021().white.apply(
+            fontFamily: 'PlusJakartaSans',
+            bodyColor: scheme.onSurface,
+            displayColor: scheme.onSurface),
+        appBarTheme: AppBarTheme(
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            centerTitle: false,
+            backgroundColor: scheme.surface,
+            foregroundColor: scheme.onSurface),
+        inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            fillColor: scheme.surfaceContainerHigh,
+            border:
+                OutlineInputBorder(borderRadius: BorderRadius.circular(18))),
+        cardTheme: CardThemeData(
+            elevation: 0,
+            color: scheme.surfaceContainer,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(22))),
+        filledButtonTheme: light.filledButtonTheme,
+        elevatedButtonTheme: light.elevatedButtonTheme,
+        dividerTheme:
+            DividerThemeData(color: scheme.outlineVariant, thickness: .8),
+        dialogTheme:
+            DialogThemeData(backgroundColor: scheme.surfaceContainerHigh),
+        bottomSheetTheme: BottomSheetThemeData(
+            backgroundColor: scheme.surface,
+            modalBarrierColor: Colors.black54));
+  }
+
   static ThemeData get light {
     final scheme = ColorScheme.fromSeed(
         seedColor: AppColors.primary,

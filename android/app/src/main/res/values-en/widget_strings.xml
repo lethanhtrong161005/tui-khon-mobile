@@ -1,0 +1,9 @@
+<resources>
+    <!-- Bootstrap/system-locale equivalents of the homeWidget* ARB labels. -->
+    <string name="widget_title">Túi Khôn — Quick record</string>
+    <string name="widget_expense">Expense</string>
+    <string name="widget_income">Income</string>
+    <string name="widget_scan">Scan photo</string>
+    <string name="widget_quick_record">Quick record</string>
+    <string name="widget_description">Record expenses, scan receipts and record income.</string>
+</resources>

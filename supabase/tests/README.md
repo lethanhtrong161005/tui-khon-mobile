@@ -1,5 +1,20 @@
 # Offline history SQL tests
 
+## Cloud readiness smoke test (05/11/2026)
+
+`cloud_readiness.sql` is a separate administrative smoke test for the intended
+Supabase cloud project's SQL Editor. It creates two random fixture accounts and
+checks onboarding, authenticated RLS isolation, RPC push/pull, idempotent retry,
+editing, stale-device conflict, deletion tombstones, and revoked direct writes.
+Everything runs inside `BEGIN`/`ROLLBACK`; no email or AI call is sent and no
+existing account is modified. An assertion failure must be treated as a failure;
+rollback the connection before reuse if the SQL client leaves it in a transaction.
+
+This is not a real-device login, SMTP, Storage signed-URL, Gemini, Google OAuth,
+or multi-connection concurrency test. Do not count it as acceptance for those flows.
+
+## In-memory regression tests
+
 From the repository root, with Node.js and npm installed:
 
 ```sh

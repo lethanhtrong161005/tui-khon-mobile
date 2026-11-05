@@ -137,3 +137,6 @@ migrate_working_dir/
 # Supabase CLI
 supabase/.temp/
 supabase/.branches/
+
+# Generated localization output
+lib/l10n/generated/

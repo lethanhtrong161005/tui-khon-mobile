@@ -1,3 +1,4 @@
+import '../../../l10n/app_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -41,8 +42,8 @@ class _CategoryRulesScreenState extends ConsumerState<CategoryRulesScreen> {
       if (mounted) ref.invalidate(categoryRulesProvider);
     } catch (error) {
       if (mounted)
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(friendlyError(error))));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(friendlyError(error, context: context))));
     } finally {
       if (mounted) setState(() => _busy.remove(id));
     }
@@ -54,50 +55,60 @@ class _CategoryRulesScreenState extends ConsumerState<CategoryRulesScreen> {
     final categories = ref.watch(categoriesProvider);
     final names = {for (final c in categories.valueOrNull ?? []) c.id: c.name};
     return Scaffold(
-      appBar: AppBar(title: const Text('Quy tắc phân loại')),
+      appBar: AppBar(title: Text(appL10n(context).msgCategoryRules14)),
       body: Column(children: [
-        const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text(
-                'Chỉ học khi bạn đổi danh mục rồi lưu giao dịch. Quy tắc khớp chính xác mô tả bản nháp ban đầu sau khi bỏ dấu, chuyển chữ thường và gộp khoảng trắng; ưu tiên quy tắc riêng của cửa hàng; không học ví hay số tiền.')),
+        Flexible(
+            flex: 2,
+            fit: FlexFit.loose,
+            child: SingleChildScrollView(
+                child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(appL10n(context)
+                        .msgLearningHappensOnlyWhenYouChange348)))),
         Expanded(
+            flex: 3,
             child: rules.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) => Center(
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Text(friendlyError(error)),
-            TextButton(
-                onPressed: () => ref.invalidate(categoryRulesProvider),
-                child: const Text('Thử lại')),
-          ])),
-          data: (rows) => rows.isEmpty
-              ? const Center(child: Text('Chưa có quy tắc phân loại'))
-              : ListView.builder(
-                  itemCount: rows.length,
-                  itemBuilder: (context, index) {
-                    final row = rows[index];
-                    final busy = _busy.contains(row['id']);
-                    return ListTile(
-                      title: Text(row['keyword'] as String),
-                      subtitle: Text(names[row['category_id']] ??
-                          (categories.isLoading
-                              ? 'Đang tải danh mục…'
-                              : 'Danh mục không còn tồn tại')),
-                      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                        Switch(
-                            value: row['enabled'] != false,
-                            onChanged: busy
-                                ? null
-                                : (value) => _change(row, enabled: value)),
-                        IconButton(
-                            tooltip: 'Xóa quy tắc',
-                            icon: const Icon(Icons.delete_outline),
-                            onPressed:
-                                busy ? null : () => _change(row, delete: true)),
-                      ]),
-                    );
-                  }),
-        )),
+              loading: () =>
+                  const Center(child: const CircularProgressIndicator()),
+              error: (error, _) => Center(
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Text(friendlyError(error, context: context)),
+                TextButton(
+                    onPressed: () => ref.invalidate(categoryRulesProvider),
+                    child: Text(appL10n(context).msgRetry50)),
+              ])),
+              data: (rows) => rows.isEmpty
+                  ? Center(
+                      child: Text(appL10n(context).msgNoCategoryRulesYet349))
+                  : ListView.builder(
+                      itemCount: rows.length,
+                      itemBuilder: (context, index) {
+                        final row = rows[index];
+                        final busy = _busy.contains(row['id']);
+                        return ListTile(
+                          title: Text(row['keyword'] as String),
+                          subtitle: Text(names[row['category_id']] ??
+                              (categories.isLoading
+                                  ? appL10n(context).msgLoadingCategories350
+                                  : appL10n(context)
+                                      .msgCategoryNoLongerExists351)),
+                          trailing:
+                              Row(mainAxisSize: MainAxisSize.min, children: [
+                            Switch(
+                                value: row['enabled'] != false,
+                                onChanged: busy
+                                    ? null
+                                    : (value) => _change(row, enabled: value)),
+                            IconButton(
+                                tooltip: appL10n(context).msgDeleteRule352,
+                                icon: const Icon(Icons.delete_outline),
+                                onPressed: busy
+                                    ? null
+                                    : () => _change(row, delete: true)),
+                          ]),
+                        );
+                      }),
+            )),
       ]),
     );
   }

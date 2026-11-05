@@ -1,3 +1,4 @@
+import '../../../core/utils/app_failure.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:convert';
@@ -18,8 +19,11 @@ class AdvisorRepository {
   Future<String> _fingerprint() async {
     if (_store == null) return '';
     return sha256
-        .convert(utf8.encode(jsonEncode(
-            [await _store.rows('transactions'), await _store.rows('categories'), await _store.rows('budgets')])))
+        .convert(utf8.encode(jsonEncode([
+          await _store.rows('transactions'),
+          await _store.rows('categories'),
+          await _store.rows('budgets')
+        ])))
         .toString();
   }
 
@@ -29,10 +33,14 @@ class AdvisorRepository {
     final cached = await _store?.meta('advisor:$range');
     try {
       if (_store != null && await _store.pendingCount() > 0)
-        throw StateError('Đồng bộ dữ liệu trước khi tạo nhận xét AI mới');
-      final response = await _client.functions.invoke('ai-advisor', body: {'range': range});
-      final data = ((response.data as Map)['data'] as Map).cast<String, dynamic>();
-      await _store?.setMeta('advisor:$range', jsonEncode({'fingerprint': fingerprint, 'data': data}));
+        throw AppFailure(
+            'failure22', [], 'Đồng bộ dữ liệu trước khi tạo nhận xét AI mới');
+      final response =
+          await _client.functions.invoke('ai-advisor', body: {'range': range});
+      final data =
+          ((response.data as Map)['data'] as Map).cast<String, dynamic>();
+      await _store?.setMeta('advisor:$range',
+          jsonEncode({'fingerprint': fingerprint, 'data': data}));
       return AdvisorReport.fromJson(data);
     } catch (_) {
       if (cached == null) rethrow;
@@ -46,11 +54,13 @@ class AdvisorRepository {
   }
 
   /// Totals by category and by day — plain SQL, no AI quota.
-  Future<PeriodSummary> fetchPeriod({required DateTime from, required DateTime to}) async {
+  Future<PeriodSummary> fetchPeriod(
+      {required DateTime from, required DateTime to}) async {
     if (_store != null) {
       final end = DateTime(to.year, to.month, to.day + 1);
       final tx = (await OfflineWalletRepository(_store).allTransactions())
-          .where((t) => !t.occurredAt.isBefore(from) && t.occurredAt.isBefore(end));
+          .where((t) =>
+              !t.occurredAt.isBefore(from) && t.occurredAt.isBefore(end));
       final categories = <String, Map<String, dynamic>>{};
       final days = <String, Map<String, dynamic>>{};
       var income = 0, expense = 0;
@@ -75,7 +85,8 @@ class AdvisorRepository {
         c['total'] = (c['total'] as int) + t.amount;
         c['count'] = (c['count'] as int) + 1;
         final date = t.occurredAt.toIso8601String().substring(0, 10);
-        final d = days.putIfAbsent(date, () => {'day': date, 'income': 0, 'expense': 0});
+        final d = days.putIfAbsent(
+            date, () => {'day': date, 'income': 0, 'expense': 0});
         d[t.type.name] = (d[t.type.name] as int) + t.amount;
       }
       return PeriodSummary(
@@ -84,7 +95,8 @@ class AdvisorRepository {
           byCategory: categories.values.map(CategoryTotal.fromJson).toList(),
           byDay: days.values.map(DailyTotal.fromJson).toList());
     }
-    final data = await _client.rpc('get_period_summary', params: {'p_from': _isoDate(from), 'p_to': _isoDate(to)});
+    final data = await _client.rpc('get_period_summary',
+        params: {'p_from': _isoDate(from), 'p_to': _isoDate(to)});
     return PeriodSummary.fromJson((data as Map).cast<String, dynamic>());
   }
 
@@ -93,28 +105,33 @@ class AdvisorRepository {
 }
 
 final advisorRepositoryProvider = Provider<AdvisorRepository>(
-  (ref) => AdvisorRepository(ref.watch(supabaseClientProvider), ref.watch(localStoreProvider)),
+  (ref) => AdvisorRepository(
+      ref.watch(supabaseClientProvider), ref.watch(localStoreProvider)),
 );
 
 /// AI report per range (30 / 90 days). Not auto-disposed: reopening the
 /// screen reuses the last analysis instead of spending another AI call.
-final advisorReportProvider = FutureProvider.family<AdvisorReport, int>((ref, range) {
+final advisorReportProvider =
+    FutureProvider.family<AdvisorReport, int>((ref, range) {
   ref.watch(currentUserIdProvider);
   return ref.watch(advisorRepositoryProvider).analyze(range: range);
 });
 
-final advisorStaleProvider = FutureProvider.autoDispose.family<bool, int>((ref, range) async {
+final advisorStaleProvider =
+    FutureProvider.autoDispose.family<bool, int>((ref, range) async {
   ref.watch(localRevisionProvider);
   final store = ref.watch(localStoreProvider);
   if (store == null) return false;
   final raw = await store.meta('advisor:$range');
   if (raw == null) return false;
   final fingerprint = await ref.watch(advisorRepositoryProvider)._fingerprint();
-  return (jsonDecode(raw) as Map)['fingerprint'] != fingerprint || await store.pendingCount() > 0;
+  return (jsonDecode(raw) as Map)['fingerprint'] != fingerprint ||
+      await store.pendingCount() > 0;
 });
 
 /// Spending of the last [range] days, ending today.
-final periodSummaryProvider = FutureProvider.autoDispose.family<PeriodSummary, int>((ref, range) {
+final periodSummaryProvider =
+    FutureProvider.autoDispose.family<PeriodSummary, int>((ref, range) {
   ref.watch(localRevisionProvider);
   ref.watch(currentUserIdProvider);
   final now = DateTime.now();

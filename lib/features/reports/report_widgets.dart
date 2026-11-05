@@ -1,15 +1,17 @@
+import '../../core/utils/localized_format.dart';
+import '../../core/theme/semantic_colors.dart';
+import '../../l10n/app_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' show NumberFormat;
-import '../../core/constants/app_colors.dart';
 import '../../core/utils/category_icons.dart';
-import '../../core/utils/currency_formatter.dart';
 import '../../core/widgets/glass.dart';
 import '../../core/widgets/spending_donut.dart';
 import 'monthly_report.dart';
 
-String reportMoney(num value, {bool signed = false}) =>
-    CurrencyFormatter.formatVND(value, showSign: signed || value < 0);
-String percent(num value) => '${NumberFormat('0.0', 'vi').format(value)}%';
+String reportMoney(num value, {bool signed = false, BuildContext? context}) =>
+    formatMoney(context, value, showSign: signed || value < 0);
+String percent(num value, {BuildContext? context}) =>
+    '${NumberFormat('0.0', appL10n(context).localeName).format(value)}%';
 
 class ReportSectionTitle extends StatelessWidget {
   const ReportSectionTitle(this.title, {super.key, this.action});
@@ -46,7 +48,8 @@ class AdaptiveReportGrid extends StatelessWidget {
                 textDirection: TextDirection.ltr,
                 textScaler: MediaQuery.textScalerOf(context),
                 text: TextSpan(
-                    text: reportMoney(metric.value, signed: metric.signed),
+                    text: reportMoney(metric.value,
+                        signed: metric.signed, context: context),
                     style: DefaultTextStyle.of(context)
                         .style
                         .copyWith(fontSize: 11, fontWeight: FontWeight.w800)))
@@ -83,11 +86,11 @@ class ReportMetric extends StatelessWidget {
         const SizedBox(height: 10),
         Text(label, style: const TextStyle(fontSize: 11)),
         const SizedBox(height: 5),
-        Text(reportMoney(value, signed: signed),
+        Text(reportMoney(value, signed: signed, context: context),
             style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
-                color: signed ? color : AppColors.onSurface))
+                color: signed ? color : appPalette(context).onSurface))
       ]));
 }
 
@@ -103,22 +106,26 @@ class ReportComparison extends StatelessWidget {
   Widget build(BuildContext context) {
     final delta = current - previous;
     final good = income ? delta >= 0 : delta <= 0;
-    final color = good ? AppColors.primary : AppColors.error;
+    final color =
+        good ? appPalette(context).primary : appPalette(context).error;
     return GlassCard(
         radius: 18,
         padding: const EdgeInsets.all(14),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(income ? 'Thu nhập tháng trước' : 'Chi tiêu tháng trước',
+          Text(
+              income
+                  ? appL10n(context).msgLastMonthSIncome522
+                  : appL10n(context).msgLastMonthSExpenses523,
               style: const TextStyle(fontSize: 11)),
           const SizedBox(height: 6),
-          Text(reportMoney(previous),
+          Text(reportMoney(previous, context: context),
               style:
                   const TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
           const SizedBox(height: 12),
           if (previous == 0)
-            const Text('Chưa có dữ liệu so sánh',
-                style:
-                    TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant))
+            Text(appL10n(context).msgNoComparisonDataYet524,
+                style: TextStyle(
+                    fontSize: 12, color: appPalette(context).onSurfaceVariant))
           else
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Icon(
@@ -132,13 +139,13 @@ class ReportComparison extends StatelessWidget {
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                    Text(reportMoney(delta, signed: true),
+                    Text(reportMoney(delta, signed: true, context: context),
                         style: TextStyle(
                             color: color,
                             fontSize: 12,
                             fontWeight: FontWeight.w700)),
                     Text(
-                        '${delta > 0 ? '+' : ''}${percent(delta / previous * 100)}',
+                        '${delta > 0 ? '+' : ''}${percent(delta / previous * 100, context: context)}',
                         style: TextStyle(color: color, fontSize: 11)),
                   ])),
             ]),
@@ -146,17 +153,21 @@ class ReportComparison extends StatelessWidget {
   }
 }
 
-List<ReportRow> reportSlices(MonthlyReport report, {bool all = false}) {
+List<ReportRow> reportSlices(MonthlyReport report,
+    {bool all = false, BuildContext? context}) {
   final sorted = report.categoryDetails.toList()
     ..sort((a, b) {
       final order = (b['amount'] as int).compareTo(a['amount'] as int);
       return order == 0 ? '${a['id']}'.compareTo('${b['id']}') : order;
     });
-  const fallback = ['#00A878', '#7257D9', '#FFBD44', '#FF852C', '#3999E8'];
+  final fallback = ['#00A878', '#7257D9', '#FFBD44', '#FF852C', '#3999E8'];
   final result = <ReportRow>[];
   for (var i = 0; i < sorted.length; i++) {
     result.add({
       ...sorted[i],
+      'name': sorted[i]['category_known'] == false
+          ? appL10n(context).msgUncategorized441
+          : sorted[i]['name'],
       'color': sorted[i]['color'] ?? fallback[i % fallback.length]
     });
   }
@@ -165,7 +176,7 @@ List<ReportRow> reportSlices(MonthlyReport report, {bool all = false}) {
     ...result.take(5),
     {
       'id': 'other',
-      'name': 'Khác',
+      'name': appL10n(context).msgOther432,
       'color': '#A9B4C4',
       'amount': result.skip(5).fold<int>(0, (n, r) => n + (r['amount'] as int))
     }
@@ -178,19 +189,20 @@ class ReportCategories extends StatelessWidget {
   final bool all;
   @override
   Widget build(BuildContext context) {
-    final rows = reportSlices(report, all: all);
+    final rows = reportSlices(report, all: all, context: context);
     final colors = [
       for (final r in rows)
-        colorFromHex(r['color'] as String?) ?? AppColors.primary
+        colorFromHex(r['color'] as String?) ?? appPalette(context).primary
     ];
     return GlassCard(
         padding: const EdgeInsets.all(14),
         radius: 20,
         child: LayoutBuilder(builder: (context, c) {
           if (rows.isEmpty)
-            return const Padding(
-                padding: EdgeInsets.all(18),
-                child: Center(child: Text('Chưa có chi tiêu trong tháng.')));
+            return Padding(
+                padding: const EdgeInsets.all(18),
+                child: Center(
+                    child: Text(appL10n(context).msgNoExpensesThisMonth525)));
           final compact = c.maxWidth >= 300 &&
               MediaQuery.textScalerOf(context).scale(14) <= 16;
           final chart = SizedBox(
@@ -199,13 +211,14 @@ class ReportCategories extends StatelessWidget {
                   amounts: [for (final r in rows) r['amount'] as int],
                   colors: colors,
                   center: Column(mainAxisSize: MainAxisSize.min, children: [
-                    Text(reportMoney(report.expense),
+                    Text(reportMoney(report.expense, context: context),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                             fontSize: 11, fontWeight: FontWeight.w800)),
-                    const Text('Tổng chi',
+                    Text(appL10n(context).msgTotalSpending454,
                         style: TextStyle(
-                            fontSize: 10, color: AppColors.onSurfaceVariant))
+                            fontSize: 10,
+                            color: appPalette(context).onSurfaceVariant))
                   ])));
           final legend = Column(children: [
             for (var i = 0; i < rows.length; i++)
@@ -228,17 +241,22 @@ class ReportCategories extends StatelessWidget {
                             child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                              Text(reportMoney(rows[i]['amount'] as num),
+                              Text(
+                                  reportMoney(rows[i]['amount'] as num,
+                                      context: context),
                                   style: const TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600)),
                               Text(
-                                  percent((rows[i]['amount'] as num) /
-                                      report.expense *
-                                      100),
-                                  style: const TextStyle(
+                                  percent(
+                                      (rows[i]['amount'] as num) /
+                                          report.expense *
+                                          100,
+                                      context: context),
+                                  style: TextStyle(
                                       fontSize: 10,
-                                      color: AppColors.onSurfaceVariant))
+                                      color:
+                                          appPalette(context).onSurfaceVariant))
                             ])),
                       ]))
           ]);
@@ -253,13 +271,15 @@ class ReportCategories extends StatelessWidget {
   }
 }
 
-String budgetState(int spent, int limit) => spent > limit
-    ? 'Vượt ${reportMoney(spent - limit)}'
+String budgetState(int spent, int limit, {BuildContext? context}) => spent >
+        limit
+    ? appL10n(context)
+        .msgOverBy226((reportMoney(spent - limit, context: context)).toString())
     : spent == limit
-        ? 'Đã chạm hạn mức'
+        ? appL10n(context).msgLimitReached526
         : spent >= limit * .8
-            ? 'Gần chạm hạn mức'
-            : 'Trong hạn mức';
+            ? appL10n(context).msgNearTheLimit527
+            : appL10n(context).msgWithinBudget528;
 
 class ReportBudget extends StatelessWidget {
   const ReportBudget({super.key, required this.budget});
@@ -270,10 +290,10 @@ class ReportBudget extends StatelessWidget {
         limit = (budget['limit_amount'] as num).toInt();
     final ratio = limit <= 0 ? 0.0 : spent / limit;
     final color = ratio >= 1
-        ? AppColors.error
+        ? appPalette(context).error
         : ratio >= .8
             ? Colors.orange.shade700
-            : AppColors.primary;
+            : appPalette(context).primary;
     return Padding(
         padding: const EdgeInsets.only(bottom: 10),
         child: GlassCard(
@@ -293,14 +313,18 @@ class ReportBudget extends StatelessWidget {
                       children: [
                     Text(
                         budget['category_id'] == null
-                            ? 'Ngân sách tổng'
-                            : '${budget['name']}',
+                            ? appL10n(context).msgOverallBudget529
+                            : budget['category_known'] == false
+                                ? appL10n(context).msgUncategorized441
+                                : '${budget['name']}',
                         style: const TextStyle(
                             fontWeight: FontWeight.w700, fontSize: 13)),
                     const SizedBox(height: 5),
-                    Text('${reportMoney(spent)} / ${reportMoney(limit)}',
-                        style: const TextStyle(
-                            fontSize: 11, color: AppColors.onSurfaceVariant)),
+                    Text(
+                        '${reportMoney(spent, context: context)} / ${reportMoney(limit, context: context)}',
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: appPalette(context).onSurfaceVariant)),
                     const SizedBox(height: 8),
                     ClipRRect(
                         borderRadius: BorderRadius.circular(6),
@@ -311,7 +335,7 @@ class ReportBudget extends StatelessWidget {
                             backgroundColor: color.withValues(alpha: .10))),
                     const SizedBox(height: 7),
                     Text(
-                        '${percent(ratio * 100)} · ${budgetState(spent, limit)}',
+                        '${percent(ratio * 100, context: context)} · ${budgetState(spent, limit, context: context)}',
                         style: TextStyle(
                             fontSize: 11,
                             color: color,

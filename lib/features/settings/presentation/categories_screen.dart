@@ -1,7 +1,8 @@
+import '../../../core/theme/semantic_colors.dart';
+import '../../../l10n/app_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/category_icons.dart';
 import '../../../core/utils/error_messages.dart';
 import '../../../core/widgets/form_sheet.dart';
@@ -22,7 +23,9 @@ class CategoriesScreen extends ConsumerWidget {
     Widget list(TransactionType type) {
       if (categories == null) {
         return Center(
-          child: async.hasError ? Text(friendlyError(async.error!)) : const CircularProgressIndicator(),
+          child: async.hasError
+              ? Text(friendlyError(async.error!, context: context))
+              : const CircularProgressIndicator(),
         );
       }
       final items = categories.where((c) => c.type == type).toList();
@@ -32,15 +35,17 @@ class CategoriesScreen extends ConsumerWidget {
           for (final c in items)
             Card(
               elevation: 0,
-              color: AppColors.surfaceContainerLowest,
+              color: appPalette(context).surfaceContainerLowest,
               margin: const EdgeInsets.only(bottom: 8),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14)),
               child: ListTile(
                 leading: CircleAvatar(
                   backgroundColor: c.colorValue.withOpacity(0.15),
                   child: Icon(c.iconData, color: c.colorValue, size: 20),
                 ),
-                title: Text(c.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                title: Text(c.name,
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => showCategoryForm(context, type: type, initial: c),
               ),
@@ -53,36 +58,48 @@ class CategoriesScreen extends ConsumerWidget {
       length: 2,
       child: Builder(
         builder: (context) => Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: appPalette(context).surface,
           appBar: AppBar(
-            backgroundColor: AppColors.surface,
+            backgroundColor: appPalette(context).surface,
             elevation: 0,
-            title: const Text('Danh mục', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-            bottom: const TabBar(
-              labelColor: AppColors.primary,
-              indicatorColor: AppColors.primary,
-              tabs: [Tab(text: 'Chi tiêu'), Tab(text: 'Thu nhập')],
+            title: Text(appL10n(context).categories,
+                style:
+                    const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+            bottom: TabBar(
+              labelColor: appPalette(context).primary,
+              indicatorColor: appPalette(context).primary,
+              tabs: [
+                Tab(text: appL10n(context).msgExpenses164),
+                Tab(text: appL10n(context).msgIncome163)
+              ],
             ),
           ),
           floatingActionButton: FloatingActionButton.extended(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
+            backgroundColor: appPalette(context).primary,
+            foregroundColor: appPalette(context).onPrimary,
             icon: const Icon(Icons.add),
-            label: const Text('Thêm danh mục'),
+            label: Text(appL10n(context).msgAddCategory418),
             onPressed: () => showCategoryForm(
               context,
-              type: DefaultTabController.of(context).index == 0 ? TransactionType.expense : TransactionType.income,
+              type: DefaultTabController.of(context).index == 0
+                  ? TransactionType.expense
+                  : TransactionType.income,
             ),
           ),
-          body: TabBarView(children: [list(TransactionType.expense), list(TransactionType.income)]),
+          body: TabBarView(children: [
+            list(TransactionType.expense),
+            list(TransactionType.income)
+          ]),
         ),
       ),
     );
   }
 }
 
-Future<void> showCategoryForm(BuildContext context, {required TransactionType type, CategoryModel? initial}) {
-  return showFormSheet<void>(context, _CategoryForm(type: type, initial: initial));
+Future<void> showCategoryForm(BuildContext context,
+    {required TransactionType type, CategoryModel? initial}) {
+  return showFormSheet<void>(
+      context, _CategoryForm(type: type, initial: initial));
 }
 
 class _CategoryForm extends ConsumerStatefulWidget {
@@ -108,7 +125,8 @@ class _CategoryFormState extends ConsumerState<_CategoryForm> {
   }
 
   Future<void> _save() async {
-    if (_name.text.trim().isEmpty) return showToast(context, 'Nhập tên danh mục');
+    if (_name.text.trim().isEmpty)
+      return showToast(context, appL10n(context).msgEnterACategoryName419);
     setState(() => _busy = true);
     try {
       await ref.read(walletRepositoryProvider).saveCategory(CategoryModel(
@@ -121,7 +139,7 @@ class _CategoryFormState extends ConsumerState<_CategoryForm> {
       _refresh();
       if (mounted) Navigator.pop(context);
     } catch (e) {
-      if (mounted) showToast(context, friendlyError(e));
+      if (mounted) showToast(context, friendlyError(e, context: context));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -130,16 +148,19 @@ class _CategoryFormState extends ConsumerState<_CategoryForm> {
   Future<void> _delete() async {
     final ok = await confirmDialog(
       context,
-      title: 'Xoá danh mục "${widget.initial!.name}"?',
-      message: 'Các giao dịch cũ vẫn được giữ và chuyển thành "Chưa phân loại". Ngân sách của danh mục này sẽ bị xoá.',
+      title: appL10n(context)
+          .msgDeleteCategory420((widget.initial!.name).toString()),
+      message: appL10n(context).msgExistingTransactionsWillBeKeptAnd421,
     );
     if (!ok) return;
     try {
-      await ref.read(walletRepositoryProvider).deleteCategory(widget.initial!.id);
+      await ref
+          .read(walletRepositoryProvider)
+          .deleteCategory(widget.initial!.id);
       _refresh();
       if (mounted) Navigator.pop(context);
     } catch (e) {
-      if (mounted) showToast(context, friendlyError(e));
+      if (mounted) showToast(context, friendlyError(e, context: context));
     }
   }
 
@@ -154,23 +175,38 @@ class _CategoryFormState extends ConsumerState<_CategoryForm> {
     final type = widget.initial?.type ?? widget.type;
     return FormSheet(
       title: widget.initial == null
-          ? (type == TransactionType.expense ? 'Danh mục chi mới' : 'Danh mục thu mới')
-          : 'Sửa danh mục',
-      submitLabel: 'Lưu',
+          ? (type == TransactionType.expense
+              ? appL10n(context).msgNewExpenseCategory422
+              : appL10n(context).msgNewIncomeCategory423)
+          : appL10n(context).msgEditCategory424,
+      submitLabel: appL10n(context).msgSave43,
       busy: _busy,
       onSubmit: _save,
       trailing: widget.initial == null
           ? null
-          : IconButton(icon: const Icon(Icons.delete_outline, color: AppColors.error), onPressed: _delete),
+          : IconButton(
+              icon:
+                  Icon(Icons.delete_outline, color: appPalette(context).error),
+              onPressed: _delete),
       children: [
-        TextField(controller: _name, maxLength: 50, decoration: sheetInputDecoration('Tên danh mục')),
-        const Text('Biểu tượng', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+        TextField(
+            controller: _name,
+            maxLength: 50,
+            decoration:
+                sheetInputDecoration(appL10n(context).msgCategoryName425)),
+        Text(appL10n(context).msgIcon332,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        IconPickerGrid(selected: _icon, color: colorFromHex(_color)!, onChanged: (v) => setState(() => _icon = v)),
+        IconPickerGrid(
+            selected: _icon,
+            color: colorFromHex(_color)!,
+            onChanged: (v) => setState(() => _icon = v)),
         const SizedBox(height: 12),
-        const Text('Màu', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+        Text(appL10n(context).msgColor333,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        ColorPickerRow(selected: _color, onChanged: (v) => setState(() => _color = v)),
+        ColorPickerRow(
+            selected: _color, onChanged: (v) => setState(() => _color = v)),
       ],
     );
   }

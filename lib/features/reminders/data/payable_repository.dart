@@ -1,3 +1,4 @@
+import '../../../core/utils/app_failure.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/offline/local_store.dart';
 import '../../home/models/transaction_model.dart';
@@ -52,7 +53,8 @@ class PayablePayments {
                 note: payable.note ?? payable.title));
     if (confirmed != null &&
         (!confirmed.isValid || confirmed.type != TransactionType.expense)) {
-      throw ArgumentError('Khoản phải trả cần một khoản chi hợp lệ');
+      throw AppArgumentFailure(
+          'failure32', [], 'Khoản phải trả cần một khoản chi hợp lệ');
     }
     // One journal operation: LocalStore and the server derive its transaction
     // in the same commit. Never enqueue an independent transaction here.

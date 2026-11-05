@@ -1,3 +1,4 @@
+import '../theme/semantic_colors.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
@@ -16,20 +17,22 @@ class SpendingDonut extends StatelessWidget {
   Widget build(BuildContext context) => AspectRatio(
       aspectRatio: 1,
       child: CustomPaint(
-          painter: _Donut(amounts, colors),
+          painter:
+              _Donut(amounts, colors, appPalette(context).surfaceContainerHigh),
           child: Center(
               child:
                   Padding(padding: const EdgeInsets.all(38), child: center))));
 }
 
 class _Donut extends CustomPainter {
-  _Donut(this.amounts, this.colors);
+  _Donut(this.amounts, this.colors, this.emptyColor);
+  final Color emptyColor;
   final List<int> amounts;
   final List<Color> colors;
   @override
   void paint(Canvas canvas, Size size) {
     const stroke = 26.0;
-    final rect = Offset(stroke / 2, stroke / 2) &
+    final rect = const Offset(stroke / 2, stroke / 2) &
         Size(size.width - stroke, size.height - stroke);
     final total = amounts.fold<int>(0, (a, b) => a + b);
     if (total <= 0) {
@@ -39,7 +42,7 @@ class _Donut extends CustomPainter {
           math.pi * 2,
           false,
           Paint()
-            ..color = const Color(0xFFE4ECE8)
+            ..color = emptyColor
             ..style = PaintingStyle.stroke
             ..strokeWidth = stroke);
       return;

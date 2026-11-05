@@ -1,9 +1,10 @@
+import '../../../core/theme/semantic_colors.dart';
+import '../../../l10n/app_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/error_messages.dart';
 import '../providers/auth_providers.dart';
 import 'forgot_password_screen.dart';
@@ -53,8 +54,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         showAuthMessage(
             context,
             sent
-                ? 'Mã xác thực mới đã được gửi tới $email'
-                : 'Email chưa xác thực. Bạn có thể gửi lại mã ở màn tiếp theo.');
+                ? appL10n(context)
+                    .msgANewVerificationCodeWasSent96((email).toString())
+                : appL10n(context).msgYourEmailIsNotVerifiedYou97);
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -62,10 +64,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   email: email, purpose: OtpPurpose.signup)),
         );
       } else {
-        showAuthMessage(context, friendlyError(e));
+        showAuthMessage(context, friendlyError(e, context: context));
       }
     } catch (e) {
-      if (mounted) showAuthMessage(context, friendlyError(e));
+      if (mounted) showAuthMessage(context, friendlyError(e, context: context));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -79,9 +81,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref.read(authRepositoryProvider).signInWithGoogle();
     } on GoogleSignInException catch (e) {
       if (mounted && e.code != GoogleSignInExceptionCode.canceled)
-        showAuthMessage(context, friendlyError(e));
+        showAuthMessage(context, friendlyError(e, context: context));
     } catch (e) {
-      if (mounted) showAuthMessage(context, friendlyError(e));
+      if (mounted) showAuthMessage(context, friendlyError(e, context: context));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -101,12 +103,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           busy: _isLoading,
           children: [
             const SizedBox(height: 16),
-            const AuthBrandHeader(
+            AuthBrandHeader(
                 title: 'Túi Khôn',
-                subtitle: 'Quản lý tài chính cá nhân &\nTrợ lý Gemini AI'),
+                subtitle: appL10n(context)
+                    .msgPersonalFinanceNotebookGeminiAiAssistant99),
             const AuthHeroIllustration(),
             GoogleAuthButton(onPressed: _handleGoogleSignIn, busy: _isLoading),
-            const AuthDivider('Hoặc đăng nhập bằng'),
+            AuthDivider(appL10n(context).msgOrSignInWith100),
             Form(
                 key: _formKey,
                 child: AutofillGroup(
@@ -120,18 +123,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       autofillHints: const [AutofillHints.email],
                       validator: (v) => isValidEmail(v ?? '')
                           ? null
-                          : 'Vui lòng nhập email hợp lệ'),
+                          : appL10n(context).msgEnterAValidEmailAddress91),
                   const SizedBox(height: 14),
                   AuthTextField(
                       controller: _passwordController,
                       enabled: !_isLoading,
                       icon: Icons.lock_outline_rounded,
-                      hint: 'Mật khẩu',
+                      hint: appL10n(context).msgPassword101,
                       isPassword: true,
                       textInputAction: TextInputAction.done,
                       autofillHints: const [AutofillHints.password],
-                      validator: (v) =>
-                          (v ?? '').isEmpty ? 'Vui lòng nhập mật khẩu' : null,
+                      validator: (v) => (v ?? '').isEmpty
+                          ? appL10n(context).msgEnterYourPassword102
+                          : null,
                       onSubmitted: (_) => _handleEmailLogin()),
                 ]))),
             Align(
@@ -145,10 +149,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 builder: (_) => ForgotPasswordScreen(
                                     initialEmail:
                                         _emailController.text.trim()))),
-                    child: const Text('Quên mật khẩu?'))),
+                    child: Text(appL10n(context).msgForgotPassword103))),
             const SizedBox(height: 8),
             AuthPrimaryButton(
-                label: 'Đăng nhập',
+                label: appL10n(context).msgSignIn104,
                 isLoading: _isLoading,
                 onPressed: _handleEmailLogin),
             const SizedBox(height: 10),
@@ -156,9 +160,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 alignment: WrapAlignment.center,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  const Text('Chưa có tài khoản?',
+                  Text(appL10n(context).msgDonTHaveAnAccount105,
                       style: TextStyle(
-                          fontSize: 12, color: AppColors.onSurfaceVariant)),
+                          fontSize: 12,
+                          color: appPalette(context).onSurfaceVariant)),
                   TextButton(
                       onPressed: _isLoading
                           ? null
@@ -166,16 +171,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               context,
                               MaterialPageRoute(
                                   builder: (_) => const RegisterScreen())),
-                      child: const Text('Đăng ký ngay')),
+                      child: Text(appL10n(context).msgRegisterNow106)),
                 ]),
             const SizedBox(height: 12),
-            const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Icon(Icons.shield_outlined, size: 17, color: AppColors.primary),
-              SizedBox(width: 8),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Icon(Icons.shield_outlined,
+                  size: 17, color: appPalette(context).primary),
+              const SizedBox(width: 8),
               Flexible(
-                  child: Text('Ghi chép riêng theo tài khoản của bạn',
+                  child: Text(
+                      appL10n(context).msgYourRecordsArePrivateToYour107,
                       style: TextStyle(
-                          fontSize: 11, color: AppColors.onSurfaceVariant)))
+                          fontSize: 11,
+                          color: appPalette(context).onSurfaceVariant)))
             ]),
           ]);
 }

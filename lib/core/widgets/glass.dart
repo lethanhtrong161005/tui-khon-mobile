@@ -21,6 +21,11 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final effectiveTint = dark
+        ? Color.alphaBlend(tint.withValues(alpha: .04),
+            Theme.of(context).colorScheme.surfaceContainer)
+        : tint;
     final opaque = MediaQuery.of(context).highContrast;
     final surface = DecoratedBox(
       decoration: BoxDecoration(
@@ -28,11 +33,12 @@ class GlassCard extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              tint.withValues(alpha: opaque ? 1 : .88),
-              tint.withValues(alpha: opaque ? 1 : .66)
+              effectiveTint.withValues(alpha: opaque ? 1 : .88),
+              effectiveTint.withValues(alpha: opaque ? 1 : .66)
             ]),
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: Colors.white.withValues(alpha: .85)),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: dark ? .10 : .85)),
       ),
       child: Material(
           type: MaterialType.transparency,
@@ -68,35 +74,43 @@ class NotebookBackground extends StatelessWidget {
           gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: ai
+              colors: Theme.of(context).brightness == Brightness.dark
                   ? const [
-                      Color(0xFFF1F0FF),
-                      Color(0xFFFCFCFF),
-                      Color(0xFFF0F6F3)
+                      Color(0xFF0C211A),
+                      Color(0xFF10231D),
+                      Color(0xFF132A23)
                     ]
-                  : const [
-                      Color(0xFFE5F5E9),
-                      Color(0xFFFAFBF6),
-                      Color(0xFFEDF6ED)
-                    ],
+                  : ai
+                      ? const [
+                          Color(0xFFF1F0FF),
+                          Color(0xFFFCFCFF),
+                          Color(0xFFF0F6F3)
+                        ]
+                      : const [
+                          Color(0xFFE5F5E9),
+                          Color(0xFFFAFBF6),
+                          Color(0xFFEDF6ED)
+                        ],
               stops: const [0, .45, 1])),
       child: child);
 }
 
 class TintedIcon extends StatelessWidget {
-  const TintedIcon(this.icon,
-      {super.key, this.color = AppColors.primary, this.size = 44});
+  const TintedIcon(this.icon, {super.key, this.color, this.size = 44});
   final IconData icon;
-  final Color color;
+  final Color? color;
   final double size;
   @override
   Widget build(BuildContext context) => Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-          color: color.withValues(alpha: .11),
+          color: (color ?? Theme.of(context).colorScheme.primary)
+              .withValues(alpha: .11),
           borderRadius: BorderRadius.circular(size * .36)),
-      child: Icon(icon, color: color, size: size * .49));
+      child: Icon(icon,
+          color: color ?? Theme.of(context).colorScheme.primary,
+          size: size * .49));
 }
 
 class EmeraldButton extends StatelessWidget {
@@ -121,6 +135,7 @@ class EmeraldButton extends StatelessWidget {
           onPressed: onPressed,
           style: FilledButton.styleFrom(
               backgroundColor: Colors.transparent,
+              foregroundColor: Colors.white,
               disabledBackgroundColor: const Color(0xFFB2C5BA),
               minimumSize: const Size(0, 52),
               shape: RoundedRectangleBorder(

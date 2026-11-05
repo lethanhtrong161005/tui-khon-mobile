@@ -1,6 +1,7 @@
+import '../../../core/theme/semantic_colors.dart';
+import '../../../l10n/app_l10n.dart';
 import 'package:flutter/material.dart';
 
-import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/glass.dart';
 import '../models/planning_models.dart';
 import 'budgets_tab.dart';
@@ -42,43 +43,49 @@ class _PlanningScreenState extends State<PlanningScreen>
         null, // the budgets tab has its own buttons (month-specific)
       PlanningTab.debts => FloatingActionButton.extended(
           onPressed: () => showDebtForm(context, type: DebtType.borrow),
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          backgroundColor: appPalette(context).primary,
+          foregroundColor: appPalette(context).onPrimary,
           icon: const Icon(Icons.add),
-          label: const Text('Thêm khoản nợ'),
+          label: Text(appL10n(context).msgAddDebt248),
         ),
       PlanningTab.goals => FloatingActionButton.extended(
           onPressed: () => showGoalForm(context),
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          backgroundColor: appPalette(context).primary,
+          foregroundColor: appPalette(context).onPrimary,
           icon: const Icon(Icons.add),
-          label: const Text('Mục tiêu mới'),
+          label: Text(appL10n(context).msgNewGoal327),
         ),
     };
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: AppColors.surface.withValues(alpha: .85),
+        backgroundColor: appPalette(context).surface.withValues(alpha: .85),
         automaticallyImplyLeading: !widget.embedded,
         elevation: 0,
-        title: const Text('Kế hoạch',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+        title: Text(appL10n(context).planning,
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
         bottom: TabBar(
           controller: _tabs,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           indicatorSize: TabBarIndicatorSize.tab,
           indicator: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: .1),
+              color: appPalette(context).primary.withValues(alpha: .1),
               borderRadius: BorderRadius.circular(20)),
           dividerColor: Colors.transparent,
-          labelColor: AppColors.primary,
-          indicatorColor: AppColors.primary,
-          unselectedLabelColor: AppColors.onSurfaceVariant,
-          tabs: const [
-            Tab(icon: Icon(Icons.donut_large, size: 20), text: 'Ngân sách'),
-            Tab(icon: Icon(Icons.handshake, size: 20), text: 'Sổ nợ'),
-            Tab(icon: Icon(Icons.savings, size: 20), text: 'Mục tiêu'),
+          labelColor: appPalette(context).primary,
+          indicatorColor: appPalette(context).primary,
+          unselectedLabelColor: appPalette(context).onSurfaceVariant,
+          tabs: [
+            Tab(
+                icon: const Icon(Icons.donut_large, size: 20),
+                text: appL10n(context).msgBudgets8),
+            Tab(
+                icon: const Icon(Icons.handshake, size: 20),
+                text: appL10n(context).msgDebtBook9),
+            Tab(
+                icon: const Icon(Icons.savings, size: 20),
+                text: appL10n(context).msgGoals11),
           ],
         ),
       ),

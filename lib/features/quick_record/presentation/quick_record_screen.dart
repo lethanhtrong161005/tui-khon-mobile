@@ -1,3 +1,6 @@
+import '../../../core/utils/localized_format.dart';
+import '../../../core/theme/semantic_colors.dart';
+import '../../../l10n/app_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -9,7 +12,6 @@ import '../../../core/offline/duplicate_service.dart';
 import '../data/quick_record_learning.dart';
 import '../../../core/services/voice_input_service.dart';
 import '../../../core/utils/category_icons.dart';
-import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/error_messages.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../home/models/category_model.dart';
@@ -72,11 +74,10 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
 
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final List<_ChatMessage> _messages = [
+  late final List<_ChatMessage> _messages = [
     _ChatMessage(
       isUser: false,
-      text: 'Chào bạn! Bạn vừa chi tiêu gì hay có khoản thu nào mới? '
-          'Hãy gõ hoặc bấm mic nói tự nhiên bằng tiếng Việt nhé.',
+      text: appL10n(context).msgHelloHaveYouSpentOrReceived353,
     ),
   ];
   List<ChatTurn> _followUpHistory = [];
@@ -87,6 +88,12 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
   bool _isThinking = false;
   int? _aiDailyCount;
   int _aiDailyLimit = _defaultDailyLimit;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _messages.first.text = appL10n(context).msgHelloHaveYouSpentOrReceived353;
+  }
 
   @override
   void initState() {
@@ -142,7 +149,8 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
                 text: target.item?.sourceText ?? target.draft?.note ?? ''),
             ChatTurn(
                 fromUser: false,
-                text: target.item?.question ?? 'Khoản này bao nhiêu tiền?'),
+                text: target.item?.question ??
+                    appL10n(context).msgHowMuchWasThisTransaction354),
           ];
     setState(() {
       _messages
@@ -208,7 +216,8 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
       setState(() {
         if (e is FunctionException && e.status == 429)
           _aiDailyCount = _aiDailyLimit;
-        _messages.add(_ChatMessage(isUser: false, text: friendlyError(e)));
+        _messages.add(_ChatMessage(
+            isUser: false, text: friendlyError(e, context: context)));
       });
     } finally {
       if (mounted) setState(() => _isThinking = false);
@@ -239,13 +248,15 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
               draft: replacing.draft,
               sourceText:
                   replacing.item?.sourceText ?? replacing.draft?.note ?? '',
-              question: result.question ?? 'Bạn bổ sung số tiền giúp mình nhé?',
-              missingFields: const ['amount']);
+              question:
+                  result.question ?? appL10n(context).msgPleaseAddTheAmount355,
+              missingFields: ['amount']);
           replacing.text = replacing.item!.question!;
         } else {
           _messages.add(_ChatMessage(
               isUser: false,
-              text: result.question ?? 'Bạn nói rõ hơn giúp mình nhé?'));
+              text: result.question ??
+                  appL10n(context).msgPleaseProvideMoreDetails356));
         }
         return;
       }
@@ -267,13 +278,14 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
                     isPossibleDuplicate(draft, m.draft!)));
         final text = [
           item.needsClarification
-              ? 'Cần bổ sung giao dịch này:'
-              : 'Kiểm tra rồi bấm Lưu nhé:',
+              ? appL10n(context).msgAddDetailsToThisTransaction357
+              : appL10n(context).msgReviewAndTapSave358,
           if (result.offline)
-            '(Đang dùng bộ phân tích offline, hãy kiểm tra lại.)',
+            appL10n(context).msgUsingTheOfflineParserPleaseReview359,
           if (item.question != null) item.question!,
           if (result.warnings.isNotEmpty)
-            'Cần kiểm tra: ${result.warnings.join(', ')}',
+            appL10n(context)
+                .msgReviewRequired360((result.warnings.join(', ')).toString()),
         ].join('\n');
         final message = _ChatMessage(
             isUser: false,
@@ -317,8 +329,8 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
       onError: (_) {
         if (mounted && _controller.text.trim().isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Mình chưa nghe rõ, bạn thử nói lại nhé')),
+            SnackBar(
+                content: Text(appL10n(context).msgICouldnTHearThatClearly361)),
           );
         }
       },
@@ -326,9 +338,9 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
     if (!mounted) return;
     if (!started) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text(
-                'Thiết bị chưa hỗ trợ nhận giọng nói hoặc bạn chưa cấp quyền micro')),
+        SnackBar(
+            content: Text(appL10n(context)
+                .msgSpeechRecognitionIsUnavailableOrMicrophone362)),
       );
       return;
     }
@@ -350,8 +362,10 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
     if (receipt == null || !mounted) return;
 
     setState(() {
-      _messages.add(
-          _ChatMessage(isUser: true, text: 'Ảnh hóa đơn', isReceipt: true));
+      _messages.add(_ChatMessage(
+          isUser: true,
+          text: appL10n(context).msgReceiptImage363,
+          isReceipt: true));
       _isThinking = true;
     });
     _scrollToBottom();
@@ -385,8 +399,8 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
       }
     } catch (e) {
       if (mounted)
-        setState(() =>
-            _messages.add(_ChatMessage(isUser: false, text: friendlyError(e))));
+        setState(() => _messages.add(_ChatMessage(
+            isUser: false, text: friendlyError(e, context: context))));
     } finally {
       if (mounted) setState(() => _isThinking = false);
       _scrollToBottom();
@@ -415,12 +429,12 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
       await _learnSavedCorrection(message);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đã lưu giao dịch vào sổ Túi Khôn!')),
+        SnackBar(content: Text(appL10n(context).msgSavedToYourTIKh364)),
       );
     } catch (e) {
       if (mounted)
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(friendlyError(e))));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(friendlyError(e, context: context))));
     } finally {
       if (mounted) setState(() => message.saving = false);
     }
@@ -487,8 +501,8 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
       }
     } catch (e) {
       if (mounted)
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(friendlyError(e))));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(friendlyError(e, context: context))));
     } finally {
       if (mounted) ref.refreshWalletData();
       if (mounted)
@@ -550,12 +564,12 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
     try {
       await ref.saveTransaction(draft);
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Đã lưu giao dịch!')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(appL10n(context).msgTransactionSaved365)));
     } catch (e) {
       if (mounted)
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(friendlyError(e))));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(friendlyError(e, context: context))));
     }
   }
 
@@ -583,16 +597,16 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
     final profile = ref.watch(profileProvider).valueOrNull;
     // Loaded up front so the confirmation card can show category icons instantly.
     final categories =
-        ref.watch(categoriesProvider).valueOrNull ?? const <CategoryModel>[];
+        ref.watch(categoriesProvider).valueOrNull ?? <CategoryModel>[];
     ref.watch(walletsProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: appPalette(context).surface,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF7F7FC),
+        backgroundColor: adaptiveSurface(context, const Color(0xFFF7F7FC)),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.onSurface),
+          icon: Icon(Icons.arrow_back, color: appPalette(context).onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         title: Row(
@@ -601,26 +615,27 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
               width: 28,
               height: 28,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.12),
+                color: appPalette(context).primary.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.account_balance_wallet,
-                  size: 18, color: AppColors.primary),
+              child: Icon(Icons.account_balance_wallet,
+                  size: 18, color: appPalette(context).primary),
             ),
             const SizedBox(width: 8),
-            const Text(
-              'Ghi Nhanh AI',
+            Expanded(
+                child: Text(
+              appL10n(context).quickAi,
               style: TextStyle(
-                  color: AppColors.onSurface,
+                  color: appPalette(context).onSurface,
                   fontSize: 16,
                   fontWeight: FontWeight.bold),
-            ),
+            )),
           ],
         ),
         actions: [
           IconButton(
-            tooltip: 'Nhập thủ công',
-            icon: const Icon(Icons.edit_note, color: AppColors.onSurface),
+            tooltip: appL10n(context).msgEnterManually366,
+            icon: Icon(Icons.edit_note, color: appPalette(context).onSurface),
             onPressed: _addManually,
           ),
           Padding(
@@ -634,10 +649,10 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
               child: profile?.avatarUrl == null
                   ? Text(
                       profile?.initials ?? '',
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.primary),
+                          color: appPalette(context).primary),
                     )
                   : null,
             ),
@@ -648,10 +663,14 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
           ai: true,
           child: Column(
             children: [
-              _introCard(),
+              Flexible(
+                  flex: 2,
+                  fit: FlexFit.loose,
+                  child: SingleChildScrollView(child: _introCard())),
 
               // Message stream
               Expanded(
+                flex: 3,
                 child: ListView.builder(
                   controller: _scrollController,
                   padding:
@@ -671,12 +690,15 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
               // Sticky bottom input bar
               if (_activeFollowUp != null)
                 ListTile(
-                  title: Text(
-                      'Bổ sung: ${_activeFollowUp!.item?.sourceText ?? _activeFollowUp!.draft?.note ?? ''}'),
+                  title: Text(appL10n(context).msgFollowUp367(
+                      (_activeFollowUp!.item?.sourceText ??
+                              _activeFollowUp!.draft?.note ??
+                              '')
+                          .toString())),
                   subtitle: Text(_activeFollowUp!.item?.question ??
-                      'Khoản này bao nhiêu tiền?'),
+                      appL10n(context).msgHowMuchWasThisTransaction354),
                   trailing: IconButton(
-                      tooltip: 'Hủy bổ sung',
+                      tooltip: appL10n(context).msgCancelFollowUp368,
                       onPressed: _isThinking
                           ? null
                           : () => setState(() => _activeFollowUp = null),
@@ -692,38 +714,41 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       child: GlassCard(
           radius: 22,
-          tint: const Color(0xFFF0EEFF),
+          tint: adaptiveSurface(context, const Color(0xFFF0EEFF)),
           padding: const EdgeInsets.all(14),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              const TintedIcon(Icons.auto_awesome_rounded,
-                  color: AppColors.secondary, size: 36),
+              TintedIcon(Icons.auto_awesome_rounded,
+                  color: appPalette(context).secondary, size: 36),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                    Text('Trợ lý Túi Khôn',
-                        style: TextStyle(
+                    Text(appL10n(context).msgTIKhNAssistant369,
+                        style: const TextStyle(
                             fontSize: 14, fontWeight: FontWeight.w800)),
-                    SizedBox(height: 3),
-                    Text('Ghi nhiều khoản, duyệt trước khi lưu',
+                    const SizedBox(height: 3),
+                    Text(
+                        appL10n(context)
+                            .msgRecordMultipleItemsAndReviewBefore370,
                         style: TextStyle(
-                            fontSize: 10, color: AppColors.onSurfaceVariant)),
+                            fontSize: 10,
+                            color: appPalette(context).onSurfaceVariant)),
                   ]))
             ]),
             const SizedBox(height: 12),
-            const Text('Gõ hoặc nói tự nhiên bằng tiếng Việt',
-                style:
-                    TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant)),
+            Text(appL10n(context).msgTypeOrSpeakNaturallyInVietnamese371,
+                style: TextStyle(
+                    fontSize: 11, color: appPalette(context).onSurfaceVariant)),
             const SizedBox(height: 6),
             SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(children: [
-                  _quickChip('Ăn phở 65k'),
-                  _quickChip('Cà phê 35k, đổ xăng 80k'),
-                  _quickChip('Nhận lương 12 triệu'),
+                  _quickChip(appL10n(context).msgNPhK372),
+                  _quickChip(appL10n(context).msgCPhKXNgK373),
+                  _quickChip(appL10n(context).msgNhNLNgTriU374),
                 ])),
           ])));
 
@@ -732,8 +757,9 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
       margin: const EdgeInsets.only(right: 6),
       child: ActionChip(
         label: Text(text,
-            style: const TextStyle(fontSize: 12, color: AppColors.onSurface)),
-        backgroundColor: AppColors.surfaceContainerHighest,
+            style:
+                TextStyle(fontSize: 12, color: appPalette(context).onSurface)),
+        backgroundColor: appPalette(context).surfaceContainerHighest,
         side: BorderSide.none,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         onPressed: () {
@@ -754,13 +780,13 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
         constraints:
             BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
         padding: const EdgeInsets.all(12),
-        decoration: const BoxDecoration(
-          color: AppColors.primary,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(16),
-            bottomLeft: Radius.circular(16),
-            bottomRight: Radius.circular(16),
-            topRight: Radius.circular(4),
+        decoration: BoxDecoration(
+          color: appPalette(context).primary,
+          borderRadius: const BorderRadius.only(
+            topLeft: const Radius.circular(16),
+            bottomLeft: const Radius.circular(16),
+            bottomRight: const Radius.circular(16),
+            topRight: const Radius.circular(4),
           ),
         ),
         child: Column(
@@ -773,7 +799,9 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
                       color: Colors.white70, size: 14),
                   const SizedBox(width: 4),
                   Text(
-                    msg.isReceipt ? 'QUÉT HÓA ĐƠN' : 'GIỌNG NÓI ĐÃ DỊCH',
+                    msg.isReceipt
+                        ? appL10n(context).msgScanReceipt375
+                        : appL10n(context).msgTranscribedVoice376,
                     style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 10,
@@ -804,20 +832,20 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
   }
 
   Widget _buildThinkingBubble() {
-    return const Padding(
-      padding: EdgeInsets.only(bottom: 12),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          SizedBox(width: 4),
+          const SizedBox(width: 4),
           SizedBox(
               width: 16,
               height: 16,
               child: CircularProgressIndicator(
-                  strokeWidth: 2, color: AppColors.secondary)),
-          SizedBox(width: 10),
-          Text('Gemini đang phân tích...',
-              style:
-                  TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant)),
+                  strokeWidth: 2, color: appPalette(context).secondary)),
+          const SizedBox(width: 10),
+          Text(appL10n(context).msgGeminiIsAnalyzing377,
+              style: TextStyle(
+                  fontSize: 12, color: appPalette(context).onSurfaceVariant)),
         ],
       ),
     );
@@ -832,8 +860,8 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(6),
-              decoration: const BoxDecoration(
-                color: AppColors.secondary,
+              decoration: BoxDecoration(
+                color: appPalette(context).secondary,
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.smart_toy, color: Colors.white, size: 16),
@@ -844,12 +872,12 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceContainerLowest,
+                  color: appPalette(context).surfaceContainerLowest,
                   borderRadius: const BorderRadius.only(
-                    topRight: Radius.circular(16),
-                    bottomLeft: Radius.circular(16),
-                    bottomRight: Radius.circular(16),
-                    topLeft: Radius.circular(4),
+                    topRight: const Radius.circular(16),
+                    bottomLeft: const Radius.circular(16),
+                    bottomRight: const Radius.circular(16),
+                    topLeft: const Radius.circular(4),
                   ),
                   boxShadow: [
                     BoxShadow(
@@ -859,8 +887,8 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
                   ],
                 ),
                 child: Text(msg.text,
-                    style: const TextStyle(
-                        fontSize: 13, color: AppColors.onSurface)),
+                    style: TextStyle(
+                        fontSize: 13, color: appPalette(context).onSurface)),
               ),
             ),
           ],
@@ -872,10 +900,10 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
               if (!msg.saved)
                 CheckboxListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Chọn giao dịch'),
+                  title: Text(appL10n(context).msgSelectTransaction378),
                   subtitle: msg.duplicate
-                      ? const Text(
-                          'Có thể trùng giao dịch. Kiểm tra trước khi lưu.')
+                      ? Text(appL10n(context)
+                          .msgPossibleDuplicateReviewBeforeSaving379)
                       : null,
                   value: msg.selected,
                   onChanged: msg.saving || msg.needsClarification
@@ -887,7 +915,7 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
               if (!msg.saved && msg.needsClarification)
                 TextButton(
                     onPressed: _isThinking ? null : () => _beginFollowUp(msg),
-                    child: const Text('Bổ sung')),
+                    child: Text(appL10n(context).msgAddDetails380)),
               if (msg.batch != null &&
                   identical(
                       msg, _messages.lastWhere((m) => m.batch == msg.batch)))
@@ -901,8 +929,11 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
                               .any((m) => m.batch == msg.batch && m.saving)
                       ? () => _saveSelected(msg.batch!)
                       : null,
-                  child: Text(
-                      'Lưu đã chọn (${_messages.where((m) => m.batch == msg.batch && m.selected && !m.saved).length})'),
+                  child: Text(appL10n(context).msgSaveSelected381((_messages
+                          .where((m) =>
+                              m.batch == msg.batch && m.selected && !m.saved)
+                          .length)
+                      .toString())),
                 ),
             ]),
           ),
@@ -919,16 +950,16 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
         categories.where((c) => c.id == draft.categoryId).firstOrNull?.icon;
     final title = (draft.note != null && draft.note!.isNotEmpty)
         ? draft.note!
-        : (draft.categoryName ?? 'Giao dịch');
+        : (draft.categoryName ?? appL10n(context).msgTransactions5);
     final subtitle = [
-      draft.categoryName ?? 'Chưa chọn danh mục',
+      draft.categoryName ?? appL10n(context).msgNoCategorySelected382,
       if (draft.merchant != null) draft.merchant!
     ].join(' • ');
 
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: appPalette(context).surfaceContainerLowest,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
@@ -956,8 +987,9 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
                       child: Icon(
                         CategoryIcons.resolve(categoryIcon),
                         size: 20,
-                        color:
-                            isIncome ? AppColors.primary : AppColors.tertiary,
+                        color: isIncome
+                            ? appPalette(context).primary
+                            : appPalette(context).tertiary,
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -973,9 +1005,9 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
                           ),
                           Text(
                             subtitle,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 11,
-                                color: AppColors.onSurfaceVariant),
+                                color: appPalette(context).onSurfaceVariant),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
@@ -989,15 +1021,19 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
                 decoration: BoxDecoration(
                   color: isIncome
                       ? AppColors.primaryFixed
-                      : AppColors.surfaceContainerHigh,
+                      : appPalette(context).surfaceContainerHigh,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  isIncome ? '+ Thu nhập' : 'Trừ tiền',
+                  isIncome
+                      ? appL10n(context).msgIncome383
+                      : appL10n(context).msgExpense384,
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: isIncome ? AppColors.primary : AppColors.onSurface,
+                    color: isIncome
+                        ? appPalette(context).primary
+                        : appPalette(context).onSurface,
                   ),
                 ),
               ),
@@ -1007,7 +1043,7 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLow,
+              color: appPalette(context).surfaceContainerLow,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -1016,19 +1052,21 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('SỐ TIỀN QUY ĐỔI',
+                    Text(appL10n(context).msgAmountInVnd385,
                         style: TextStyle(
                             fontSize: 10,
-                            color: AppColors.onSurfaceVariant,
+                            color: appPalette(context).onSurfaceVariant,
                             fontWeight: FontWeight.bold)),
                     Text(
-                      CurrencyFormatter.formatVND(
-                          isIncome ? draft.amount : -draft.amount,
+                      formatMoney(
+                          context, isIncome ? draft.amount : -draft.amount,
                           showSign: true),
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
-                        color: isIncome ? AppColors.primary : AppColors.error,
+                        color: isIncome
+                            ? appPalette(context).primary
+                            : appPalette(context).error,
                       ),
                     ),
                   ],
@@ -1037,7 +1075,7 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: appPalette(context).surfaceContainer,
                     borderRadius: BorderRadius.circular(8),
                     boxShadow: [
                       BoxShadow(
@@ -1045,7 +1083,8 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
                     ],
                   ),
                   child: Text(
-                    draft.walletName ?? 'Chọn nguồn tiền',
+                    draft.walletName ??
+                        appL10n(context).msgSelectAMoneySource301,
                     style: const TextStyle(
                         fontSize: 11, fontWeight: FontWeight.bold),
                   ),
@@ -1055,14 +1094,16 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
           ),
           const SizedBox(height: 12),
           if (msg.saved)
-            const Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.check_circle, color: AppColors.primary, size: 18),
-                SizedBox(width: 6),
-                Text('Đã lưu vào sổ',
+                Icon(Icons.check_circle,
+                    color: appPalette(context).primary, size: 18),
+                const SizedBox(width: 6),
+                Text(appL10n(context).msgSavedToNotebook386,
                     style: TextStyle(
-                        fontWeight: FontWeight.bold, color: AppColors.primary)),
+                        fontWeight: FontWeight.bold,
+                        color: appPalette(context).primary)),
               ],
             )
           else
@@ -1076,8 +1117,8 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20)),
                     ),
-                    child: const Text('Sửa',
-                        style: TextStyle(color: AppColors.onSurface)),
+                    child: Text(appL10n(context).msgEdit244,
+                        style: TextStyle(color: appPalette(context).onSurface)),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -1091,14 +1132,16 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
                         ? const SizedBox(
                             width: 14,
                             height: 14,
-                            child: CircularProgressIndicator(
+                            child: const CircularProgressIndicator(
                                 strokeWidth: 2, color: Colors.white),
                           )
                         : const Icon(Icons.check_circle, size: 16),
-                    label: Text(isIncome ? 'Lưu khoản thu' : 'Lưu giao dịch'),
+                    label: Text(isIncome
+                        ? appL10n(context).msgSaveIncome213
+                        : appL10n(context).msgSaveTransaction214),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
+                      backgroundColor: appPalette(context).primary,
+                      foregroundColor: appPalette(context).onPrimary,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20)),
                     ),
@@ -1124,22 +1167,26 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
                   Container(
                       width: 5,
                       height: 5,
-                      decoration: const BoxDecoration(
-                          color: AppColors.primary, shape: BoxShape.circle)),
+                      decoration: BoxDecoration(
+                          color: appPalette(context).primary,
+                          shape: BoxShape.circle)),
                   const SizedBox(width: 6),
                   Expanded(
                       child: Text(
-                          'Hôm nay: ${_aiDailyCount ?? '–'}/$_aiDailyLimit lượt AI',
-                          style: const TextStyle(
+                          appL10n(context).msgTodayAiRequests387(
+                              (_aiDailyCount ?? '–').toString(),
+                              (_aiDailyLimit).toString()),
+                          style: TextStyle(
                               fontSize: 10,
-                              color: AppColors.onSurfaceVariant))),
-                  const Text('Gemini',
-                      style: TextStyle(fontSize: 10, color: AppColors.outline)),
+                              color: appPalette(context).onSurfaceVariant))),
+                  Text('Gemini',
+                      style: TextStyle(
+                          fontSize: 10, color: appPalette(context).outline)),
                 ]),
                 const SizedBox(height: 7),
                 Row(children: [
                   IconButton(
-                      tooltip: 'Quét hóa đơn',
+                      tooltip: appL10n(context).msgScanReceipt192,
                       icon:
                           const Icon(Icons.document_scanner_outlined, size: 22),
                       onPressed:
@@ -1154,8 +1201,9 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
                               contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 14),
                               hintText: _isRecording
-                                  ? 'Đang nghe…'
-                                  : 'Ví dụ: cà phê 35k…',
+                                  ? appL10n(context).msgListening388
+                                  : appL10n(context)
+                                      .msgVietnameseExampleCPhK389,
                               hintStyle: const TextStyle(fontSize: 12),
                               border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(24),
@@ -1171,18 +1219,18 @@ class _QuickRecordScreenState extends ConsumerState<QuickRecordScreen> {
                         final send =
                             value.text.trim().isNotEmpty && !_isRecording;
                         return DecoratedBox(
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 gradient: LinearGradient(colors: [
-                                  AppColors.primary,
-                                  AppColors.secondary
+                                  appPalette(context).primary,
+                                  appPalette(context).secondary
                                 ])),
                             child: IconButton(
                                 tooltip: _isRecording
-                                    ? 'Dừng ghi âm'
+                                    ? appL10n(context).msgStopRecording390
                                     : send
-                                        ? 'Gửi ghi chép'
-                                        : 'Ghi bằng giọng nói',
+                                        ? appL10n(context).msgSendRecord391
+                                        : appL10n(context).msgRecordByVoice191,
                                 onPressed: _isThinking
                                     ? null
                                     : send

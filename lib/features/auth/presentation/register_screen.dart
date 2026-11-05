@@ -1,8 +1,9 @@
+import '../../../core/theme/semantic_colors.dart';
+import '../../../l10n/app_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/error_messages.dart';
 import '../providers/auth_providers.dart';
 import 'otp_verification_screen.dart';
@@ -49,7 +50,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         );
       }
     } catch (e) {
-      if (mounted) showAuthMessage(context, friendlyError(e));
+      if (mounted) showAuthMessage(context, friendlyError(e, context: context));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -72,9 +73,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       await ref.read(authRepositoryProvider).signInWithGoogle();
     } on GoogleSignInException catch (e) {
       if (mounted && e.code != GoogleSignInExceptionCode.canceled)
-        showAuthMessage(context, friendlyError(e));
+        showAuthMessage(context, friendlyError(e, context: context));
     } catch (e) {
-      if (mounted) showAuthMessage(context, friendlyError(e));
+      if (mounted) showAuthMessage(context, friendlyError(e, context: context));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -84,10 +85,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) =>
       AuthScaffold(layout: AuthLayout.register, busy: _isLoading, children: [
         const SizedBox(height: 16),
-        const AuthBrandHeader(
-            title: 'Tạo tài khoản',
-            subtitle:
-                'Ghi chép chi tiêu bằng giọng nói, quét hóa đơn\nvà nhận tư vấn từ Gemini AI'),
+        AuthBrandHeader(
+            title: appL10n(context).msgCreateAccount118,
+            subtitle: appL10n(context).msgRecordExpensesByVoiceScanReceipts119),
         const SizedBox(height: 20),
         Form(
             key: _formKey,
@@ -97,11 +97,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   controller: _nameController,
                   enabled: !_isLoading,
                   icon: Icons.person_outline_rounded,
-                  hint: 'Tên hiển thị (vd: Minh Quân)',
-                  helperText: 'Tên này sẽ hiển thị trong ứng dụng',
+                  hint: appL10n(context).msgDisplayNameEGMinhQuan120,
+                  helperText: appL10n(context).msgThisNameWillAppearInThe121,
                   autofillHints: const [AutofillHints.name],
                   validator: (v) => (v ?? '').trim().isEmpty
-                      ? 'Vui lòng nhập tên hiển thị'
+                      ? appL10n(context).msgEnterADisplayName122
                       : null),
               const SizedBox(height: 12),
               AuthTextField(
@@ -109,60 +109,62 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   enabled: !_isLoading,
                   icon: Icons.mail_outline_rounded,
                   hint: 'Email',
-                  helperText: 'Dùng email để đăng nhập và nhận mã xác thực',
+                  helperText: appL10n(context).msgUseThisEmailToSignIn123,
                   keyboardType: TextInputType.emailAddress,
                   autofillHints: const [AutofillHints.email],
                   validator: (v) => isValidEmail(v ?? '')
                       ? null
-                      : 'Vui lòng nhập email hợp lệ'),
+                      : appL10n(context).msgEnterAValidEmailAddress91),
               const SizedBox(height: 12),
               AuthTextField(
                   controller: _passwordController,
                   enabled: !_isLoading,
                   icon: Icons.lock_outline_rounded,
-                  hint: 'Mật khẩu (ít nhất 6 ký tự)',
+                  hint: appL10n(context).msgPasswordAtLeastCharacters124,
                   isPassword: true,
                   autofillHints: const [AutofillHints.newPassword],
                   validator: (v) => (v ?? '').length < 6
-                      ? 'Mật khẩu cần ít nhất 6 ký tự'
+                      ? appL10n(context).msgUseAtLeastCharacters125
                       : null),
               const SizedBox(height: 12),
               AuthTextField(
                   controller: _confirmController,
                   enabled: !_isLoading,
                   icon: Icons.lock_outline_rounded,
-                  hint: 'Nhập lại mật khẩu',
+                  hint: appL10n(context).msgConfirmPassword126,
                   isPassword: true,
                   autofillHints: const [AutofillHints.newPassword],
                   textInputAction: TextInputAction.done,
                   validator: (v) =>
                       (v ?? '').isEmpty || v != _passwordController.text
-                          ? 'Mật khẩu nhập lại không khớp'
+                          ? appL10n(context).msgPasswordsDoNotMatch127
                           : null,
                   onSubmitted: (_) => _handleRegister()),
             ]))),
         const SizedBox(height: 16),
         AuthPrimaryButton(
-            label: 'Đăng ký',
+            label: appL10n(context).msgRegister128,
             isLoading: _isLoading,
             onPressed: _handleRegister),
         const SizedBox(height: 12),
-        const Text('Túi Khôn sẽ gửi mã xác thực 6 số tới email của bạn.',
+        Text(appL10n(context).msgTIKhNWillSend129,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant)),
-        const AuthDivider('Hoặc đăng ký bằng'),
+            style: TextStyle(
+                fontSize: 11, color: appPalette(context).onSurfaceVariant)),
+        AuthDivider(appL10n(context).msgOrRegisterWith130),
         GoogleAuthButton(register: true, busy: _isLoading, onPressed: _google),
         const SizedBox(height: 8),
         Wrap(
             alignment: WrapAlignment.center,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              const Text('Đã có tài khoản?',
+              Text(appL10n(context).msgAlreadyHaveAnAccount131,
                   style: TextStyle(
-                      fontSize: 12, color: AppColors.onSurfaceVariant)),
+                      fontSize: 12,
+                      color: appPalette(context).onSurfaceVariant)),
               TextButton(
                   onPressed: _isLoading ? null : () => Navigator.pop(context),
-                  child: const Text('Đăng nhập')),
+                  child: Text(appL10n(context).msgSignIn104)),
             ]),
       ]);
 }

@@ -1,78 +1,57 @@
 import 'dart:async';
 import 'dart:io';
-
+import 'package:flutter/widgets.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../l10n/app_l10n.dart';
+import 'app_failure.dart';
+import 'failure_localization.dart';
 
-/// Converts backend / platform exceptions into short Vietnamese messages for SnackBars.
-String friendlyError(Object error) {
-  if (error is AuthException) return _authMessage(error);
-
+/// Non-UI callers keep Vietnamese diagnostics. UI always passes its context.
+String friendlyError(Object error, {BuildContext? context}) {
+  final l = appL10n(context);
+  if (error is CodedFailure) return codedFailureMessage(context, error);
+  if (error is SocketException ||
+      error is TimeoutException ||
+      error is AuthRetryableFetchException) return l.errorNetwork;
+  if (error is AuthException) {
+    return switch (error.code) {
+      'invalid_credentials' => l.errorInvalidCredentials,
+      'email_not_confirmed' => l.errorUnverified,
+      'user_already_exists' || 'email_exists' => l.errorRegistered,
+      'otp_expired' => l.errorOtp,
+      'weak_password' => l.errorPasswordShort,
+      'same_password' => l.errorPasswordSame,
+      'over_email_send_rate_limit' ||
+      'over_request_rate_limit' =>
+        l.errorRateLimit,
+      'user_banned' => l.errorBlocked,
+      'email_address_invalid' || 'validation_failed' => l.errorEmail,
+      _ => error.statusCode == '429' ? l.errorRateLimit : l.errorAuth,
+    };
+  }
   if (error is FunctionException) {
-    // Edge Functions reply with { success: false, error: { code, message } }
     final details = error.details;
-    if (details is Map &&
-        details['error'] is Map &&
-        details['error']['message'] is String) {
-      return details['error']['message'] as String;
-    }
-    if (error.status == 404) return 'Tính năng AI chưa được bật trên server';
-    return 'AI tạm thời không phản hồi, vui lòng thử lại';
+    final code = details is Map && details['error'] is Map
+        ? details['error']['code']
+        : null;
+    if (code == 'AI_NOT_CONFIGURED') return l.errorAiConfig;
+    if (error.status == 404) return l.errorAiUnavailable;
+    if (error.status == 429) return l.errorRateLimit;
+    return l.errorAi;
   }
-
-  if (error is PostgrestException) {
-    if (error.code == '23505') return 'Dữ liệu này đã tồn tại';
-    if (error.code == '42501')
-      return 'Bạn không có quyền thực hiện thao tác này';
-    return 'Không thể lưu dữ liệu, vui lòng thử lại';
-  }
-
-  if (error is GoogleSignInException) {
-    if (error.code == GoogleSignInExceptionCode.canceled)
-      return 'Bạn đã huỷ đăng nhập Google';
-    if (error.code == GoogleSignInExceptionCode.clientConfigurationError) {
-      return 'Đăng nhập Google chưa được cấu hình cho ứng dụng';
-    }
-    return 'Không thể đăng nhập Google, vui lòng thử lại';
-  }
-
-  if (error is SocketException || error is TimeoutException) {
-    return 'Không kết nối được máy chủ. Hãy kiểm tra kết nối và thử lại.';
-  }
-
-  if (error is StateError) return error.message;
-
-  return 'Có lỗi xảy ra, vui lòng thử lại';
-}
-
-String _authMessage(AuthException e) {
-  if (e is AuthRetryableFetchException)
-    return 'Không kết nối được máy chủ. Hãy kiểm tra kết nối và thử lại.';
-
-  switch (e.code) {
-    case 'invalid_credentials':
-      return 'Email hoặc mật khẩu không đúng';
-    case 'email_not_confirmed':
-      return 'Email chưa được xác thực';
-    case 'user_already_exists':
-    case 'email_exists':
-      return 'Email này đã được đăng ký, hãy đăng nhập';
-    case 'otp_expired':
-      return 'Mã xác thực sai hoặc đã hết hạn';
-    case 'weak_password':
-      return 'Mật khẩu quá yếu, hãy dùng ít nhất 6 ký tự';
-    case 'same_password':
-      return 'Mật khẩu mới phải khác mật khẩu cũ';
-    case 'over_email_send_rate_limit':
-    case 'over_request_rate_limit':
-      return 'Bạn thao tác quá nhanh, vui lòng đợi một lát rồi thử lại';
-    case 'user_banned':
-      return 'Tài khoản của bạn đã bị khoá';
-    case 'email_address_invalid':
-    case 'validation_failed':
-      return 'Email không hợp lệ';
-  }
-  if (e.statusCode == '429')
-    return 'Bạn thao tác quá nhanh, vui lòng đợi một lát rồi thử lại';
-  return 'Không thể xác thực, vui lòng thử lại';
+  if (error is PostgrestException)
+    return error.code == '23505'
+        ? l.errorExists
+        : error.code == '42501'
+            ? l.errorPermission
+            : l.errorSave;
+  if (error is GoogleSignInException)
+    return error.code == GoogleSignInExceptionCode.canceled
+        ? l.errorGoogleCanceled
+        : error.code == GoogleSignInExceptionCode.clientConfigurationError
+            ? l.errorGoogleConfig
+            : l.errorGoogle;
+  if (context == null && error is StateError) return error.message;
+  return l.errorUnknown;
 }

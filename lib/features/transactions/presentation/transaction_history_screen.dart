@@ -1,3 +1,6 @@
+import '../../../core/utils/localized_format.dart';
+import '../../../core/theme/semantic_colors.dart';
+import '../../../l10n/app_l10n.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -8,7 +11,6 @@ import '../../planning/presentation/debt_history_screen.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/category_icons.dart';
-import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/error_messages.dart';
 import '../../../core/widgets/form_sheet.dart';
 import '../../../core/widgets/glass.dart';
@@ -116,6 +118,7 @@ class _TransactionHistoryScreenState
         return;
       }
     }
+    if (!mounted) return;
     final draft = await showTransactionFormSheet(context,
         initial: tx.toDraft(), excludingId: tx.id);
     if (draft == null || !mounted) return;
@@ -124,15 +127,16 @@ class _TransactionHistoryScreenState
       ref.refreshWalletData();
       await _reload();
     } catch (e) {
-      if (mounted) showToast(context, friendlyError(e));
+      if (mounted) showToast(context, friendlyError(e, context: context));
     }
   }
 
   Future<bool> _delete(TransactionModel tx) async {
     final ok = await confirmDialog(
       context,
-      title: 'Xoá giao dịch?',
-      message: '${tx.title} • ${CurrencyFormatter.formatVND(tx.amount)}',
+      title: appL10n(context).msgDeleteTransaction461,
+      message:
+          '${transactionDisplayTitle(context, tx)} • ${formatMoney(context, tx.amount)}',
     );
     if (!ok) return false;
     try {
@@ -141,7 +145,7 @@ class _TransactionHistoryScreenState
       setState(() => _items.removeWhere((t) => t.id == tx.id));
       return true;
     } catch (e) {
-      if (mounted) showToast(context, friendlyError(e));
+      if (mounted) showToast(context, friendlyError(e, context: context));
       return false;
     }
   }
@@ -149,9 +153,8 @@ class _TransactionHistoryScreenState
   @override
   Widget build(BuildContext context) {
     final categories =
-        ref.watch(categoriesProvider).valueOrNull ?? const <CategoryModel>[];
-    final wallets =
-        ref.watch(walletsProvider).valueOrNull ?? const <WalletModel>[];
+        ref.watch(categoriesProvider).valueOrNull ?? <CategoryModel>[];
+    final wallets = ref.watch(walletsProvider).valueOrNull ?? <WalletModel>[];
     final income =
         _items.where((t) => t.isIncome).fold(0, (s, t) => s + t.amount);
     final expense =
@@ -168,37 +171,50 @@ class _TransactionHistoryScreenState
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: appPalette(context).surface,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
+        backgroundColor: appPalette(context).surface,
         elevation: 0,
-        title: const Text('Giao dịch',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+        title: Text(appL10n(context).msgTransactions5,
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
       ),
       body: Column(
         children: [
-          _buildFilters(categories, wallets),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            child: Row(
-              children: [
-                Expanded(
-                    child: Text('Thu: ${CurrencyFormatter.formatVND(income)}',
-                        style: const TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12))),
-                Text('Chi: ${CurrencyFormatter.formatVND(expense)}',
-                    style: const TextStyle(
-                        color: AppColors.error,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12)),
-              ],
-            ),
-          ),
+          Flexible(
+              flex: 2,
+              fit: FlexFit.loose,
+              child: SingleChildScrollView(
+                  child: Column(children: [
+                _buildFilters(categories, wallets),
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  child: Wrap(
+                    spacing: 12,
+                    runSpacing: 6,
+                    children: [
+                      Text(
+                          appL10n(context)
+                              .incomeAmount(formatMoney(context, income)),
+                          style: TextStyle(
+                              color: appPalette(context).primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12)),
+                      Text(
+                          appL10n(context)
+                              .expenseAmount(formatMoney(context, expense)),
+                          style: TextStyle(
+                              color: appPalette(context).error,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ]))),
           Expanded(
+            flex: 3,
             child: RefreshIndicator(
-              color: AppColors.primary,
+              color: appPalette(context).primary,
               onRefresh: _reload,
               child: ListView(
                 controller: _scroll,
@@ -210,28 +226,32 @@ class _TransactionHistoryScreenState
                     for (final tx in entry.value) _tile(tx),
                   ],
                   if (_loading)
-                    const Padding(
-                      padding: EdgeInsets.all(20),
+                    Padding(
+                      padding: const EdgeInsets.all(20),
                       child: Center(
                           child: CircularProgressIndicator(
-                              color: AppColors.primary)),
+                              color: appPalette(context).primary)),
                     )
                   else if (_error != null)
                     Padding(
                       padding: const EdgeInsets.all(20),
                       child: Column(children: [
-                        Text(friendlyError(_error!),
+                        Text(friendlyError(_error!, context: context),
                             textAlign: TextAlign.center),
                         TextButton(
-                            onPressed: _reload, child: const Text('Thử lại')),
+                            onPressed: _reload,
+                            child: Text(appL10n(context).msgRetry50)),
                       ]),
                     )
                   else if (_items.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.all(32),
-                      child: Text('Không có giao dịch nào khớp bộ lọc.',
+                    Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Text(
+                          appL10n(context)
+                              .msgNoTransactionsMatchTheseFilters462,
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: AppColors.onSurfaceVariant)),
+                          style: TextStyle(
+                              color: appPalette(context).onSurfaceVariant)),
                     ),
                 ],
               ),
@@ -249,7 +269,7 @@ class _TransactionHistoryScreenState
         .where((c) => _filter.type == null || c.type == _filter.type)
         .toList();
     return Container(
-      color: AppColors.surface,
+      color: appPalette(context).surface,
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
       child: Column(
         children: [
@@ -261,9 +281,14 @@ class _TransactionHistoryScreenState
                 onPressed: () => _setFilter(
                     _filter.copyWith(month: DateTime(m.year, m.month - 1))),
               ),
-              Text('Tháng ${m.month.toString().padLeft(2, '0')}/${m.year}',
-                  style: const TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.bold)),
+              Expanded(
+                  child: Text(
+                      appL10n(context).msgMonth219(
+                          (m.month.toString().padLeft(2, '0')).toString(),
+                          (m.year).toString()),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.bold))),
               IconButton(
                 icon: const Icon(Icons.chevron_right),
                 onPressed: () => _setFilter(
@@ -275,7 +300,7 @@ class _TransactionHistoryScreenState
             controller: _searchController,
             decoration: InputDecoration(
               isDense: true,
-              hintText: 'Tìm theo ghi chú...',
+              hintText: appL10n(context).msgSearchNotes463,
               prefixIcon: const Icon(Icons.search, size: 20),
               border:
                   OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
@@ -293,21 +318,23 @@ class _TransactionHistoryScreenState
             child: Row(
               children: [
                 for (final (label, type) in [
-                  ('Tất cả', null),
-                  ('Chi tiêu', TransactionType.expense),
-                  ('Thu nhập', TransactionType.income),
+                  (appL10n(context).msgAll206, null),
+                  (appL10n(context).msgExpenses164, TransactionType.expense),
+                  (appL10n(context).msgIncome163, TransactionType.income),
                 ])
                   Padding(
                     padding: const EdgeInsets.only(right: 6),
                     child: ChoiceChip(
                       showCheckmark: false,
-                      selectedColor: AppColors.primary,
-                      backgroundColor: Colors.white.withValues(alpha: .6),
+                      selectedColor: appPalette(context).primary,
+                      backgroundColor: appPalette(context)
+                          .surfaceContainer
+                          .withValues(alpha: .6),
                       side: BorderSide.none,
                       labelStyle: TextStyle(
                           color: _filter.type == type
                               ? Colors.white
-                              : AppColors.onSurfaceVariant),
+                              : appPalette(context).onSurfaceVariant),
                       label: Text(label),
                       selected: _filter.type == type,
                       onSelected: (_) => _setFilter(_filter.copyWith(
@@ -316,7 +343,7 @@ class _TransactionHistoryScreenState
                   ),
                 const SizedBox(width: 4),
                 _dropdownChip<String>(
-                  label: 'Danh mục',
+                  label: appL10n(context).categories,
                   value: _filter.categoryId,
                   items: {for (final c in visibleCategories) c.id: c.name},
                   onChanged: (v) =>
@@ -324,7 +351,7 @@ class _TransactionHistoryScreenState
                 ),
                 const SizedBox(width: 6),
                 _dropdownChip<String>(
-                  label: 'Nguồn tiền',
+                  label: appL10n(context).wallets,
                   value: _filter.walletId,
                   items: {for (final w in wallets) w.id: w.name},
                   onChanged: (v) =>
@@ -348,7 +375,9 @@ class _TransactionHistoryScreenState
       onSelected: onChanged,
       itemBuilder: (_) => [
         PopupMenuItem<T?>(
-            value: null, child: Text('Tất cả ${label.toLowerCase()}')),
+            value: null,
+            child: Text(
+                appL10n(context).msgAll464((label.toLowerCase()).toString()))),
         for (final e in items.entries)
           PopupMenuItem<T?>(value: e.key, child: Text(e.value)),
       ],
@@ -365,9 +394,9 @@ class _TransactionHistoryScreenState
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final label = day == today
-        ? 'Hôm nay'
+        ? appL10n(context).msgToday465
         : day == today.subtract(const Duration(days: 1))
-            ? 'Hôm qua'
+            ? appL10n(context).msgYesterday175
             : formatDate(day);
     final net = items.fold(0, (s, t) => s + t.signedAmount);
     return Padding(
@@ -377,12 +406,12 @@ class _TransactionHistoryScreenState
           Expanded(
               child: Text(label,
                   style: const TextStyle(fontWeight: FontWeight.bold))),
-          Text(CurrencyFormatter.formatVND(net, showSign: true),
+          Text(formatMoney(context, net, showSign: true),
               style: TextStyle(
                   fontSize: 12,
                   color: net >= 0
-                      ? AppColors.primary
-                      : AppColors.onSurfaceVariant)),
+                      ? appPalette(context).primary
+                      : appPalette(context).onSurfaceVariant)),
         ],
       ),
     );
@@ -390,7 +419,9 @@ class _TransactionHistoryScreenState
 
   Widget _tile(TransactionModel tx) {
     final color = colorFromHex(tx.categoryColor) ??
-        (tx.isIncome ? AppColors.primary : AppColors.tertiary);
+        (tx.isIncome
+            ? appPalette(context).primary
+            : appPalette(context).tertiary);
     final time =
         '${tx.occurredAt.hour.toString().padLeft(2, '0')}:${tx.occurredAt.minute.toString().padLeft(2, '0')}';
     return Dismissible(
@@ -402,7 +433,8 @@ class _TransactionHistoryScreenState
         padding: const EdgeInsets.only(right: 20),
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-            color: AppColors.error, borderRadius: BorderRadius.circular(16)),
+            color: appPalette(context).error,
+            borderRadius: BorderRadius.circular(16)),
         child: const Icon(Icons.delete, color: Colors.white),
       ),
       child: Padding(
@@ -419,15 +451,17 @@ class _TransactionHistoryScreenState
                     borderRadius: BorderRadius.circular(12)),
                 child: Icon(tx.icon, color: color, size: 20),
               ),
-              title: Text(tx.title,
+              title: Text(transactionDisplayTitle(context, tx),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                       fontWeight: FontWeight.bold, fontSize: 14)),
               subtitle: Text(
-                [tx.categoryName ?? 'Chưa phân loại', tx.walletName ?? '', time]
-                    .where((s) => s.isNotEmpty)
-                    .join(' • '),
+                [
+                  tx.categoryName ?? appL10n(context).msgUncategorized441,
+                  tx.walletName ?? '',
+                  time
+                ].where((s) => s.isNotEmpty).join(' • '),
                 style: const TextStyle(fontSize: 11),
               ),
               trailing: Row(
@@ -435,9 +469,9 @@ class _TransactionHistoryScreenState
                 children: [
                   if (tx.receiptPath != null)
                     IconButton(
-                      tooltip: 'Xem hóa đơn',
-                      icon: const Icon(Icons.receipt_long,
-                          size: 18, color: AppColors.secondary),
+                      tooltip: appL10n(context).msgViewReceipt466,
+                      icon: Icon(Icons.receipt_long,
+                          size: 18, color: appPalette(context).secondary),
                       onPressed: () => showReceiptImage(
                           context,
                           ref
@@ -445,11 +479,12 @@ class _TransactionHistoryScreenState
                               .signedUrl(tx.receiptPath!)),
                     ),
                   Text(
-                    CurrencyFormatter.formatVND(tx.signedAmount,
-                        showSign: true),
+                    formatMoney(context, tx.signedAmount, showSign: true),
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: tx.isIncome ? AppColors.primary : AppColors.error,
+                      color: tx.isIncome
+                          ? appPalette(context).primary
+                          : appPalette(context).error,
                     ),
                   ),
                 ],

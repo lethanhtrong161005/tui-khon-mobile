@@ -1,3 +1,4 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
 import 'dart:async';
 import 'package:tui_khon_mobile/core/supabase/supabase_providers.dart';
@@ -226,7 +227,9 @@ void main() {
             .onPressed,
         isNull);
     expect(calls, 1);
-    pending.completeError(StateError('AI chưa được cấu hình trên server'));
+    pending.completeError(FunctionException(status: 500, details: {
+      'error': {'code': 'AI_NOT_CONFIGURED'}
+    }));
     await tester.pumpAndSettle();
     expect(find.text('AI chưa được cấu hình trên server'), findsOneWidget);
     expect(find.text('Tạo nhận xét AI'), findsOneWidget);
@@ -251,7 +254,7 @@ void main() {
         isNull);
     repository.result.completeError(StateError('Không thể lưu lúc này'));
     await tester.pumpAndSettle();
-    expect(find.text('Không thể lưu lúc này'), findsOneWidget);
+    expect(find.text('Có lỗi xảy ra, vui lòng thử lại'), findsOneWidget);
     expect(
         tester
             .widget<TextFormField>(find.byKey(const Key('payment-amount')))

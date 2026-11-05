@@ -1,3 +1,4 @@
+import '../../../l10n/app_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -11,7 +12,8 @@ class ResetPasswordScreen extends ConsumerStatefulWidget {
   const ResetPasswordScreen({super.key});
 
   @override
-  ConsumerState<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
+  ConsumerState<ResetPasswordScreen> createState() =>
+      _ResetPasswordScreenState();
 }
 
 class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
@@ -22,11 +24,11 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   Future<void> _save() async {
     final password = _passwordController.text;
     if (password.length < 6) {
-      showAuthMessage(context, 'Mật khẩu cần ít nhất 6 ký tự');
+      showAuthMessage(context, appL10n(context).msgUseAtLeastCharacters125);
       return;
     }
     if (password != _confirmController.text) {
-      showAuthMessage(context, 'Mật khẩu nhập lại không khớp');
+      showAuthMessage(context, appL10n(context).msgPasswordsDoNotMatch127);
       return;
     }
 
@@ -38,9 +40,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       final navigator = Navigator.of(context);
       ref.read(passwordRecoveryPendingProvider.notifier).state = false;
       navigator.popUntil((route) => route.isFirst);
-      messenger.showSnackBar(const SnackBar(content: Text('Đổi mật khẩu thành công!')));
+      messenger.showSnackBar(SnackBar(
+          content: Text(appL10n(context).msgPasswordChangedSuccessfully132)));
     } catch (e) {
-      if (mounted) showAuthMessage(context, friendlyError(e));
+      if (mounted) showAuthMessage(context, friendlyError(e, context: context));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -70,16 +73,16 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       child: AuthScaffold(
         onBack: _isLoading ? () {} : _cancel,
         children: [
-          const AuthBrandHeader(
-            title: 'Đặt mật khẩu mới',
-            subtitle: 'Chọn mật khẩu mới cho tài khoản Túi Khôn của bạn',
+          AuthBrandHeader(
+            title: appL10n(context).msgSetANewPassword133,
+            subtitle: appL10n(context).msgChooseANewPasswordForYour134,
             icon: Icons.password,
           ),
           const SizedBox(height: 28),
           AuthTextField(
             controller: _passwordController,
             icon: Icons.lock_outline,
-            hint: 'Mật khẩu mới (ít nhất 6 ký tự)',
+            hint: appL10n(context).msgNewPasswordAtLeastCharacters135,
             isPassword: true,
             autofillHints: const [AutofillHints.newPassword],
           ),
@@ -87,13 +90,17 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           AuthTextField(
             controller: _confirmController,
             icon: Icons.lock_reset,
-            hint: 'Nhập lại mật khẩu mới',
+            hint: appL10n(context).msgConfirmNewPassword136,
             isPassword: true,
             textInputAction: TextInputAction.done,
             onSubmitted: (_) => _save(),
           ),
           const SizedBox(height: 24),
-          AuthPrimaryButton(label: 'Lưu mật khẩu', isLoading: _isLoading, onPressed: _save, icon: Icons.check),
+          AuthPrimaryButton(
+              label: appL10n(context).msgSavePassword137,
+              isLoading: _isLoading,
+              onPressed: _save,
+              icon: Icons.check),
         ],
       ),
     );

@@ -1,8 +1,10 @@
+import '../../../core/utils/localized_format.dart';
+import '../../../core/theme/semantic_colors.dart';
+import '../../../l10n/app_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/error_messages.dart';
 import '../../../core/widgets/form_sheet.dart';
 import '../../home/models/wallet_model.dart';
@@ -20,54 +22,76 @@ class WalletsScreen extends ConsumerWidget {
     final total = wallets?.fold(0, (s, w) => s + w.balance) ?? 0;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: appPalette(context).surface,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
+        backgroundColor: appPalette(context).surface,
         elevation: 0,
-        title: const Text('Nguồn tiền', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+        title: Text(appL10n(context).wallets,
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: appPalette(context).primary,
+        foregroundColor: appPalette(context).onPrimary,
         icon: const Icon(Icons.add),
-        label: const Text('Thêm nguồn tiền'),
+        label: Text(appL10n(context).msgAddMoneySource426),
         onPressed: () => showFormSheet<void>(context, const _WalletForm()),
       ),
       body: wallets == null
-          ? Center(child: async.hasError ? Text(friendlyError(async.error!)) : const CircularProgressIndicator())
+          ? Center(
+              child: async.hasError
+                  ? Text(friendlyError(async.error!, context: context))
+                  : const CircularProgressIndicator())
           : ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
               children: [
-                Text('Tổng: ${CurrencyFormatter.formatVND(total)}',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                Text(
+                    appL10n(context)
+                        .msgTotal427((formatMoney(context, total)).toString()),
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 4),
-                const Text(
-                  'Nguồn tiền chỉ để bạn biết tiền đang nằm ở đâu. Túi Khôn không liên kết ngân hàng hay ví điện tử; '
-                  'số dư = số dư ban đầu + thu − chi bạn đã ghi.',
-                  style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
+                Text(
+                  appL10n(context).msgMoneySourcesAreLabelsForTracking428,
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: appPalette(context).onSurfaceVariant),
                 ),
                 const SizedBox(height: 12),
                 for (final w in wallets)
                   Card(
                     elevation: 0,
-                    color: AppColors.surfaceContainerLowest,
+                    color: appPalette(context).surfaceContainerLowest,
                     margin: const EdgeInsets.only(bottom: 8),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
                     child: ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: AppColors.primaryFixed.withOpacity(0.5),
-                        child: Icon(w.iconData, color: AppColors.primary, size: 20),
+                        backgroundColor:
+                            AppColors.primaryFixed.withOpacity(0.5),
+                        child: Icon(w.iconData,
+                            color: appPalette(context).primary, size: 20),
                       ),
-                      title: Text(w.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text(w.typeLabel, style: const TextStyle(fontSize: 11)),
+                      title: Text(w.name,
+                          style: const TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: Text(
+                          switch (w.type) {
+                            'cash' => appL10n(context).msgCash429,
+                            'bank' => appL10n(context).msgBankAccount430,
+                            'ewallet' => appL10n(context).msgEWallet431,
+                            _ => appL10n(context).msgOther432,
+                          },
+                          style: const TextStyle(fontSize: 11)),
                       trailing: Text(
-                        CurrencyFormatter.formatVND(w.balance),
+                        formatMoney(context, w.balance),
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: w.balance < 0 ? AppColors.error : AppColors.onSurface,
+                          color: w.balance < 0
+                              ? appPalette(context).error
+                              : appPalette(context).onSurface,
                         ),
                       ),
-                      onTap: () => showFormSheet<void>(context, _WalletForm(initial: w)),
+                      onTap: () =>
+                          showFormSheet<void>(context, _WalletForm(initial: w)),
                     ),
                   ),
               ],
@@ -86,22 +110,25 @@ class _WalletForm extends ConsumerStatefulWidget {
 }
 
 class _WalletFormState extends ConsumerState<_WalletForm> {
-  static const _types = {
-    'cash': ('Tiền mặt', 'payments'),
-    'bank': ('Tài khoản ngân hàng', 'account_balance'),
-    'ewallet': ('Ví điện tử', 'account_balance_wallet'),
-    'other': ('Khác', 'savings'),
-  };
+  Map<String, (String, String)> get _types => {
+        'cash': (appL10n(context).msgCash429, 'payments'),
+        'bank': (appL10n(context).msgBankAccount430, 'account_balance'),
+        'ewallet': (appL10n(context).msgEWallet431, 'account_balance_wallet'),
+        'other': (appL10n(context).msgOther432, 'savings'),
+      };
 
   late final _name = TextEditingController(text: widget.initial?.name ?? '');
   late final _initial = TextEditingController(
-    text: (widget.initial?.initialBalance ?? 0) == 0 ? '' : '${widget.initial!.initialBalance}',
+    text: (widget.initial?.initialBalance ?? 0) == 0
+        ? ''
+        : '${widget.initial!.initialBalance}',
   );
   late String _type = widget.initial?.type ?? 'cash';
   bool _busy = false;
 
   Future<void> _save() async {
-    if (_name.text.trim().isEmpty) return showToast(context, 'Nhập tên nguồn tiền (vd: TK Vietcombank)');
+    if (_name.text.trim().isEmpty)
+      return showToast(context, appL10n(context).msgEnterAMoneySourceNameE433);
     setState(() => _busy = true);
     try {
       await ref.read(walletRepositoryProvider).saveWallet(WalletModel(
@@ -115,7 +142,7 @@ class _WalletFormState extends ConsumerState<_WalletForm> {
       ref.refreshWalletData();
       if (mounted) Navigator.pop(context);
     } catch (e) {
-      if (mounted) showToast(context, friendlyError(e));
+      if (mounted) showToast(context, friendlyError(e, context: context));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -124,19 +151,25 @@ class _WalletFormState extends ConsumerState<_WalletForm> {
   Future<void> _remove() async {
     final ok = await confirmDialog(
       context,
-      title: 'Xoá "${widget.initial!.name}"?',
-      message: 'Nếu đã có giao dịch, nguồn tiền sẽ được ẩn đi (giao dịch cũ giữ nguyên) thay vì xoá hẳn.',
+      title: appL10n(context).msgDelete434((widget.initial!.name).toString()),
+      message: appL10n(context).msgIfItHasTransactionsThisSource435,
     );
     if (!ok) return;
     try {
-      final archived = await ref.read(walletRepositoryProvider).removeWallet(widget.initial!.id);
+      final archived = await ref
+          .read(walletRepositoryProvider)
+          .removeWallet(widget.initial!.id);
       ref.refreshWalletData();
       if (mounted) {
         Navigator.pop(context);
-        showToast(context, archived ? 'Đã ẩn nguồn tiền (vẫn giữ lịch sử giao dịch)' : 'Đã xoá nguồn tiền');
+        showToast(
+            context,
+            archived
+                ? appL10n(context).msgMoneySourceArchivedTransactionHistoryIs436
+                : appL10n(context).msgMoneySourceDeleted437);
       }
     } catch (e) {
-      if (mounted) showToast(context, friendlyError(e));
+      if (mounted) showToast(context, friendlyError(e, context: context));
     }
   }
 
@@ -150,15 +183,24 @@ class _WalletFormState extends ConsumerState<_WalletForm> {
   @override
   Widget build(BuildContext context) {
     return FormSheet(
-      title: widget.initial == null ? 'Thêm nguồn tiền' : 'Sửa nguồn tiền',
-      submitLabel: 'Lưu',
+      title: widget.initial == null
+          ? appL10n(context).msgAddMoneySource426
+          : appL10n(context).msgEditMoneySource438,
+      submitLabel: appL10n(context).msgSave43,
       busy: _busy,
       onSubmit: _save,
       trailing: widget.initial == null
           ? null
-          : IconButton(icon: const Icon(Icons.delete_outline, color: AppColors.error), onPressed: _remove),
+          : IconButton(
+              icon:
+                  Icon(Icons.delete_outline, color: appPalette(context).error),
+              onPressed: _remove),
       children: [
-        TextField(controller: _name, maxLength: 50, decoration: sheetInputDecoration('Tên (vd: TK Vietcombank, Ví MoMo)')),
+        TextField(
+            controller: _name,
+            maxLength: 50,
+            decoration: sheetInputDecoration(
+                appL10n(context).msgNameEGBankAccountMomo439)),
         Wrap(
           spacing: 8,
           children: [
@@ -171,7 +213,9 @@ class _WalletFormState extends ConsumerState<_WalletForm> {
           ],
         ),
         const SizedBox(height: 12),
-        MoneyField(controller: _initial, label: 'Số dư ban đầu (VND)'),
+        MoneyField(
+            controller: _initial,
+            label: appL10n(context).msgOpeningBalanceVnd440),
       ],
     );
   }

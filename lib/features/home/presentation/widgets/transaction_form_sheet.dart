@@ -1,10 +1,13 @@
+import '../../../../core/utils/localized_format.dart';
+import '../../../../core/utils/vnd_amount_input.dart';
+import '../../../../core/utils/error_messages.dart';
+import '../../../../core/theme/semantic_colors.dart';
+import '../../../../l10n/app_l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/offline/duplicate_service.dart';
-import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/glass.dart';
 import '../../models/category_model.dart';
 import '../../models/transaction_model.dart';
@@ -47,8 +50,15 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
   late DateTime _date = widget.initial?.occurredAt ?? DateTime.now();
 
   bool _showAllCategories = false;
+  bool _submitting = false;
 
-  int get _amount => int.tryParse(_amountController.text) ?? 0;
+  int get _amount => parseVndInput(_amountController.text);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    formatVndController(_amountController, appL10n(context).localeName);
+  }
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
@@ -66,14 +76,32 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
 
   Future<void> _submit(
       List<CategoryModel> categories, List<WalletModel> wallets) async {
+    if (_submitting) return;
+    setState(() => _submitting = true);
+    try {
+      await _submitDraft(categories, wallets);
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(friendlyError(error, context: context))));
+      }
+    } finally {
+      if (mounted && ModalRoute.of(context)?.isCurrent == true) {
+        setState(() => _submitting = false);
+      }
+    }
+  }
+
+  Future<void> _submitDraft(
+      List<CategoryModel> categories, List<WalletModel> wallets) async {
     if (_amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Vui lòng nhập số tiền lớn hơn 0')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(appL10n(context).msgEnterAnAmountGreaterThan197)));
       return;
     }
     if (_categoryId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Vui lòng chọn danh mục')));
+          SnackBar(content: Text(appL10n(context).msgSelectACategory198)));
       return;
     }
     final category = categories.firstWhere((c) => c.id == _categoryId);
@@ -121,10 +149,10 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoriesProvider);
     final walletsAsync = ref.watch(walletsProvider);
-    final categories = (categoriesAsync.valueOrNull ?? const <CategoryModel>[])
+    final categories = (categoriesAsync.valueOrNull ?? <CategoryModel>[])
         .where((c) => c.type == _type)
         .toList();
-    final wallets = (walletsAsync.valueOrNull ?? const <WalletModel>[])
+    final wallets = (walletsAsync.valueOrNull ?? <WalletModel>[])
         .where((w) => !w.isArchived)
         .toList();
     if (_categoryId != null && !categories.any((c) => c.id == _categoryId))
@@ -148,9 +176,9 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
                     MediaQuery.viewInsetsOf(context).bottom),
             child: ClipRRect(
                 borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(30)),
+                    const BorderRadius.vertical(top: const Radius.circular(30)),
                 child: Material(
-                    color: AppColors.surface,
+                    color: appPalette(context).surface,
                     child: NotebookBackground(
                         child: SafeArea(
                             top: false,
@@ -162,7 +190,8 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
                                       height: 4,
                                       margin: const EdgeInsets.only(top: 10),
                                       decoration: BoxDecoration(
-                                          color: AppColors.outlineVariant,
+                                          color: appPalette(context)
+                                              .outlineVariant,
                                           borderRadius:
                                               BorderRadius.circular(4))),
                                   Padding(
@@ -170,7 +199,8 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
                                           10, 4, 16, 4),
                                       child: Row(children: [
                                         IconButton(
-                                            tooltip: 'Đóng',
+                                            tooltip:
+                                                appL10n(context).msgClose19,
                                             onPressed: () =>
                                                 Navigator.pop(context),
                                             icon: const Icon(
@@ -181,9 +211,12 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
                                                     ? (_type ==
                                                             TransactionType
                                                                 .expense
-                                                        ? 'Thêm chi tiêu'
-                                                        : 'Thêm thu nhập')
-                                                    : 'Chỉnh sửa giao dịch',
+                                                        ? appL10n(context)
+                                                            .msgAddExpense189
+                                                        : appL10n(context)
+                                                            .msgAddIncome190)
+                                                    : appL10n(context)
+                                                        .msgEditTransaction199,
                                                 textAlign: TextAlign.center,
                                                 style: const TextStyle(
                                                     fontSize: 17,
@@ -203,35 +236,41 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
                                                         TransactionType>(
                                                     showSelectedIcon: false,
                                                     style: SegmentedButton.styleFrom(
-                                                        backgroundColor: Colors
-                                                            .white
-                                                            .withValues(
-                                                                alpha: .65),
+                                                        backgroundColor:
+                                                            appPalette(context)
+                                                                .surfaceContainer
+                                                                .withValues(
+                                                                    alpha: .65),
                                                         selectedBackgroundColor:
-                                                            AppColors.primary
+                                                            appPalette(context)
+                                                                .primary
                                                                 .withValues(
                                                                     alpha: .12),
                                                         selectedForegroundColor:
-                                                            AppColors.primary,
-                                                        side: const BorderSide(
-                                                            color: Color(
-                                                                0xFFD7E6DD))),
-                                                    segments: const [
+                                                            appPalette(context)
+                                                                .primary,
+                                                        side: BorderSide(
+                                                            color: adaptiveSurface(
+                                                                context,
+                                                                const Color(
+                                                                    0xFFD7E6DD)))),
+                                                    segments: [
                                                       ButtonSegment(
                                                           value: TransactionType
                                                               .expense,
-                                                          label:
-                                                              Text('Chi tiêu')),
+                                                          label: Text(appL10n(
+                                                                  context)
+                                                              .msgExpenses164)),
                                                       ButtonSegment(
                                                           value: TransactionType
                                                               .income,
-                                                          label:
-                                                              Text('Thu nhập'))
+                                                          label: Text(appL10n(
+                                                                  context)
+                                                              .msgIncome163))
                                                     ],
                                                     selected: {_type},
                                                     onSelectionChanged: (v) =>
-                                                        setState(() =>
-                                                            _type = v.first)),
+                                                        setState(() => _type = v.first)),
                                                 const SizedBox(height: 16),
                                                 TextField(
                                                     controller:
@@ -239,10 +278,9 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
                                                     keyboardType:
                                                         TextInputType.number,
                                                     inputFormatters: [
-                                                      FilteringTextInputFormatter
-                                                          .digitsOnly,
-                                                      LengthLimitingTextInputFormatter(
-                                                          13)
+                                                      VndAmountInputFormatter(
+                                                          appL10n(context)
+                                                              .localeName)
                                                     ],
                                                     style: const TextStyle(
                                                         fontSize: 32,
@@ -250,27 +288,23 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
                                                             FontWeight.w800,
                                                         letterSpacing: -1),
                                                     decoration: InputDecoration(
-                                                        labelText:
-                                                            'Số tiền (VND)',
-                                                        suffixText: 'đ',
+                                                        labelText: appL10n(context)
+                                                            .msgAmountVnd200,
+                                                        suffixText:
+                                                            appL10n(context)
+                                                                .msg201,
                                                         suffixIcon: IconButton(
-                                                            tooltip:
-                                                                'Xóa số tiền',
-                                                            icon: const Icon(
-                                                                Icons
-                                                                    .cancel_rounded,
+                                                            tooltip: appL10n(context)
+                                                                .msgClearAmount202,
+                                                            icon: const Icon(Icons.cancel_rounded,
                                                                 size: 19),
-                                                            onPressed: () =>
-                                                                setState(
-                                                                    _amountController
-                                                                        .clear)),
+                                                            onPressed: () => setState(
+                                                                _amountController
+                                                                    .clear)),
                                                         helperText: _amount > 0
-                                                            ? CurrencyFormatter
-                                                                .formatVND(
-                                                                    _amount)
-                                                            : 'Nhập số tiền nguyên bằng đồng'),
-                                                    onChanged: (_) =>
-                                                        setState(() {})),
+                                                            ? formatMoney(context, _amount)
+                                                            : appL10n(context).msgEnterAWholeAmountInVnd203),
+                                                    onChanged: (_) => setState(() {})),
                                                 const SizedBox(height: 14),
                                                 if (loading)
                                                   const LinearProgressIndicator(),
@@ -283,18 +317,22 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
                                                         ref.invalidate(
                                                             walletsProvider);
                                                       },
-                                                      child: const Text(
-                                                          'Không tải được dữ liệu. Thử lại')),
+                                                      child: Text(appL10n(
+                                                              context)
+                                                          .msgCouldNotLoadDataRetry204)),
                                                 if (!loading &&
                                                     categories.isEmpty)
-                                                  const Padding(
-                                                      padding:
-                                                          EdgeInsets.symmetric(
-                                                              vertical: 12),
+                                                  Padding(
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                          vertical: 12),
                                                       child: Text(
-                                                          'Chưa có danh mục cho loại giao dịch này. Thêm danh mục trong Cá nhân → Danh mục.',
-                                                          style: TextStyle(
-                                                              fontSize: 12))),
+                                                          appL10n(context)
+                                                              .msgNoCategoriesForThisTransactionType205,
+                                                          style:
+                                                              const TextStyle(
+                                                                  fontSize:
+                                                                      12))),
                                                 LayoutBuilder(
                                                     builder: (context, bounds) {
                                                   final columns = bounds
@@ -341,8 +379,8 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
                                                                                 borderRadius: BorderRadius.circular(
                                                                                     18),
                                                                                 gradient: _categoryId == c.id
-                                                                                    ? const LinearGradient(colors: [
-                                                                                        AppColors.primary,
+                                                                                    ? LinearGradient(colors: [
+                                                                                        appPalette(context).primary,
                                                                                         AppColors.primaryContainer
                                                                                       ])
                                                                                     : null,
@@ -373,7 +411,7 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
                                                                       BorderRadius
                                                                           .circular(
                                                                               18),
-                                                                  child: const Column(
+                                                                  child: Column(
                                                                       children: [
                                                                         TintedIcon(
                                                                             Icons
@@ -381,14 +419,15 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
                                                                             size:
                                                                                 55,
                                                                             color:
-                                                                                AppColors.onSurfaceVariant),
-                                                                        SizedBox(
+                                                                                appPalette(context).onSurfaceVariant),
+                                                                        const SizedBox(
                                                                             height:
                                                                                 6),
                                                                         Text(
-                                                                            'Tất cả',
+                                                                            appL10n(context)
+                                                                                .msgAll206,
                                                                             style:
-                                                                                TextStyle(fontSize: 10))
+                                                                                const TextStyle(fontSize: 10))
                                                                       ]))),
                                                       ]);
                                                 }),
@@ -398,20 +437,20 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
                                                         'wallet-${wallets.length}'),
                                                     initialValue: _walletId,
                                                     isExpanded: true,
-                                                    decoration:
-                                                        const InputDecoration(
-                                                            labelText:
-                                                                'Nguồn tiền',
-                                                            prefixIcon: Icon(
-                                                                Icons
-                                                                    .account_balance_wallet_outlined,
-                                                                size: 20)),
+                                                    decoration: InputDecoration(
+                                                        labelText:
+                                                            appL10n(context)
+                                                                .wallets,
+                                                        prefixIcon: const Icon(
+                                                            Icons
+                                                                .account_balance_wallet_outlined,
+                                                            size: 20)),
                                                     items: [
                                                       for (final w in wallets)
                                                         DropdownMenuItem(
                                                             value: w.id,
                                                             child: Text(
-                                                                '${w.name} • ${CurrencyFormatter.formatVND(w.balance)}',
+                                                                '${w.name} • ${formatMoney(context, w.balance)}',
                                                                 overflow:
                                                                     TextOverflow
                                                                         .ellipsis,
@@ -423,35 +462,37 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
                                                     onChanged: (v) => setState(
                                                         () => _walletId = v)),
                                                 if (!loading && wallets.isEmpty)
-                                                  const Padding(
-                                                      padding: EdgeInsets.only(
-                                                          top: 8),
+                                                  Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              top: 8),
                                                       child: Text(
-                                                          'Thêm nguồn tiền trong Cá nhân → Nguồn tiền để ghi giao dịch.',
-                                                          style: TextStyle(
-                                                              fontSize: 12))),
+                                                          appL10n(context)
+                                                              .msgAddAMoneySourceInProfile207,
+                                                          style:
+                                                              const TextStyle(
+                                                                  fontSize:
+                                                                      12))),
                                                 const SizedBox(height: 14),
                                                 GlassCard(
                                                     radius: 18,
                                                     child: ListTile(
                                                         dense: true,
-                                                        leading: const Icon(
-                                                            Icons
-                                                                .calendar_today_outlined,
+                                                        leading: const Icon(Icons.calendar_today_outlined,
                                                             size: 19),
-                                                        title: const Text(
-                                                            'Thời gian',
+                                                        title: Text(
+                                                            appL10n(context)
+                                                                .msgDateAndTime208,
                                                             style: TextStyle(
                                                                 fontSize: 10,
-                                                                color: AppColors
+                                                                color: appPalette(context)
                                                                     .onSurfaceVariant)),
                                                         subtitle: Text(
                                                             '${_date.day.toString().padLeft(2, '0')}/${_date.month.toString().padLeft(2, '0')}/${_date.year}',
                                                             style: const TextStyle(
                                                                 fontSize: 13,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w600)),
+                                                                fontWeight: FontWeight
+                                                                    .w600)),
                                                         trailing: const Icon(
                                                             Icons.chevron_right_rounded,
                                                             size: 20),
@@ -460,19 +501,23 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
                                                 TextField(
                                                     controller: _noteController,
                                                     maxLength: 255,
-                                                    decoration:
-                                                        const InputDecoration(
-                                                            labelText:
-                                                                'Ghi chú',
-                                                            hintText:
-                                                                'Bạn đã dùng khoản tiền này cho việc gì?',
-                                                            counterText: '')),
+                                                    decoration: InputDecoration(
+                                                        labelText:
+                                                            appL10n(context)
+                                                                .msgNote24,
+                                                        hintText: appL10n(
+                                                                context)
+                                                            .msgWhatWasThisPaymentFor209,
+                                                        counterText: '')),
                                                 const SizedBox(height: 10),
                                                 Wrap(spacing: 6, children: [
                                                   for (final note in [
-                                                    'Ăn sáng',
-                                                    'Cà phê',
-                                                    'Đi chợ'
+                                                    appL10n(context)
+                                                        .msgBreakfast210,
+                                                    appL10n(context)
+                                                        .msgCoffee211,
+                                                    appL10n(context)
+                                                        .msgGroceries212
                                                   ])
                                                     ActionChip(
                                                         label: Text(note,
@@ -481,10 +526,11 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
                                                                     fontSize:
                                                                         10)),
                                                         side: BorderSide.none,
-                                                        backgroundColor: Colors
-                                                            .white
-                                                            .withValues(
-                                                                alpha: .7),
+                                                        backgroundColor:
+                                                            appPalette(context)
+                                                                .surfaceContainer
+                                                                .withValues(
+                                                                    alpha: .7),
                                                         onPressed: () =>
                                                             _noteController
                                                                 .text = note)
@@ -498,9 +544,12 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
                                           child: EmeraldButton(
                                               label: _type ==
                                                       TransactionType.income
-                                                  ? 'Lưu khoản thu'
-                                                  : 'Lưu giao dịch',
-                                              onPressed: loading ||
+                                                  ? appL10n(context)
+                                                      .msgSaveIncome213
+                                                  : appL10n(context)
+                                                      .msgSaveTransaction214,
+                                              onPressed: _submitting ||
+                                                      loading ||
                                                       categoriesAsync
                                                           .hasError ||
                                                       walletsAsync.hasError ||

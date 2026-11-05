@@ -7,6 +7,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/supabase/supabase_providers.dart';
 import 'core/config/env.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/appearance.dart';
+import 'core/home_widget/home_widget_controller.dart';
+import 'core/home_widget/home_widget_host.dart';
+import 'l10n/generated/app_localizations.dart';
+import 'l10n/locale_aware_forms.dart';
 import 'features/auth/presentation/auth_gate.dart';
 
 /// Entry point of the Túi Khôn Flutter application.
@@ -40,6 +45,8 @@ Future<void> main() async {
   runApp(
     ProviderScope(
       overrides: [
+        homeWidgetEnabledProvider.overrideWithValue(true),
+        appearancePreferencesProvider.overrideWithValue(preferences),
         offlineAccountIdProvider.overrideWith((ref) => offlineAccount)
       ],
       child: const TuiKhonApp(),
@@ -48,15 +55,29 @@ Future<void> main() async {
 }
 
 /// Root widget configuring the application theme and the AuthGate root route.
-class TuiKhonApp extends StatelessWidget {
+class TuiKhonApp extends ConsumerWidget {
   const TuiKhonApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final appearance = ref.watch(appearanceProvider);
     return MaterialApp(
       title: 'Túi Khôn',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: appearance.theme,
+      locale: ref.watch(effectiveLocaleProvider),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      navigatorObservers: [ref.read(appNavigationObserverProvider)],
+      builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
+          value: Theme.of(context).brightness == Brightness.dark
+              ? SystemUiOverlayStyle.light
+              : SystemUiOverlayStyle.dark,
+          child: HomeWidgetHost(
+              configured: Env.isSupabaseConfigured,
+              child: LocaleAwareForms(child: child!))),
       home: Env.isSupabaseConfigured
           ? const AuthGate()
           : const MissingConfigScreen(),

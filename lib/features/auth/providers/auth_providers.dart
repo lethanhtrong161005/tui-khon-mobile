@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:convert';
 import '../../../core/offline/local_store.dart';
+import '../../../core/home_widget/home_widget_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../reminders/data/reminder_scheduler.dart';
 
@@ -10,6 +11,8 @@ import '../models/user_profile.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>(
   (ref) => AuthRepository(ref.watch(supabaseClientProvider), beforeSignOut: () async {
+    ref.read(homeWidgetControllerProvider.notifier).clear();
+    await ref.read(homeWidgetBridgeProvider).clearPendingAction();
     ref.read(offlineAccountIdProvider.notifier).state = null;
     await (await SharedPreferences.getInstance()).remove('offline_account_id');
     for (final group in ['debts', 'payables', 'diary', 'report']) {

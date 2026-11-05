@@ -1,8 +1,11 @@
+import '../../../../core/theme/semantic_colors.dart';
+import '../../../../l10n/app_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/config/env.dart';
+import '../../../../core/theme/appearance.dart';
 
 /// Shared building blocks for the auth screens (login, register, OTP, reset).
 
@@ -49,22 +52,22 @@ class AuthBrandHeader extends StatelessWidget {
           width: compact ? 68 : 76,
           height: compact ? 68 : 76,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppColors.primary, AppColors.primaryContainer],
+            gradient: LinearGradient(
+              colors: [appPalette(context).primary, AppColors.primaryContainer],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(compact ? 20 : 24),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withValues(alpha: .16),
+                color: appPalette(context).primary.withValues(alpha: .16),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),
             ],
           ),
           child: compact
-              ? const CustomPaint(painter: _AuthLogoPainter())
+              ? const CustomPaint(painter: const _AuthLogoPainter())
               : Icon(icon, size: 38, color: Colors.white),
         ),
         SizedBox(height: compact ? 14 : 16),
@@ -73,7 +76,7 @@ class AuthBrandHeader extends StatelessWidget {
           style: TextStyle(
             fontSize: compact ? 24 : 26,
             fontWeight: FontWeight.w800,
-            color: AppColors.onSurface,
+            color: appPalette(context).onSurface,
             letterSpacing: -0.5,
           ),
           textAlign: TextAlign.center,
@@ -81,8 +84,10 @@ class AuthBrandHeader extends StatelessWidget {
         SizedBox(height: compact ? 8 : 6),
         Text(
           subtitle,
-          style: const TextStyle(
-              fontSize: 13, color: AppColors.onSurfaceVariant, height: 1.4),
+          style: TextStyle(
+              fontSize: 13,
+              color: appPalette(context).onSurfaceVariant,
+              height: 1.4),
           textAlign: TextAlign.center,
         ),
       ],
@@ -157,11 +162,26 @@ class AuthTextField extends StatefulWidget {
 
 class _AuthTextFieldState extends State<AuthTextField> {
   bool _obscured = true;
+  final _fieldKey = GlobalKey<FormFieldState<String>>();
+  Locale? _locale;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final next = Localizations.maybeLocaleOf(context);
+    if (_locale != next && _fieldKey.currentState?.hasError == true) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _fieldKey.currentState?.validate();
+      });
+    }
+    _locale = next;
+  }
 
   @override
   Widget build(BuildContext context) {
     final compact = _AuthStyle.isCompact(context);
     final field = TextFormField(
+      key: _fieldKey,
       controller: widget.controller,
       enabled: widget.enabled,
       validator: widget.validator,
@@ -186,12 +206,15 @@ class _AuthTextFieldState extends State<AuthTextField> {
         constraints: compact ? const BoxConstraints(minHeight: 56) : null,
         helperMaxLines: 2,
         errorMaxLines: 3,
-        helperStyle:
-            const TextStyle(fontSize: 10, color: AppColors.onSurfaceVariant),
-        prefixIcon: Icon(widget.icon, color: AppColors.primary, size: 21),
+        helperStyle: TextStyle(
+            fontSize: 10, color: appPalette(context).onSurfaceVariant),
+        prefixIcon:
+            Icon(widget.icon, color: appPalette(context).primary, size: 21),
         suffixIcon: widget.isPassword
             ? IconButton(
-                tooltip: _obscured ? 'Hiện mật khẩu' : 'Ẩn mật khẩu',
+                tooltip: _obscured
+                    ? appL10n(context).msgShowPassword138
+                    : appL10n(context).msgHidePassword139,
                 onPressed: widget.enabled
                     ? () => setState(() => _obscured = !_obscured)
                     : null,
@@ -201,21 +224,24 @@ class _AuthTextFieldState extends State<AuthTextField> {
                         : Icons.visibility_outlined,
                     size: 21))
             : null,
-        hintStyle: const TextStyle(fontSize: 13, color: AppColors.outline),
+        hintStyle: TextStyle(fontSize: 13, color: appPalette(context).outline),
         counterText: '',
         filled: true,
-        fillColor: Colors.white.withValues(alpha: .95),
+        fillColor: appPalette(context).surfaceContainer.withValues(alpha: .95),
         contentPadding:
             EdgeInsets.symmetric(horizontal: 16, vertical: compact ? 16 : 19),
         border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(22),
-            borderSide: const BorderSide(color: Color(0xFFE1EBE4))),
+            borderSide: BorderSide(
+                color: adaptiveSurface(context, const Color(0xFFE1EBE4)))),
         enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(22),
-            borderSide: const BorderSide(color: Color(0xFFE1EBE4))),
+            borderSide: BorderSide(
+                color: adaptiveSurface(context, const Color(0xFFE1EBE4)))),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(22),
-            borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+            borderSide:
+                BorderSide(color: appPalette(context).primary, width: 1.5)),
       ),
     );
     if (!compact || widget.helperText == null) return field;
@@ -224,10 +250,10 @@ class _AuthTextFieldState extends State<AuthTextField> {
       Padding(
           padding: const EdgeInsets.only(left: 14, top: 6),
           child: Text(widget.helperText!,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 10,
                   height: 1.3,
-                  color: AppColors.onSurfaceVariant))),
+                  color: appPalette(context).onSurfaceVariant))),
     ]);
   }
 }
@@ -254,10 +280,10 @@ class AuthPrimaryButton extends StatelessWidget {
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(22),
               gradient: const LinearGradient(
-                  colors: [Color(0xFF007A58), Color(0xFF009D75)]),
+                  colors: const [Color(0xFF007A58), Color(0xFF009D75)]),
               boxShadow: [
                 BoxShadow(
-                    color: AppColors.primary.withValues(alpha: .14),
+                    color: appPalette(context).primary.withValues(alpha: .14),
                     blurRadius: 12,
                     offset: const Offset(0, 4))
               ]),
@@ -268,6 +294,7 @@ class AuthPrimaryButton extends StatelessWidget {
                   onPressed: isLoading ? null : onPressed,
                   style: FilledButton.styleFrom(
                       backgroundColor: Colors.transparent,
+                      foregroundColor: Colors.white,
                       disabledBackgroundColor: const Color(0xFFADCABC),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(22))),
@@ -275,7 +302,7 @@ class AuthPrimaryButton extends StatelessWidget {
                       ? const SizedBox(
                           width: 22,
                           height: 22,
-                          child: CircularProgressIndicator(
+                          child: const CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.white))
                       : Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -298,19 +325,19 @@ class AuthPrimaryButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: AppColors.primary.withOpacity(0.6),
+          backgroundColor: appPalette(context).primary,
+          foregroundColor: appPalette(context).onPrimary,
+          disabledBackgroundColor: appPalette(context).primary.withOpacity(0.6),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 3,
-          shadowColor: AppColors.primary.withOpacity(0.3),
+          shadowColor: appPalette(context).primary.withOpacity(0.3),
         ),
         child: isLoading
             ? const SizedBox(
                 width: 22,
                 height: 22,
-                child: CircularProgressIndicator(
+                child: const CircularProgressIndicator(
                     strokeWidth: 2.5, color: Colors.white),
               )
             : Row(
@@ -349,7 +376,7 @@ class AuthScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final compact = layout != AuthLayout.secondary;
     final back = IconButton(
-        tooltip: 'Quay lại',
+        tooltip: appL10n(context).msgBack140,
         onPressed: busy ? null : onBack ?? () => Navigator.maybePop(context),
         icon: const Icon(Icons.arrow_back_rounded));
     return _AuthStyle(
@@ -357,12 +384,15 @@ class AuthScaffold extends StatelessWidget {
         child: PopScope(
             canPop: !busy,
             child: Scaffold(
-              backgroundColor: AppColors.background,
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               body: Stack(children: [
-                const Positioned.fill(
+                Positioned.fill(
                     child: IgnorePointer(
                         child: ExcludeSemantics(
-                            child: CustomPaint(painter: _AuthLeaves())))),
+                            child: CustomPaint(
+                                painter: _AuthLeaves(
+                                    dark: Theme.of(context).brightness ==
+                                        Brightness.dark))))),
                 SafeArea(
                   child: LayoutBuilder(
                       builder: (context, bounds) => SingleChildScrollView(
@@ -385,6 +415,10 @@ class AuthScaffold extends StatelessWidget {
                                                 child: back),
                                           ...children,
                                         ]),
+                                    const Positioned(
+                                        right: 0,
+                                        top: 0,
+                                        child: const AppearanceButton()),
                                     if (showBack && compact)
                                       Positioned(left: 0, top: 0, child: back),
                                   ]))))),
@@ -402,13 +436,14 @@ class AuthDivider extends StatelessWidget {
       padding: EdgeInsets.symmetric(
           vertical: _AuthStyle.isCompact(context) ? 12 : 20),
       child: Row(children: [
-        const Expanded(child: Divider()),
+        const Expanded(child: const Divider()),
         Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(label,
-                style: const TextStyle(
-                    fontSize: 11, color: AppColors.onSurfaceVariant))),
-        const Expanded(child: Divider()),
+                style: TextStyle(
+                    fontSize: 11,
+                    color: appPalette(context).onSurfaceVariant))),
+        const Expanded(child: const Divider()),
       ]));
 }
 
@@ -430,14 +465,15 @@ class GoogleAuthButton extends StatelessWidget {
                 : Env.isGoogleConfigured
                     ? onPressed
                     : () => showAuthMessage(context,
-                        'Google chưa được cấu hình. Bạn có thể đăng ký hoặc đăng nhập bằng email trước.'),
+                        appL10n(context).msgGoogleSignInIsNotConfigured141),
             style: OutlinedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: const Color(0xFF18364C),
+                backgroundColor: appPalette(context).surfaceContainer,
+                foregroundColor: appPalette(context).onSurface,
                 minimumSize: const Size(double.infinity, 56),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                side: const BorderSide(color: Color(0xFFE5EDE7)),
+                side: BorderSide(
+                    color: adaptiveSurface(context, const Color(0xFFE5EDE7))),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(22))),
             child: Row(children: [
@@ -446,7 +482,9 @@ class GoogleAuthButton extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                   child: Text(
-                      register ? 'Đăng ký với Google' : 'Tiếp tục với Google',
+                      register
+                          ? appL10n(context).msgRegisterWithGoogle142
+                          : appL10n(context).msgContinueWithGoogle143,
                       textAlign: TextAlign.center,
                       maxLines: MediaQuery.textScalerOf(context).scale(1) <= 1.2
                           ? 1
@@ -457,19 +495,27 @@ class GoogleAuthButton extends StatelessWidget {
               const Icon(Icons.chevron_right_rounded, size: 21)
             ])),
         if (!Env.isGoogleConfigured)
-          const Padding(
-              padding: EdgeInsets.only(top: 4),
-              child: Text('Google chưa cấu hình',
+          Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(appL10n(context).msgGoogleNotConfigured144,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                      fontSize: 10, height: 1.3, color: AppColors.outline))),
+                      fontSize: 10,
+                      height: 1.3,
+                      color: appPalette(context).outline))),
       ]);
 }
 
 class _AuthLeaves extends CustomPainter {
-  const _AuthLeaves();
+  const _AuthLeaves({this.dark = false});
+  final bool dark;
   @override
   void paint(Canvas canvas, Size size) {
+    if (dark) {
+      canvas.drawRect(
+          Offset.zero & size, Paint()..color = const Color(0xFF0C211A));
+      return;
+    }
     final rect = Offset.zero & size;
     canvas.drawRect(
         rect,
@@ -477,7 +523,7 @@ class _AuthLeaves extends CustomPainter {
           ..shader = const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
+              colors: const [
                 Color(0xFFF8FCF7),
                 Color(0xFFF1F8EF),
                 Color(0xFFF8FCF5)
@@ -499,7 +545,7 @@ class _AuthLeaves extends CustomPainter {
           118, size.height * .17, 49, size.height * .07, 0, size.height * .14)
       ..lineTo(-18, size.height * .26);
     leaf(left, Rect.fromLTWH(0, size.height * .1, 100, 180),
-        const [Color(0xFFDCF5E3), Color(0xFFBDE8CD)]);
+        [const Color(0xFFDCF5E3), const Color(0xFFBDE8CD)]);
     final leftFold = Path()
       ..moveTo(0, size.height * .25)
       ..lineTo(30, size.height * .18)
@@ -513,7 +559,7 @@ class _AuthLeaves extends CustomPainter {
           size.height * .37, size.width, size.height * .42)
       ..close();
     leaf(right, Rect.fromLTWH(size.width - 95, size.height * .17, 95, 240),
-        const [Color(0xFFE3F6E7), Color(0xFFCAEBD5)]);
+        [const Color(0xFFE3F6E7), const Color(0xFFCAEBD5)]);
     final fold = Path()
       ..moveTo(size.width, size.height * .28)
       ..quadraticBezierTo(
@@ -528,7 +574,7 @@ class _AuthLeaves extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_AuthLeaves oldDelegate) => false;
+  bool shouldRepaint(_AuthLeaves oldDelegate) => dark != oldDelegate.dark;
 }
 
 /// All artwork (including leaves and shadow) is contained inside this frame.

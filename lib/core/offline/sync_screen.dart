@@ -1,3 +1,5 @@
+import '../../l10n/app_l10n.dart';
+import '../utils/localized_format.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -15,19 +17,22 @@ class SyncIndicator extends ConsumerWidget {
     if (ref.watch(localStoreProvider) == null) return const SizedBox.shrink();
     final state = ref.watch(syncControllerProvider);
     final label = state.running
-        ? 'Đang đồng bộ…'
+        ? appL10n(context).msgSyncing0
         : state.conflicts > 0
-            ? '${state.conflicts} mục cần đối chiếu'
+            ? appL10n(context).msgItemsNeedReview1(state.conflicts)
             : state.pending > 0
-                ? '${state.pending} thay đổi trên máy'
-                : 'Đã đồng bộ';
+                ? appL10n(context).msgChangesOnThisDevice2(state.pending)
+                : appL10n(context).msgSynced3;
     return ListTile(
         dense: true,
         leading: Icon(state.error != null ? Icons.cloud_off : Icons.cloud_sync),
         title: Text(label),
-        subtitle: state.error == null ? null : const Text('Ghi chép vẫn lưu trên máy'),
+        subtitle: state.error == null
+            ? null
+            : Text(appL10n(context).msgYourRecordsAreStillSavedOn4),
         trailing: const Icon(Icons.chevron_right),
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SyncScreen())));
+        onTap: () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const SyncScreen())));
   }
 }
 
@@ -39,30 +44,37 @@ class SyncScreen extends ConsumerStatefulWidget {
 
 class _SyncScreenState extends ConsumerState<SyncScreen> {
   String _entity(Object? key) =>
-      const {
-        'transactions': 'Giao dịch',
-        'wallets': 'Nguồn tiền',
-        'categories': 'Danh mục',
-        'budgets': 'Ngân sách',
-        'debts': 'Sổ nợ',
-        'debt_payments': 'Lịch sử trả nợ',
-        'goals': 'Mục tiêu',
-        'payables': 'Khoản phải trả',
-        'payable_occurrences': 'Lần thanh toán',
-        'category_rules': 'Quy tắc phân loại',
-        'notifications': 'Thông báo'
+      {
+        'transactions': appL10n(context).msgTransactions5,
+        'wallets': appL10n(context).wallets,
+        'categories': appL10n(context).categories,
+        'budgets': appL10n(context).msgBudgets8,
+        'debts': appL10n(context).msgDebtBook9,
+        'debt_payments': appL10n(context).msgPaymentHistory10,
+        'goals': appL10n(context).msgGoals11,
+        'payables': appL10n(context).payables,
+        'payable_occurrences': appL10n(context).msgPaymentOccurrence13,
+        'category_rules': appL10n(context).msgCategoryRules14,
+        'notifications': appL10n(context).msgNotifications15
       }[key] ??
-      'Ghi chép';
+      appL10n(context).msgRecord16;
   String _error(Map<String, dynamic> row) => row['entity'] == 'debt_payments'
-      ? 'Kiểm tra số tiền trả và khoản nợ còn lại. Bấm để sửa lịch sử.'
-      : 'Kiểm tra nội dung trong mục ${_entity(row['entity'])}, rồi thử đồng bộ lại.';
+      ? appL10n(context).msgCheckThePaymentAmountAndRemaining17
+      : appL10n(context)
+          .msgCheckTheContentsInThenTry18((_entity(row['entity'])).toString());
   Future<void> _openError(Map<String, dynamic> e) async {
-    final row = (jsonDecode(e['payload'] as String) as Map).cast<String, dynamic>();
+    final row =
+        (jsonDecode(e['payload'] as String) as Map).cast<String, dynamic>();
     if (e['entity'] == 'debt_payments') {
-      final debt = await ref.read(localStoreProvider)!.record('debts', row['debt_id'] as String);
+      final debt = await ref
+          .read(localStoreProvider)!
+          .record('debts', row['debt_id'] as String);
       if (debt != null && mounted) {
         await Navigator.push(
-            context, MaterialPageRoute(builder: (_) => DebtHistoryScreen(debt: DebtModel.fromJson(debt))));
+            context,
+            MaterialPageRoute(
+                builder: (_) =>
+                    DebtHistoryScreen(debt: DebtModel.fromJson(debt))));
         if (mounted) setState(() {});
         return;
       }
@@ -71,23 +83,29 @@ class _SyncScreenState extends ConsumerState<SyncScreen> {
     await showDialog<void>(
         context: context,
         builder: (ctx) => AlertDialog(
-            title: Text(_entity(e['entity'])),
-            content: SingleChildScrollView(child: Text('${_display(e['payload'] as String?, 0)}\n\n${_error(e)}')),
-            actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đóng'))]));
+                title: Text(_entity(e['entity'])),
+                content: SingleChildScrollView(
+                    child: Text(
+                        '${_display(e['payload'] as String?, 0)}\n\n${_error(e)}')),
+                actions: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: Text(appL10n(context).msgClose19))
+                ]));
   }
 
   Future<void> _resolve(Map<String, dynamic> c, bool keep) async {
-    await ref
-        .read(localStoreProvider)!
-        .resolveConflict(c['entity'] as String, c['record_id'] as String, keepLocal: keep);
+    await ref.read(localStoreProvider)!.resolveConflict(
+        c['entity'] as String, c['record_id'] as String,
+        keepLocal: keep);
     if (!mounted) return;
     await ref.read(syncControllerProvider.notifier).sync();
     if (mounted) setState(() {});
   }
 
   String _display(String? raw, int deleted) {
-    if (deleted == 1) return 'Đã xoá';
-    if (raw == null) return 'Chưa tồn tại';
+    if (deleted == 1) return appL10n(context).msgDeleted20;
+    if (raw == null) return appL10n(context).msgDoesNotExistYet21;
     final row = (jsonDecode(raw) as Map).cast<String, dynamic>();
     final fields = [
       'name',
@@ -95,25 +113,40 @@ class _SyncScreenState extends ConsumerState<SyncScreen> {
       'note',
       'type',
       'amount',
+      'initial_balance',
       'paid_at',
       'occurred_at',
       'saved_amount',
       'target_amount',
       'limit_amount'
     ];
-    const names = {
-      'name': 'Tên',
-      'person_name': 'Người liên quan',
-      'note': 'Ghi chú',
-      'type': 'Loại',
-      'amount': 'Số tiền',
-      'paid_at': 'Ngày trả',
-      'occurred_at': 'Thời điểm',
-      'saved_amount': 'Đã để dành',
-      'target_amount': 'Mục tiêu',
-      'limit_amount': 'Hạn mức'
+    final names = {
+      'name': appL10n(context).msgName22,
+      'person_name': appL10n(context).msgPerson23,
+      'note': appL10n(context).msgNote24,
+      'type': appL10n(context).msgType25,
+      'amount': appL10n(context).msgAmount26,
+      'initial_balance': appL10n(context).msgOpeningBalanceVnd440,
+      'paid_at': appL10n(context).msgPaymentDate27,
+      'occurred_at': appL10n(context).msgDateAndTime28,
+      'saved_amount': appL10n(context).msgSaved29,
+      'target_amount': appL10n(context).msgGoals11,
+      'limit_amount': appL10n(context).msgLimit30
     };
-    return fields.where((k) => row[k] != null).map((k) => '${names[k]}: ${row[k]}').join('\n');
+    return fields.where((k) => row[k] != null).map((k) {
+      final value = row[k];
+      const moneyFields = {
+        'amount',
+        'initial_balance',
+        'saved_amount',
+        'target_amount',
+        'limit_amount'
+      };
+      final display = moneyFields.contains(k) && value is num
+          ? formatMoney(context, value, showSign: value < 0)
+          : '$value';
+      return '${names[k]}: $display';
+    }).join('\n');
   }
 
   @override
@@ -122,21 +155,37 @@ class _SyncScreenState extends ConsumerState<SyncScreen> {
     final status = ref.watch(syncControllerProvider);
     ref.watch(localRevisionProvider);
     return Scaffold(
-        appBar: AppBar(title: const Text('Dữ liệu & Đồng bộ')),
+        appBar: AppBar(title: Text(appL10n(context).dataSync)),
         body: ListView(padding: const EdgeInsets.all(16), children: [
-          Text('${status.pending} thay đổi đang chờ · ${status.conflicts} xung đột'),
-          if (status.lastSuccess != null) Text('Lần cuối: ${status.lastSuccess!.toLocal()}'),
+          Text(appL10n(context).msgPendingChangesConflicts32(
+              (status.pending).toString(), (status.conflicts).toString())),
+          if (status.lastSuccess != null)
+            Text(appL10n(context).msgLastSuccessfulSync33(
+                financialDateTime(status.lastSuccess!))),
           if (status.error != null)
             Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(status.error!, style: TextStyle(color: Theme.of(context).colorScheme.error))),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(appL10n(context).syncError,
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.error)),
+                      ExpansionTile(
+                          title: Text(appL10n(context).errorDetails),
+                          children: [SelectableText(status.error!)])
+                    ])),
           FilledButton.icon(
-              onPressed:
-                  status.running ? null : () => ref.read(syncControllerProvider.notifier).sync(retryErrors: true),
+              onPressed: status.running
+                  ? null
+                  : () => ref
+                      .read(syncControllerProvider.notifier)
+                      .sync(retryErrors: true),
               icon: const Icon(Icons.sync),
-              label: Text(status.running ? 'Đang đồng bộ' : 'Đồng bộ ngay')),
-          const Text(
-              'Dữ liệu trên máy được giữ khi chưa có mạng. Nếu hai thiết bị sửa cùng một mục, chọn bản muốn giữ bên dưới.'),
+              label: Text(status.running
+                  ? appL10n(context).msgSyncing34
+                  : appL10n(context).msgSyncNow35)),
+          Text(appL10n(context).msgYourDataStaysOnThisDevice36),
           FutureBuilder(
               future: store.conflicts(),
               builder: (context, snapshot) => Column(children: [
@@ -144,18 +193,32 @@ class _SyncScreenState extends ConsumerState<SyncScreen> {
                       Card(
                           child: Padding(
                               padding: const EdgeInsets.all(12),
-                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                Text(_entity(c['entity'])),
-                                const SizedBox(height: 8),
-                                const Text('Trên máy', style: TextStyle(fontWeight: FontWeight.bold)),
-                                Text(_display(c['local_data'] as String?, c['local_deleted'] as int)),
-                                const Text('Trên server', style: TextStyle(fontWeight: FontWeight.bold)),
-                                Text(_display(c['server_data'] as String?, c['server_deleted'] as int)),
-                                Wrap(spacing: 8, children: [
-                                  TextButton(onPressed: () => _resolve(c, true), child: const Text('Giữ bản trên máy')),
-                                  TextButton(onPressed: () => _resolve(c, false), child: const Text('Giữ bản server'))
-                                ]),
-                              ])))
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(_entity(c['entity'])),
+                                    const SizedBox(height: 8),
+                                    Text(appL10n(context).msgOnThisDevice37,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    Text(_display(c['local_data'] as String?,
+                                        c['local_deleted'] as int)),
+                                    Text(appL10n(context).msgOnTheServer38,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    Text(_display(c['server_data'] as String?,
+                                        c['server_deleted'] as int)),
+                                    Wrap(spacing: 8, children: [
+                                      TextButton(
+                                          onPressed: () => _resolve(c, true),
+                                          child: Text(appL10n(context)
+                                              .msgKeepDeviceVersion39)),
+                                      TextButton(
+                                          onPressed: () => _resolve(c, false),
+                                          child: Text(appL10n(context)
+                                              .msgKeepServerVersion40))
+                                    ]),
+                                  ])))
                   ])),
           FutureBuilder(
               future: store.errors(),

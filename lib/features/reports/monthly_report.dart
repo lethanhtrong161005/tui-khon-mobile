@@ -141,6 +141,7 @@ class MonthlyReport {
           for (final entry in byId.entries)
             {
               'id': entry.key,
+              'category_known': categories.any((c) => c['id'] == entry.key),
               'name': name(entry.key),
               'amount': entry.value,
               'color': categories
@@ -156,6 +157,8 @@ class MonthlyReport {
           for (final b in budgets)
             {
               ...b,
+              'category_known':
+                  categories.any((c) => c['id'] == b['category_id']),
               'icon': categories
                   .where((c) => c['id'] == b['category_id'])
                   .firstOrNull?['icon'],

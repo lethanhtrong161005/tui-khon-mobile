@@ -10,6 +10,7 @@ class CsvImportPlan {
   final List<LocalMutation> mutations = [];
   final Set<int> duplicates = {}, existingIds = {};
   final Map<int, String> errors = {};
+  final Map<int, CsvIssue> issues = {};
   int get transactionCount =>
       mutations.where((m) => m.entity == 'transactions').length;
 }
@@ -57,6 +58,8 @@ class CsvImportPlanner {
         if (id == null) {
           if (!allowCreation) {
             plan.errors[item.line] = 'Ánh xạ hoặc xác nhận tạo: $label';
+            plan.issues[item.line] =
+                CsvIssue(CsvIssueCode.mapping, label: label);
             break;
           }
           id = exchangeId();

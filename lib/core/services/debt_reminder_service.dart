@@ -32,9 +32,9 @@ class LocalDebtReminders implements DebtReminders {
             notices.add(ReminderNotice(
                 '${debt.id}:$before',
                 before == 1
-                    ? 'Ngày mai đến hạn trả nợ'
-                    : 'Hôm nay đến hạn trả nợ',
-                '${debt.personName} · ${CurrencyFormatter.formatVND(debt.remaining)}',
+                    ? _scheduler.strings.debtTomorrowTitle
+                    : _scheduler.strings.debtTodayTitle,
+                '${debt.personName} · ${CurrencyFormatter.formatVND(debt.remaining, locale: _scheduler.strings.localeName)}',
                 DateTime(due.year, due.month, due.day - before, 8),
                 '/planning/debts/${debt.id}'));
           }

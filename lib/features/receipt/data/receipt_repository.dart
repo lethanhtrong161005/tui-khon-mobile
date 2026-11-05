@@ -1,3 +1,4 @@
+import '../../../core/utils/app_failure.dart';
 import 'dart:typed_data';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
@@ -14,11 +15,15 @@ class PickedReceipt {
   final String mimeType;
   final String extension;
 
-  const PickedReceipt({required this.bytes, required this.mimeType, required this.extension});
+  const PickedReceipt(
+      {required this.bytes, required this.mimeType, required this.extension});
 
   /// Derives the MIME type from the file name; image_picker often leaves it null.
-  factory PickedReceipt.fromFile(Uint8List bytes, {String? name, String? mimeType}) {
-    final ext = (name != null && name.contains('.')) ? name.split('.').last.toLowerCase() : 'jpg';
+  factory PickedReceipt.fromFile(Uint8List bytes,
+      {String? name, String? mimeType}) {
+    final ext = (name != null && name.contains('.'))
+        ? name.split('.').last.toLowerCase()
+        : 'jpg';
     final mime = mimeType ??
         switch (ext) {
           'png' => 'image/png',
@@ -26,7 +31,8 @@ class PickedReceipt {
           'heic' || 'heif' => 'image/heic',
           _ => 'image/jpeg',
         };
-    return PickedReceipt(bytes: bytes, mimeType: mime, extension: ext == 'jpeg' ? 'jpg' : ext);
+    return PickedReceipt(
+        bytes: bytes, mimeType: mime, extension: ext == 'jpeg' ? 'jpg' : ext);
   }
 }
 
@@ -45,8 +51,10 @@ class ReceiptRepository {
   /// Uploads [receipt] and returns its storage path (saved in `receipt_path`).
   Future<String> upload(PickedReceipt receipt) async {
     final userId = _client.auth.currentUser?.id ?? local?.userId;
-    if (userId == null) throw StateError('Bạn cần đăng nhập để lưu hóa đơn');
-    final path = '$userId/${sha256.convert(receipt.bytes)}.${receipt.extension}';
+    if (userId == null)
+      throw AppFailure('failure31', [], 'Bạn cần đăng nhập để lưu hóa đơn');
+    final path =
+        '$userId/${sha256.convert(receipt.bytes)}.${receipt.extension}';
     if (local != null) {
       await local!.attach(path, receipt.bytes, receipt.mimeType);
       return path;
@@ -62,10 +70,13 @@ class ReceiptRepository {
   Future<String> signedUrl(String path) async {
     final bytes = await local?.attachment(path);
     if (bytes != null) return 'data:image/jpeg;base64,${base64Encode(bytes)}';
-    return _client.storage.from(_bucket).createSignedUrl(path, signedUrlTtlSeconds);
+    return _client.storage
+        .from(_bucket)
+        .createSignedUrl(path, signedUrlTtlSeconds);
   }
 }
 
 final receiptRepositoryProvider = Provider<ReceiptRepository>(
-  (ref) => ReceiptRepository(ref.watch(supabaseClientProvider), ref.watch(localStoreProvider)),
+  (ref) => ReceiptRepository(
+      ref.watch(supabaseClientProvider), ref.watch(localStoreProvider)),
 );

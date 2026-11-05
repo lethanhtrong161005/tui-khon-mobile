@@ -1,8 +1,9 @@
+import '../../../core/theme/semantic_colors.dart';
+import '../../../l10n/app_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../core/constants/app_colors.dart';
 import '../../../core/services/app_lock_service.dart';
 import '../../../core/offline/local_store.dart';
 import '../../../core/offline/sync_controller.dart';
@@ -23,7 +24,8 @@ class AuthGate extends ConsumerStatefulWidget {
   ConsumerState<AuthGate> createState() => _AuthGateState();
 }
 
-class _AuthGateState extends ConsumerState<AuthGate> with WidgetsBindingObserver {
+class _AuthGateState extends ConsumerState<AuthGate>
+    with WidgetsBindingObserver {
   /// Lock again when the app comes back after this long in the background.
   static const _relockAfter = Duration(seconds: 60);
   DateTime? _backgroundedAt;
@@ -59,7 +61,8 @@ class _AuthGateState extends ConsumerState<AuthGate> with WidgetsBindingObserver
       Future.microtask(() async {
         if (!mounted) return;
         ref.read(offlineAccountIdProvider.notifier).state = next.user.id;
-        await (await SharedPreferences.getInstance()).setString('offline_account_id', next.user.id);
+        await (await SharedPreferences.getInstance())
+            .setString('offline_account_id', next.user.id);
       });
     });
     ref.listen<String?>(currentUserIdProvider, (previous, next) {
@@ -85,11 +88,18 @@ class _AuthGateState extends ConsumerState<AuthGate> with WidgetsBindingObserver
                     child: Column(mainAxisSize: MainAxisSize.min, children: [
                       if (sync.running) const CircularProgressIndicator(),
                       const SizedBox(height: 16),
-                      Text(sync.error ?? 'Đang tải dữ liệu lần đầu để dùng offline…', textAlign: TextAlign.center),
+                      Text(
+                          sync.error != null
+                              ? appL10n(context).syncError
+                              : appL10n(context)
+                                  .msgDownloadingYourDataForOfflineUse88,
+                          textAlign: TextAlign.center),
                       if (!sync.running)
                         FilledButton(
-                            onPressed: () => ref.read(syncControllerProvider.notifier).sync(),
-                            child: const Text('Thử lại')),
+                            onPressed: () => ref
+                                .read(syncControllerProvider.notifier)
+                                .sync(),
+                            child: Text(appL10n(context).msgRetry50)),
                     ]))));
       }
     }
@@ -97,10 +107,23 @@ class _AuthGateState extends ConsumerState<AuthGate> with WidgetsBindingObserver
     final lockEnabled = ref.watch(appLockEnabledProvider);
     final unlocked = ref.watch(appUnlockedProvider);
     if (lockEnabled.isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator(color: AppColors.primary)));
+      return Scaffold(
+          body: Center(
+              child: CircularProgressIndicator(
+                  color: appPalette(context).primary)));
     }
-    if ((lockEnabled.valueOrNull ?? false) && !unlocked) return const AppLockScreen();
-    return const HomeScreen();
+    final locked = lockEnabled.hasError ||
+        ((lockEnabled.valueOrNull ?? false) && !unlocked);
+    return Stack(fit: StackFit.expand, children: [
+      // Preserve an open form across a background biometric re-lock.
+      ExcludeSemantics(
+          excluding: locked,
+          child: IgnorePointer(
+              ignoring: locked, child: HomeScreen(key: ValueKey(userId)))),
+      if (locked)
+        AppLockScreen(
+            automaticallyAuthenticate: !Navigator.of(context).canPop()),
+    ]);
   }
 }
 
@@ -110,29 +133,36 @@ class MissingConfigScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: AppColors.background,
+    return Scaffold(
+      backgroundColor: appPalette(context).surface,
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Column(
+          padding: const EdgeInsets.all(24),
+          child: SingleChildScrollView(
+              child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.settings_suggest, size: 56, color: AppColors.primary),
-              SizedBox(height: 16),
+              Icon(Icons.settings_suggest,
+                  size: 56, color: appPalette(context).primary),
+              const SizedBox(height: 16),
               Text(
-                'Thiếu cấu hình Supabase',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.onSurface),
+                appL10n(context).msgSupabaseConfigurationMissing89,
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: appPalette(context).onSurface),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
-                'Copy .env.example thành .env, điền SUPABASE_URL và SUPABASE_ANON_KEY rồi chạy:\n\n'
-                'flutter run --dart-define-from-file=.env',
-                style: TextStyle(fontSize: 13, color: AppColors.onSurfaceVariant, height: 1.5),
+                appL10n(context).msgCopyEnvExampleToEnvFill90,
+                style: TextStyle(
+                    fontSize: 13,
+                    color: appPalette(context).onSurfaceVariant,
+                    height: 1.5),
                 textAlign: TextAlign.center,
               ),
             ],
-          ),
+          )),
         ),
       ),
     );

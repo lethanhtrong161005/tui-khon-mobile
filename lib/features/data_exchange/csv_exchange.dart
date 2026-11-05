@@ -1,3 +1,4 @@
+import '../../core/utils/app_failure.dart';
 import 'dart:convert';
 import 'dart:math';
 
@@ -11,12 +12,21 @@ String exchangeId() {
   return '${h.substring(0, 8)}-${h.substring(8, 12)}-${h.substring(12, 16)}-${h.substring(16, 20)}-${h.substring(20)}';
 }
 
+enum CsvIssueCode { columns, type, amount, date, wallet, source, id, mapping }
+
+class CsvIssue {
+  const CsvIssue(this.code, {this.label = ''});
+  final CsvIssueCode code;
+  final String label;
+}
+
 class CsvPreviewRow {
   CsvPreviewRow(this.line, this.values,
-      {this.error, this.duplicate = false, this.conflict = false});
+      {this.error, this.issue, this.duplicate = false, this.conflict = false});
   final int line;
   final JsonRow values;
   final String? error;
+  final CsvIssue? issue;
   final bool duplicate;
   final bool conflict;
 }
@@ -107,7 +117,7 @@ class CsvExchange {
       if (row.any((v) => v.isNotEmpty)) rows.add(row);
       row = [];
       if (rows.length > maxRows + 1) {
-        throw const FormatException('Tối đa 10.000 giao dịch');
+        throw AppFormatFailure('failure26', [], 'Tối đa 10.000 giao dịch');
       }
     }
 
@@ -134,12 +144,13 @@ class CsvExchange {
         quoted = true;
       } else {
         if (closed || c == '"') {
-          throw const FormatException('CSV sai dấu ngoặc kép');
+          throw AppFormatFailure('failure27', [], 'CSV sai dấu ngoặc kép');
         }
         field.write(c);
       }
     }
-    if (quoted) throw const FormatException('CSV chưa đóng dấu ngoặc kép');
+    if (quoted)
+      throw AppFormatFailure('failure28', [], 'CSV chưa đóng dấu ngoặc kép');
     if (field.isNotEmpty || row.isNotEmpty || closed) finishRow();
     return rows;
   }
@@ -147,7 +158,8 @@ class CsvExchange {
   static List<CsvPreviewRow> preview(List<int> bytes, List<JsonRow> existing) {
     final records = decode(bytes);
     if (records.isEmpty || records.first.join(',') != columns.join(',')) {
-      throw FormatException('Cột bắt buộc: ${columns.join(', ')}');
+      throw AppFormatFailure('failure29', [(columns.join(', ')).toString()],
+          'Cột bắt buộc: ${columns.join(', ')}');
     }
     final seen = <String, JsonRow>{for (final r in existing) '${r['id']}': r};
     final signatures = existing.map(signature).toSet();
@@ -170,7 +182,8 @@ class CsvExchange {
   static CsvPreviewRow _validate(int line, List<String> cells,
       Map<String, JsonRow> seen, Set<String> signatures) {
     if (cells.length != columns.length) {
-      return CsvPreviewRow(line, {}, error: 'Sai số cột');
+      return CsvPreviewRow(line, {},
+          error: 'Sai số cột', issue: const CsvIssue(CsvIssueCode.columns));
     }
     final r = <String, dynamic>{
       for (var i = 0; i < columns.length; i++) columns[i]: cells[i]
@@ -178,20 +191,27 @@ class CsvExchange {
     final amount = int.tryParse(cells[2]);
     final date = DateTime.tryParse(cells[3]);
     String? error;
+    CsvIssue? issue;
     if (!['income', 'expense'].contains(r['type'])) {
       error = 'Loại phải là income/expense';
+      issue = const CsvIssue(CsvIssueCode.type);
     } else if (amount == null || amount <= 0 || amount > 9007199254740991) {
       error = 'Số tiền VND phải là số nguyên dương';
+      issue = const CsvIssue(CsvIssueCode.amount);
     } else if (date == null || !_validDate(cells[3])) {
       error = 'Ngày ISO 8601 phải có múi giờ';
+      issue = const CsvIssue(CsvIssueCode.date);
     } else if (r['wallet'].toString().trim().isEmpty) {
       error = 'Thiếu nguồn tiền';
+      issue = const CsvIssue(CsvIssueCode.wallet);
     } else if (!sources.contains(r['source'])) {
       error = 'Nguồn ghi nhận không hợp lệ';
+      issue = const CsvIssue(CsvIssueCode.source);
     } else if (cells[0].isNotEmpty &&
         !RegExp(r'^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$')
             .hasMatch(cells[0])) {
       error = 'ID phải là UUID hoặc để trống';
+      issue = const CsvIssue(CsvIssueCode.id);
     }
     r['amount'] = amount;
     r['occurred_at'] = date?.toUtc().toIso8601String();
@@ -204,7 +224,7 @@ class CsvExchange {
       signatures.add(sig);
     }
     return CsvPreviewRow(line, r,
-        error: error, duplicate: duplicate, conflict: conflict);
+        error: error, issue: issue, duplicate: duplicate, conflict: conflict);
   }
 
   static bool _validDate(String value) {

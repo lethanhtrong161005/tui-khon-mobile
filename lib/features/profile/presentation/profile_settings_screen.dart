@@ -1,4 +1,8 @@
+import '../../../core/theme/semantic_colors.dart';
+import '../../../core/theme/appearance.dart';
+import '../../../l10n/app_l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -33,9 +37,10 @@ class ProfileSettingsScreen extends ConsumerWidget {
       builder: (BuildContext ctx) {
         return Container(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-          decoration: const BoxDecoration(
-            color: AppColors.surfaceContainerLowest,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainer,
+            borderRadius:
+                const BorderRadius.vertical(top: const Radius.circular(28)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -44,7 +49,7 @@ class ProfileSettingsScreen extends ConsumerWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.outlineVariant.withOpacity(0.5),
+                  color: appPalette(context).outlineVariant.withOpacity(0.5),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -53,25 +58,26 @@ class ProfileSettingsScreen extends ConsumerWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                    color: AppColors.errorContainer.withOpacity(0.5),
+                    color: appPalette(context).errorContainer.withOpacity(0.5),
                     shape: BoxShape.circle),
-                child: const Icon(Icons.logout_rounded,
-                    color: AppColors.error, size: 26),
+                child: Icon(Icons.logout_rounded,
+                    color: appPalette(context).error, size: 26),
               ),
               const SizedBox(height: 14),
-              const Text('Đăng xuất khỏi Túi Khôn?',
+              Text(appL10n(context).signOutTitle,
                   style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.onSurface)),
+                      color: appPalette(context).onSurface)),
               const SizedBox(height: 6),
               Text(
                 pending > 0
-                    ? 'Có $pending thay đổi chưa đồng bộ. Đăng xuất sẽ giữ dữ liệu trên máy cho lần đăng nhập sau.'
-                    : 'Dữ liệu trên máy được giữ riêng cho tài khoản này. Bạn có thể đăng nhập lại bất kỳ lúc nào.',
+                    ? appL10n(context).msgThereAreUnsyncedChangesSigningOut344(
+                        (pending).toString())
+                    : appL10n(context).signOutLocalNote,
                 style: TextStyle(
                     fontSize: 13,
-                    color: AppColors.onSurfaceVariant,
+                    color: appPalette(context).onSurfaceVariant,
                     height: 1.4),
                 textAlign: TextAlign.center,
               ),
@@ -83,16 +89,18 @@ class ProfileSettingsScreen extends ConsumerWidget {
                       onPressed: () => Navigator.pop(ctx),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(
-                            color: AppColors.outlineVariant.withOpacity(0.5)),
+                            color: appPalette(context)
+                                .outlineVariant
+                                .withOpacity(0.5)),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text('Ở lại',
+                      child: Text(appL10n(context).stay,
                           style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.onSurface)),
+                              color: appPalette(context).onSurface)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -104,23 +112,26 @@ class ProfileSettingsScreen extends ConsumerWidget {
                         try {
                           // AuthGate clears the route stack and shows LoginScreen.
                           await ref.read(authRepositoryProvider).signOut();
-                          messenger.showSnackBar(
-                              const SnackBar(content: Text('Đã đăng xuất')));
+                          if (!context.mounted) return;
+                          messenger.showSnackBar(SnackBar(
+                              content: Text(appL10n(context).signedOut)));
                         } catch (e) {
-                          messenger.showSnackBar(
-                              SnackBar(content: Text(friendlyError(e))));
+                          if (!context.mounted) return;
+                          messenger.showSnackBar(SnackBar(
+                              content:
+                                  Text(friendlyError(e, context: context))));
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.error,
+                        backgroundColor: appPalette(context).error,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text('Đăng xuất',
-                          style: TextStyle(
+                      child: Text(appL10n(context).signOut,
+                          style: const TextStyle(
                               fontSize: 14, fontWeight: FontWeight.bold)),
                     ),
                   ),
@@ -139,34 +150,41 @@ class ProfileSettingsScreen extends ConsumerWidget {
     if (enable) {
       if (!await lock.isAvailable()) {
         if (context.mounted) {
-          showToast(context,
-              'Thiết bị chưa cài Face ID / vân tay. Hãy thiết lập trong Cài đặt của máy trước.');
+          showToast(context, appL10n(context).msgBiometricsAreNotSetUpOn345);
         }
         return;
       }
-      if (!await lock.authenticate('Xác nhận để bật khoá Túi Khôn')) return;
+      if (!context.mounted) return;
+      if (!await lock.authenticate(appL10n(context).msgConfirmToEnableTIKh346))
+        return;
     }
     await lock.setEnabled(enable);
     ref.invalidate(appLockEnabledProvider);
     if (context.mounted)
       showToast(
-          context, enable ? 'Đã bật khoá ứng dụng' : 'Đã tắt khoá ứng dụng');
+          context,
+          enable
+              ? appL10n(context).lockEnabled
+              : appL10n(context).lockDisabled);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = appL10n(context);
+    final appearance = ref.watch(appearanceProvider);
     final profile = ref.watch(profileProvider).valueOrNull;
     final lockEnabled = ref.watch(appLockEnabledProvider).valueOrNull ?? false;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.surface.withOpacity(0.9),
+        backgroundColor:
+            Theme.of(context).colorScheme.surface.withValues(alpha: .9),
         elevation: 0,
         automaticallyImplyLeading: !embedded,
-        title: const Text('Cá nhân',
+        title: Text(appL10n(context).profile,
             style: TextStyle(
-                color: AppColors.onSurface,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 17,
                 fontWeight: FontWeight.bold)),
       ),
@@ -175,116 +193,157 @@ class ProfileSettingsScreen extends ConsumerWidget {
         children: [
           _ProfileCard(profile: profile),
           const SizedBox(height: 20),
-          _sectionTitle('QUẢN LÝ SỔ'),
-          _menuGroup([
-            _menuItem(
+          _sectionTitle(context, l10n.preferences),
+          _menuGroup(context, [
+            _menuItem(context,
+                icon: Icons.brightness_6_outlined,
+                title: l10n.appearance,
+                subtitle: appearance.theme == ThemeMode.system
+                    ? l10n.system
+                    : appearance.theme == ThemeMode.dark
+                        ? l10n.dark
+                        : l10n.light,
+                onTap: () => showAppearanceChoice(context, ref)),
+            _menuItem(context,
+                icon: Icons.translate,
+                title: l10n.language,
+                subtitle: appearance.language == 'system'
+                    ? l10n.system
+                    : appearance.language == 'en'
+                        ? 'English'
+                        : 'Tiếng Việt',
+                onTap: () =>
+                    showAppearanceChoice(context, ref, language: true)),
+          ]),
+          const SizedBox(height: 20),
+          _sectionTitle(context, l10n.manageNotebook),
+          _menuGroup(context, [
+            if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android)
+              _menuItem(context,
+                  icon: Icons.widgets_outlined,
+                  title: l10n.homeWidgetTitle,
+                  subtitle: l10n.homeWidgetHelpSubtitle,
+                  onTap: () => showDialog<void>(context: context,
+                      builder: (ctx) => AlertDialog(
+                          scrollable: true,
+                          title: Text(l10n.homeWidgetTitle),
+                          content: Text(l10n.homeWidgetHelp),
+                          actions: [TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              child: Text(l10n.homeWidgetHelpClose))]))),
+            _menuItem(context,
                 icon: Icons.cloud_sync,
-                title: 'Dữ liệu & Đồng bộ',
+                title: appL10n(context).dataSync,
                 onTap: () => Navigator.push(context,
                     MaterialPageRoute(builder: (_) => const SyncScreen()))),
-            _menuItem(
+            _menuItem(context,
                 icon: Icons.import_export,
-                title: 'Nhập / xuất CSV',
+                title: appL10n(context).csvExchange,
                 onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (_) => const DataExchangeScreen()))),
-            _menuItem(
+            _menuItem(context,
                 icon: Icons.summarize,
-                title: 'Báo cáo tháng',
+                title: appL10n(context).monthlyReport,
                 onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (_) => const MonthlyReportScreen()))),
-            _menuItem(
+            _menuItem(context,
                 icon: Icons.notifications_active,
-                title: 'Cài đặt nhắc nhở',
+                title: appL10n(context).reminderSettings,
                 onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (_) => const ReminderSettingsScreen()))),
-            _menuItem(
+            _menuItem(context,
                 icon: Icons.event_note,
-                title: 'Khoản phải trả',
+                title: appL10n(context).payables,
                 onTap: () => Navigator.push(context,
                     MaterialPageRoute(builder: (_) => const PayablesScreen()))),
-            _menuItem(
+            _menuItem(context,
                 icon: Icons.auto_awesome,
-                title: 'Quy tắc phân loại đã học',
+                title: appL10n(context).learnedRules,
                 onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (_) => const CategoryRulesScreen()))),
             _menuItem(
+              context,
               icon: Icons.account_balance_wallet,
-              title: 'Nguồn tiền',
-              subtitle: 'Tiền mặt, tài khoản, ví điện tử bạn tự khai',
+              title: appL10n(context).wallets,
+              subtitle: appL10n(context).walletsSubtitle,
               onTap: () => Navigator.push(context,
                   MaterialPageRoute(builder: (_) => const WalletsScreen())),
             ),
             _menuItem(
+              context,
               icon: Icons.category,
-              title: 'Danh mục',
-              subtitle: 'Thêm, sửa, xoá danh mục thu chi',
+              title: appL10n(context).categories,
+              subtitle: appL10n(context).categoriesSubtitle,
               onTap: () => Navigator.push(context,
                   MaterialPageRoute(builder: (_) => const CategoriesScreen())),
             ),
           ]),
           const SizedBox(height: 20),
-          _sectionTitle('BẢO MẬT'),
-          _menuGroup([
+          _sectionTitle(context, appL10n(context).security),
+          _menuGroup(context, [
             SwitchListTile.adaptive(
               secondary:
-                  const Icon(Icons.fingerprint, color: AppColors.primary),
-              title: const Text('Khoá bằng Face ID / vân tay',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: const Text('Mở app cần xác thực sinh trắc học',
-                  style: TextStyle(fontSize: 12)),
+                  Icon(Icons.fingerprint, color: appPalette(context).primary),
+              title: Text(appL10n(context).biometricLock,
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: Text(appL10n(context).biometricSubtitle,
+                  style: const TextStyle(fontSize: 12)),
               value: lockEnabled,
-              activeThumbColor: AppColors.primary,
+              activeThumbColor: appPalette(context).primary,
               onChanged: (v) => _toggleLock(context, ref, v),
             ),
             _menuItem(
+              context,
               icon: Icons.logout_rounded,
-              title: 'Đăng xuất',
-              color: AppColors.error,
+              title: appL10n(context).signOut,
+              color: appPalette(context).error,
               onTap: () => _showLogoutConfirmation(context, ref),
             ),
           ]),
           const SizedBox(height: 24),
-          const Center(
-            child: Text('Túi Khôn v1.0.0 • Sổ ghi chép tài chính cá nhân',
-                style: TextStyle(fontSize: 11, color: AppColors.outline)),
+          Center(
+            child: Text(appL10n(context).appDescription,
+                style: TextStyle(
+                    fontSize: 11, color: appPalette(context).outline)),
           ),
         ],
       ),
     );
   }
 
-  Widget _sectionTitle(String text) => Padding(
+  Widget _sectionTitle(BuildContext context, String text) => Padding(
         padding: const EdgeInsets.only(left: 4, bottom: 8),
         child: Text(text,
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
-                color: AppColors.outline,
+                color: appPalette(context).outline,
                 letterSpacing: 0.5)),
       );
 
-  Widget _menuGroup(List<Widget> children) => Card(
+  Widget _menuGroup(BuildContext context, List<Widget> children) => Card(
         elevation: 0,
-        color: AppColors.surfaceContainerLowest,
+        color: Theme.of(context).colorScheme.surfaceContainer,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         clipBehavior: Clip.antiAlias,
         child: Column(children: children),
       );
 
-  Widget _menuItem({
+  Widget _menuItem(
+    BuildContext context, {
     required IconData icon,
     required String title,
     String? subtitle,
-    Color color = AppColors.primary,
+    Color? color,
     required VoidCallback onTap,
   }) =>
       ListTile(
@@ -292,7 +351,7 @@ class ProfileSettingsScreen extends ConsumerWidget {
         title: Text(title,
             style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: color == AppColors.error ? color : null)),
+                color: color == appPalette(context).error ? color : null)),
         subtitle: subtitle == null
             ? null
             : Text(subtitle, style: const TextStyle(fontSize: 12)),
@@ -310,7 +369,7 @@ class _ProfileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 0,
-      color: AppColors.surfaceContainerLowest,
+      color: Theme.of(context).colorScheme.surfaceContainer,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: ListTile(
@@ -328,10 +387,10 @@ class _ProfileCard extends StatelessWidget {
               : NetworkImage(profile!.avatarUrl!),
           child: profile?.avatarUrl == null
               ? Text(profile?.initials ?? '',
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primary))
+                      color: appPalette(context).primary))
               : null,
         ),
         title: Text(profile?.name ?? '',
@@ -340,7 +399,7 @@ class _ProfileCard extends StatelessWidget {
           [profile?.email, profile?.phone].whereType<String>().join(' • '),
           style: const TextStyle(fontSize: 12),
         ),
-        trailing: const Icon(Icons.edit_outlined, color: AppColors.primary),
+        trailing: Icon(Icons.edit_outlined, color: appPalette(context).primary),
       ),
     );
   }

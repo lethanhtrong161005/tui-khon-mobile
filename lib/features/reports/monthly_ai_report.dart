@@ -1,3 +1,4 @@
+import '../../core/utils/app_failure.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import '../../core/offline/local_store.dart';
@@ -93,16 +94,19 @@ class MonthlyAiReports {
 
   Future<CachedMonthlyAdvice> generate(DateTime month,
       {required bool Function() isCurrentAccount}) async {
-    if (!isCurrentAccount()) throw StateError('Tài khoản đã thay đổi');
+    if (!isCurrentAccount())
+      throw AppFailure('failure33', [], 'Tài khoản đã thay đổi');
     // Includes errored/conflicting outbox rows, not just queued operations.
     if (await store.pendingCount() > 0) {
-      throw StateError(
+      throw AppFailure('failure34', [],
           'Hãy đồng bộ và xử lý lỗi/xung đột trước khi tạo nhận xét AI. Bản lưu vẫn đọc được ngoại tuyến.');
     }
     final before = await snapshot(month);
-    if (!isCurrentAccount()) throw StateError('Tài khoản đã thay đổi');
+    if (!isCurrentAccount())
+      throw AppFailure('failure33', [], 'Tài khoản đã thay đổi');
     if (await store.pendingCount() > 0) {
-      throw StateError('Hãy đồng bộ dữ liệu trước khi tạo nhận xét AI.');
+      throw AppFailure(
+          'failure35', [], 'Hãy đồng bộ dữ liệu trước khi tạo nhận xét AI.');
     }
     final data = await request({'month': reportMonthKey(month)});
     final period = data['period'] as Map?;
@@ -111,18 +115,19 @@ class MonthlyAiReports {
         data['summary'] is! String ||
         (data['summary'] as String).trim().isEmpty ||
         data['insights'] is! List) {
-      throw StateError(
+      throw AppFailure('failure36', [],
           'Máy chủ chưa hỗ trợ báo cáo đúng tháng. Vui lòng thử lại sau.');
     }
     final after = await snapshot(month);
     final pending = await store.pendingCount() > 0;
-    if (!isCurrentAccount()) throw StateError('Tài khoản đã thay đổi');
+    if (!isCurrentAccount())
+      throw AppFailure('failure33', [], 'Tài khoản đã thay đổi');
     if (pending ||
         before.fingerprint != after.fingerprint ||
         groundingFingerprint(
                 Map<String, dynamic>.from(data['grounding'] as Map)) !=
             groundingFingerprint(after.grounding)) {
-      throw StateError(
+      throw AppFailure('failure37', [],
           'Dữ liệu thiết bị và máy chủ đã khác nhau. Hãy đồng bộ rồi tạo lại; bản lưu trước được giữ nguyên.');
     }
     final result = CachedMonthlyAdvice(after.fingerprint, DateTime.now(), data);

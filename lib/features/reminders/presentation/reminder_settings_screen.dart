@@ -1,3 +1,4 @@
+import '../../../l10n/app_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -44,8 +45,9 @@ class _ReminderSettingsScreenState
               .toSet());
     } catch (e) {
       if (mounted)
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Không thể cập nhật lịch nhắc. Vui lòng thử lại.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content:
+                Text(appL10n(context).msgCouldNotUpdateRemindersPleaseTry409)));
     } finally {
       if (mounted) setState(() => busy = false);
     }
@@ -66,8 +68,9 @@ class _ReminderSettingsScreenState
       await ref.read(reminderSchedulerProvider).syncGeneral();
     } catch (_) {
       if (mounted)
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Không thể cập nhật giờ nhắc. Vui lòng thử lại.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content:
+                Text(appL10n(context).msgCouldNotUpdateReminderTimePlease410)));
     } finally {
       if (mounted) setState(() => busy = false);
     }
@@ -75,35 +78,45 @@ class _ReminderSettingsScreenState
 
   @override
   Widget build(BuildContext context) => Scaffold(
-      appBar: AppBar(title: const Text('Cài đặt nhắc nhở')),
+      appBar: AppBar(title: Text(appL10n(context).reminderSettings)),
       body: prefs == null
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: const CircularProgressIndicator())
           : ListView(children: [
-              for (final item in const [
-                ('diary', 'Nhật ký thu chi', '21:00 mỗi ngày', false),
+              for (final item in [
+                (
+                  'diary',
+                  appL10n(context).msgIncomeExpenseDiary412,
+                  appL10n(context).msgEveryDay413,
+                  false
+                ),
                 (
                   'debts',
-                  'Sổ nợ',
-                  '08:00 trước hạn một ngày và đúng ngày',
+                  appL10n(context).msgDebtBook9,
+                  appL10n(context).msgOneDayBeforeAndOnThe414,
                   true
                 ),
                 (
                   'payables',
-                  'Khoản phải trả',
-                  '08:00 trước hạn một ngày và đúng ngày',
+                  appL10n(context).payables,
+                  appL10n(context).msgOneDayBeforeAndOnThe414,
                   true
                 ),
-                ('report', 'Báo cáo tháng', '08:00 ngày đầu tháng', true)
+                (
+                  'report',
+                  appL10n(context).monthlyReport,
+                  appL10n(context).msgOnTheFirstDayOfThe415,
+                  true
+                )
               ])
                 SwitchListTile(
                     title: Text(item.$2),
                     subtitle: Text(item.$1 == 'diary'
-                        ? 'Mỗi ngày vào giờ đã chọn'
+                        ? appL10n(context).msgDailyAtTheSelectedTime416
                         : item.$3),
                     value: prefs!.getBool('reminder_${item.$1}') ?? item.$4,
                     onChanged: busy ? null : (v) => change(item.$1, v)),
               ListTile(
-                title: const Text('Giờ nhắc nhật ký'),
+                title: Text(appL10n(context).msgDiaryReminderTime417),
                 subtitle: Text(TimeOfDay(
                         hour: prefs!.getInt('reminder_diary_hour') ?? 21,
                         minute: prefs!.getInt('reminder_diary_minute') ?? 0)

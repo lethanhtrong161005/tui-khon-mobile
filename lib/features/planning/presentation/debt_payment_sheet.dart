@@ -1,9 +1,12 @@
+import '../../../core/theme/semantic_colors.dart';
+import '../../../core/utils/app_failure.dart';
+import '../../../core/utils/localized_format.dart';
+import '../../../core/utils/vnd_amount_input.dart';
+import '../../../l10n/app_l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/offline/local_store.dart';
-import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/error_messages.dart';
 import '../../../core/widgets/glass.dart';
 import '../../home/providers/home_providers.dart';
@@ -30,9 +33,10 @@ Future<void> showDebtPaymentSheet(
     isScrollControlled: true,
     useSafeArea: true,
     // A solid base keeps the timeline text from bleeding through the form.
-    backgroundColor: const Color(0xFFF8FBF9),
+    backgroundColor: adaptiveSurface(context, const Color(0xFFF8FBF9)),
     shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+        borderRadius:
+            const BorderRadius.vertical(top: const Radius.circular(28))),
     clipBehavior: Clip.antiAlias,
     builder: (_) => DebtPaymentSheet(debt: debt, payment: payment),
   );
@@ -62,11 +66,17 @@ class _DebtPaymentSheetState extends ConsumerState<DebtPaymentSheet> {
   late bool _record = widget.payment?['record_transaction'] == true;
   late String? _wallet = widget.payment?['wallet_id'] as String?;
   bool _busy = false;
-  String? _error, _walletError, _amountError;
+  Object? _error, _walletError, _amountError;
   bool get _borrow => widget.debt.type == DebtType.borrow;
   bool get _legacy => widget.payment?['is_legacy'] == true;
   int get _limit =>
       widget.debt.remaining + (widget.payment?['amount'] as num? ?? 0).toInt();
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    formatVndController(_amount, appL10n(context).localeName);
+  }
+
   @override
   void dispose() {
     _amount.dispose();
@@ -98,7 +108,8 @@ class _DebtPaymentSheetState extends ConsumerState<DebtPaymentSheet> {
     if (_record &&
         (selected == null ||
             (selected['is_archived'] == true && !retainArchived))) {
-      setState(() => _walletError = 'Chọn nguồn tiền');
+      setState(() =>
+          _walletError = AppFailure('failure13', [], 'Select a money source'));
       return;
     }
     setState(() {
@@ -108,7 +119,7 @@ class _DebtPaymentSheetState extends ConsumerState<DebtPaymentSheet> {
     });
     try {
       final repository = ref.read(planningRepositoryProvider);
-      final value = int.parse(_amount.text);
+      final value = parseVndInput(_amount.text);
       if (widget.payment == null) {
         await repository.settleDebt(widget.debt.id!,
             amount: value,
@@ -128,13 +139,13 @@ class _DebtPaymentSheetState extends ConsumerState<DebtPaymentSheet> {
     } catch (e) {
       if (mounted)
         setState(() {
-          final message = friendlyError(e);
-          if (message.contains('vượt')) {
-            _amountError = message;
-          } else if (message.contains('nguồn tiền')) {
-            _walletError = message;
+          if (e is CodedFailure &&
+              ['failure1', 'failure9'].contains((e).code)) {
+            _amountError = e;
+          } else if (e is CodedFailure && (e).code == 'failure13') {
+            _walletError = e;
           } else {
-            _error = message;
+            _error = e;
           }
           _busy = false;
         });
@@ -151,8 +162,12 @@ class _DebtPaymentSheetState extends ConsumerState<DebtPaymentSheet> {
                 widget.payment?['record_transaction'] == true))
         .toList();
     final title = widget.payment != null
-        ? 'Chỉnh sửa lần ${_borrow ? 'trả' : 'thu'} nợ'
-        : (_borrow ? 'Ghi trả nợ' : 'Ghi thu nợ');
+        ? (_borrow
+            ? appL10n(context).editRepayment
+            : appL10n(context).editCollection)
+        : (_borrow
+            ? appL10n(context).msgRecordRepayment280
+            : appL10n(context).msgRecordCollection281);
     final media = MediaQuery.of(context);
     return Padding(
       padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
@@ -187,7 +202,7 @@ class _DebtPaymentSheetState extends ConsumerState<DebtPaymentSheet> {
                                       fontSize: 18,
                                       fontWeight: FontWeight.w800))),
                           IconButton(
-                              tooltip: 'Đóng',
+                              tooltip: appL10n(context).msgClose19,
                               onPressed:
                                   _busy ? null : () => Navigator.pop(context),
                               icon: const Icon(Icons.close))
@@ -199,21 +214,30 @@ class _DebtPaymentSheetState extends ConsumerState<DebtPaymentSheet> {
                             enabled: !_busy,
                             keyboardType: TextInputType.number,
                             inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly
+                              VndAmountInputFormatter(
+                                  appL10n(context).localeName)
                             ],
                             decoration: InputDecoration(
-                                labelText: 'Số tiền',
+                                labelText: appL10n(context).msgAmount26,
                                 suffixText: '₫',
-                                errorText: _amountError),
+                                errorText: _amountError == null
+                                    ? null
+                                    : friendlyError(_amountError!,
+                                        context: context)),
                             onChanged: (_) {
                               if (_amountError != null)
                                 setState(() => _amountError = null);
                             },
                             validator: (v) {
-                              final n = int.tryParse(v ?? '') ?? 0;
-                              if (n <= 0) return 'Nhập số tiền lớn hơn 0';
+                              final n = parseVndInput(v ?? '');
+                              if (n <= 0)
+                                return appL10n(context)
+                                    .msgEnterAnAmountGreaterThan246;
                               if (n > _limit)
-                                return 'Số tiền vượt quá số còn lại (${CurrencyFormatter.formatVND(_limit)})';
+                                return appL10n(context)
+                                    .msgAmountExceedsTheRemainingDebt305(
+                                        (formatMoney(context, _limit))
+                                            .toString());
                               return null;
                             }),
                         const SizedBox(height: 14),
@@ -221,7 +245,11 @@ class _DebtPaymentSheetState extends ConsumerState<DebtPaymentSheet> {
                             onPressed: _busy ? null : _pickDate,
                             icon: const Icon(Icons.calendar_month_outlined),
                             label: Text(
-                                'Ngày ${_borrow ? 'trả' : 'thu'}: ${paymentDate(_date.toIso8601String())}',
+                                (_borrow
+                                    ? appL10n(context).paymentDate(
+                                        paymentDate(_date.toIso8601String()))
+                                    : appL10n(context).collectionDate(
+                                        paymentDate(_date.toIso8601String()))),
                                 textAlign: TextAlign.center)),
                         const SizedBox(height: 14),
                         TextFormField(
@@ -231,22 +259,24 @@ class _DebtPaymentSheetState extends ConsumerState<DebtPaymentSheet> {
                             maxLength: 255,
                             minLines: 1,
                             maxLines: 3,
-                            decoration: const InputDecoration(
-                                labelText: 'Ghi chú (tùy chọn)')),
+                            decoration: InputDecoration(
+                                labelText:
+                                    appL10n(context).msgNoteOptional307)),
                         if (_legacy)
-                          const Padding(
-                              padding: EdgeInsets.only(bottom: 12),
-                              child: Text(
-                                  'Số tiền trước nâng cấp: không có chi tiết từng lần và không tạo thêm thu/chi.')),
+                          Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Text(appL10n(context)
+                                  .msgAmountPaidBeforeTheUpgradeIndividual308)),
                         SwitchListTile.adaptive(
                             contentPadding: EdgeInsets.zero,
                             secondary: const TintedIcon(
                                 Icons.account_balance_wallet_outlined,
                                 size: 38),
-                            title: Text(
-                                'Ghi kèm khoản ${_borrow ? 'chi' : 'thu'}'),
-                            subtitle:
-                                const Text('Tạo một khoản ghi chép tương ứng'),
+                            title: Text((_borrow
+                                ? appL10n(context).addMatchingExpense
+                                : appL10n(context).addMatchingIncome)),
+                            subtitle: Text(appL10n(context)
+                                .msgCreateACorrespondingTransactionRecord310),
                             value: _record,
                             onChanged: _legacy || _busy
                                 ? null
@@ -259,8 +289,8 @@ class _DebtPaymentSheetState extends ConsumerState<DebtPaymentSheet> {
                           if (wallets.isLoading)
                             const LinearProgressIndicator(),
                           if (wallets.hasError)
-                            const Text(
-                                'Không tải được nguồn tiền. Hãy đóng và thử lại.'),
+                            Text(appL10n(context)
+                                .msgCouldNotLoadMoneySourcesClose311),
                           DropdownButtonFormField<String>(
                               key: ValueKey(
                                   'wallet-$_wallet-${available.length}'),
@@ -270,14 +300,17 @@ class _DebtPaymentSheetState extends ConsumerState<DebtPaymentSheet> {
                                       : null,
                               isExpanded: true,
                               decoration: InputDecoration(
-                                  labelText: 'Nguồn tiền',
-                                  errorText: _walletError),
+                                  labelText: appL10n(context).wallets,
+                                  errorText: _walletError == null
+                                      ? null
+                                      : friendlyError(_walletError!,
+                                          context: context)),
                               items: [
                                 for (final w in available)
                                   DropdownMenuItem(
                                       value: w['id'] as String,
                                       child: Text(
-                                          '${w['name']}${w['is_archived'] == true ? ' · Đã lưu trữ' : ''}',
+                                          '${w['name']}${w['is_archived'] == true ? appL10n(context).archivedSuffix : ''}',
                                           overflow: TextOverflow.ellipsis))
                               ],
                               onChanged: _busy
@@ -290,14 +323,15 @@ class _DebtPaymentSheetState extends ConsumerState<DebtPaymentSheet> {
                         if (_error != null)
                           Padding(
                               padding: const EdgeInsets.symmetric(vertical: 12),
-                              child: Text(_error!,
+                              child: Text(
+                                  friendlyError(_error!, context: context),
                                   style: const TextStyle(color: Colors.red))),
                         const SizedBox(height: 20),
                         EmeraldButton(
                             label: _busy
-                                ? 'Đang lưu…'
+                                ? appL10n(context).msgSaving312
                                 : widget.payment != null
-                                    ? 'Cập nhật'
+                                    ? appL10n(context).msgUpdate313
                                     : title,
                             onPressed: _busy ? null : _save),
                       ])),

@@ -1,3 +1,4 @@
+import '../../../core/utils/app_failure.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/offline/local_store.dart';
@@ -60,7 +61,7 @@ String monthKey(DateTime d) =>
 
 final planningRepositoryProvider = Provider<PlanningRepository>((ref) {
   final store = ref.watch(localStoreProvider);
-  if (store == null) throw StateError('Bạn cần đăng nhập');
+  if (store == null) throw AppFailure('failure25', [], 'Bạn cần đăng nhập');
   return OfflinePlanningRepository(store);
 });
 

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="12dp"
+    android:background="@drawable/widget_background">
+    <TextView android:id="@+id/widget_title"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="@string/widget_title" android:textSize="14sp"
+        android:textStyle="bold" android:textColor="@color/widget_on_surface"
+        android:maxLines="2" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1" android:orientation="horizontal"
+        android:gravity="center_vertical" android:baselineAligned="false">
+        <LinearLayout android:id="@+id/widget_expense_action" style="@style/WidgetAction">
+            <ImageView android:id="@+id/widget_expense_icon" android:layout_width="28dp"
+                android:layout_height="28dp" android:src="@drawable/widget_expense_icon"
+                android:importantForAccessibility="no" />
+            <TextView android:id="@+id/widget_expense" style="@style/WidgetActionLabel"
+                android:text="@string/widget_expense" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/widget_scan_action" style="@style/WidgetAction">
+            <ImageView android:id="@+id/widget_scan_icon" android:layout_width="28dp"
+                android:layout_height="28dp" android:src="@drawable/widget_scan_icon"
+                android:importantForAccessibility="no" />
+            <TextView android:id="@+id/widget_scan" style="@style/WidgetActionLabel"
+                android:text="@string/widget_scan" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/widget_income_action" style="@style/WidgetAction">
+            <ImageView android:id="@+id/widget_income_icon" android:layout_width="28dp"
+                android:layout_height="28dp" android:src="@drawable/widget_income_icon"
+                android:importantForAccessibility="no" />
+            <TextView android:id="@+id/widget_income" style="@style/WidgetActionLabel"
+                android:text="@string/widget_income" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

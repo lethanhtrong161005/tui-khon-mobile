@@ -1,3 +1,4 @@
+import '../utils/app_failure.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -40,21 +41,26 @@ class SupabaseSyncRemote implements SyncRemote {
   String? get userId => client.auth.currentUser?.id;
   @override
   Future<Map<String, dynamic>> pull(int cursor) async =>
-      (await client.rpc('sync_pull', params: {'cursor': cursor, 'limit': 500}) as Map).cast<String, dynamic>();
+      (await client.rpc('sync_pull', params: {'cursor': cursor, 'limit': 500})
+              as Map)
+          .cast<String, dynamic>();
   @override
   Future<Map<String, dynamic>> push(Map<String, dynamic> parameters) async =>
-      (await client.rpc('sync_push', params: parameters) as Map).cast<String, dynamic>();
+      (await client.rpc('sync_push', params: parameters) as Map)
+          .cast<String, dynamic>();
   @override
   Future<void> upload(String path, Uint8List bytes, String mime) async {
-    await client.storage
-        .from('receipts')
-        .uploadBinary(path, bytes, fileOptions: FileOptions(contentType: mime, upsert: true));
+    await client.storage.from('receipts').uploadBinary(path, bytes,
+        fileOptions: FileOptions(contentType: mime, upsert: true));
   }
 }
 
-class SyncController extends StateNotifier<SyncStatus> with WidgetsBindingObserver {
-  SyncController(LocalStore store, SupabaseClient client) : this.withRemote(store, SupabaseSyncRemote(client));
-  SyncController.withRemote(this.store, this.remote, {bool autoStart = true}) : super(const SyncStatus()) {
+class SyncController extends StateNotifier<SyncStatus>
+    with WidgetsBindingObserver {
+  SyncController(LocalStore store, SupabaseClient client)
+      : this.withRemote(store, SupabaseSyncRemote(client));
+  SyncController.withRemote(this.store, this.remote, {bool autoStart = true})
+      : super(const SyncStatus()) {
     if (!autoStart) return;
     WidgetsBinding.instance.addObserver(this);
     _local = store.changes.listen((_) {
@@ -101,7 +107,9 @@ class SyncController extends StateNotifier<SyncStatus> with WidgetsBindingObserv
     try {
       await _state(running: true);
       if (retryErrors) await store.retryErrors();
-      if (remote.userId != store.userId) throw StateError('Đăng nhập lại để đồng bộ; ghi chép trên máy vẫn được giữ');
+      if (remote.userId != store.userId)
+        throw AppFailure('failure19', [],
+            'Đăng nhập lại để đồng bộ; ghi chép trên máy vẫn được giữ');
       // Validate auth server-side only through the request itself: an expired
       // refresh cannot erase a user's offline database.
       await _pull();
@@ -109,29 +117,37 @@ class SyncController extends StateNotifier<SyncStatus> with WidgetsBindingObserv
         if (_disposed) return;
         final path = a['path'] as String;
         try {
-          await remote.upload(path, a['bytes'] as Uint8List, a['mime'] as String);
+          await remote.upload(
+              path, a['bytes'] as Uint8List, a['mime'] as String);
           await store.uploaded(path);
         } catch (_) {
-          error = 'Ảnh hóa đơn đang chờ upload. Các ghi chép khác vẫn được đồng bộ.';
+          error =
+              'Ảnh hóa đơn đang chờ upload. Các ghi chép khác vẫn được đồng bộ.';
         }
       }
       final pending = await store.pending();
       // Preserve operation ordering. Parents are normally created first, but
       // deletes of parents intentionally precede child cleanup in their batch.
       final blocked = <String>{
-        for (final error in await store.errors()) '${error['entity']}/${error['record_id']}',
-        for (final conflict in await store.conflicts()) '${conflict['entity']}/${conflict['record_id']}',
+        for (final error in await store.errors())
+          '${error['entity']}/${error['record_id']}',
+        for (final conflict in await store.conflicts())
+          '${conflict['entity']}/${conflict['record_id']}',
       };
       for (final original in pending) {
         if (_disposed) return;
-        final entity = original['entity'] as String, id = original['record_id'] as String;
+        final entity = original['entity'] as String,
+            id = original['record_id'] as String;
         final key = '$entity/$id';
         if (blocked.contains(key)) continue;
         // ACK of an earlier edit rebases later queued edits on its version.
-        final op = (await store.pending()).where((o) => o['op_id'] == original['op_id']).firstOrNull;
+        final op = (await store.pending())
+            .where((o) => o['op_id'] == original['op_id'])
+            .firstOrNull;
         if (op == null) continue;
         try {
-          final payload = (jsonDecode(op['payload'] as String) as Map).cast<String, dynamic>();
+          final payload = (jsonDecode(op['payload'] as String) as Map)
+              .cast<String, dynamic>();
           for (final k in [
             'id',
             'user_id',
@@ -168,9 +184,12 @@ class SyncController extends StateNotifier<SyncStatus> with WidgetsBindingObserv
           } else if (reply['status'] == 'error') {
             blocked.add(key);
             await store.operationError(
-                op['op_id'] as String, reply['message']?.toString() ?? 'Thay đổi không được chấp nhận');
+                op['op_id'] as String,
+                reply['message']?.toString() ??
+                    'Thay đổi không được chấp nhận');
           } else {
-            await store.acknowledge(op['op_id'] as String, entity, id, row, version, deleted);
+            await store.acknowledge(
+                op['op_id'] as String, entity, id, row, version, deleted);
           }
         } on PostgrestException catch (e) {
           if (e.code == 'PGRST301' || e.code == '42501') rethrow;
@@ -179,10 +198,12 @@ class SyncController extends StateNotifier<SyncStatus> with WidgetsBindingObserv
         }
       }
       await _pull();
-      await store.setMeta('last_sync', DateTime.now().toUtc().toIso8601String());
+      await store.setMeta(
+          'last_sync', DateTime.now().toUtc().toIso8601String());
     } catch (e) {
-      error =
-          e is PostgrestException ? e.message : 'Chưa đồng bộ được. Dữ liệu trên máy được giữ; thử lại khi có mạng.';
+      error = e is PostgrestException
+          ? e.message
+          : 'Chưa đồng bộ được. Dữ liệu trên máy được giữ; thử lại khi có mạng.';
     } finally {
       if (!_disposed) await _state(error: error);
       _working = false;
@@ -196,7 +217,9 @@ class SyncController extends StateNotifier<SyncStatus> with WidgetsBindingObserv
     var cursor = int.tryParse(await store.meta('cursor') ?? '0') ?? 0;
     for (var page = 0; page < 1000; page++) {
       final reply = await remote.pull(cursor);
-      final changes = ((reply['changes'] as List?) ?? []).map((c) => (c as Map).cast<String, dynamic>()).toList();
+      final changes = ((reply['changes'] as List?) ?? [])
+          .map((c) => (c as Map).cast<String, dynamic>())
+          .toList();
       final next = (reply['cursor'] as num? ?? cursor).toInt();
       await store.applyPage(changes, next.toString());
       cursor = next;
@@ -206,7 +229,8 @@ class SyncController extends StateNotifier<SyncStatus> with WidgetsBindingObserv
         return;
       }
     }
-    throw StateError('Quá nhiều thay đổi, tiếp tục đồng bộ ở lần sau');
+    throw AppFailure(
+        'failure20', [], 'Quá nhiều thay đổi, tiếp tục đồng bộ ở lần sau');
   }
 
   @override
@@ -221,8 +245,10 @@ class SyncController extends StateNotifier<SyncStatus> with WidgetsBindingObserv
   }
 }
 
-final syncControllerProvider = StateNotifierProvider<SyncController, SyncStatus>((ref) {
+final syncControllerProvider =
+    StateNotifierProvider<SyncController, SyncStatus>((ref) {
   final store = ref.watch(localStoreProvider);
-  if (store == null) throw StateError('Cần tài khoản để đồng bộ');
+  if (store == null)
+    throw AppFailure('failure21', [], 'Cần tài khoản để đồng bộ');
   return SyncController(store, ref.watch(supabaseClientProvider));
 });

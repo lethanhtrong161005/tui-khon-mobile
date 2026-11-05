@@ -1,7 +1,9 @@
+import '../../core/utils/app_failure.dart';
+import '../../core/theme/semantic_colors.dart';
+import '../../l10n/app_l10n.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../core/constants/app_colors.dart';
 import '../../core/utils/error_messages.dart';
 import '../../core/widgets/glass.dart';
 import 'report_widgets.dart';
@@ -19,7 +21,7 @@ final monthlyAiRequestProvider =
               .invoke('ai-advisor', body: body);
           final envelope = Map<String, dynamic>.from(response.data as Map);
           if (envelope['success'] != true || envelope['data'] is! Map) {
-            throw StateError(
+            throw AppFailure('failure38', [],
                 'Không thể tạo nhận xét AI. Hãy kiểm tra kết nối và thử lại.');
           }
           return Map<String, dynamic>.from(envelope['data'] as Map);
@@ -39,8 +41,8 @@ class _MonthlyReportScreenState extends ConsumerState<MonthlyReportScreen> {
   bool _busy = false, _stale = false;
   bool _aiBusy = false, _pending = false;
   CachedMonthlyAdvice? _advice;
-  String? _aiError;
-  String? _error;
+  Object? _aiError;
+  Object? _error;
   int _generation = 0;
   StreamSubscription<int>? _changes;
   LocalStore? _subscribedStore;
@@ -72,7 +74,8 @@ class _MonthlyReportScreenState extends ConsumerState<MonthlyReportScreen> {
     });
     try {
       final store = ref.read(localStoreProvider);
-      if (store == null) throw StateError('Đăng nhập để xem báo cáo cục bộ');
+      if (store == null)
+        throw AppFailure('reportSignIn', [], 'Local sign-in required');
       if (!identical(store, _subscribedStore)) {
         await _changes?.cancel();
         _subscribedStore = store;
@@ -102,8 +105,7 @@ class _MonthlyReportScreenState extends ConsumerState<MonthlyReportScreen> {
         _pending = pending;
       });
     } catch (e) {
-      if (mounted && generation == _generation)
-        setState(() => _error = friendlyError(e));
+      if (mounted && generation == _generation) setState(() => _error = e);
     } finally {
       if (mounted && generation == _generation) setState(() => _busy = false);
     }
@@ -130,8 +132,7 @@ class _MonthlyReportScreenState extends ConsumerState<MonthlyReportScreen> {
           await _service(store).generate(month, isCurrentAccount: current);
       if (current() && _month == month) setState(() => _advice = advice);
     } catch (e) {
-      if (current() && _month == month)
-        setState(() => _aiError = friendlyError(e));
+      if (current() && _month == month) setState(() => _aiError = e);
     } finally {
       if (mounted) {
         setState(() => _aiBusy = false);
@@ -178,9 +179,9 @@ class _MonthlyReportScreenState extends ConsumerState<MonthlyReportScreen> {
       ...sortedBudgets.take(3)
     ];
     return Scaffold(
-      appBar: AppBar(title: const Text('Báo cáo tháng'), actions: [
+      appBar: AppBar(title: Text(appL10n(context).monthlyReport), actions: [
         IconButton(
-            tooltip: 'Tính lại báo cáo',
+            tooltip: appL10n(context).msgRecalculateReport499,
             onPressed: _busy ? null : _load,
             icon: const Icon(Icons.refresh_rounded))
       ]),
@@ -198,59 +199,77 @@ class _MonthlyReportScreenState extends ConsumerState<MonthlyReportScreen> {
                         children: [
                           Row(mainAxisSize: MainAxisSize.min, children: [
                             IconButton(
-                                tooltip: 'Tháng trước',
+                                tooltip: appL10n(context).msgPreviousMonth444,
                                 onPressed: () => _move(-1),
                                 icon: const Icon(Icons.chevron_left)),
                             Text('${_month.month}/${_month.year}',
                                 style: const TextStyle(
                                     fontWeight: FontWeight.w800, fontSize: 16)),
                             IconButton(
-                                tooltip: 'Tháng sau',
+                                tooltip: appL10n(context).msgNextMonth445,
                                 onPressed: () => _move(1),
                                 icon: const Icon(Icons.chevron_right)),
                           ]),
                           if (currentMonth)
-                            _Status('Tháng đang diễn ra',
-                                color: AppColors.primary),
+                            _Status(appL10n(context).msgCurrentMonth500,
+                                color: appPalette(context).primary),
                         ]),
-                    const Text('Toàn tháng • Giờ Việt Nam',
+                    Text(appL10n(context).msgFullCalendarMonthVietnamTime501,
                         style: TextStyle(
-                            fontSize: 11, color: AppColors.onSurfaceVariant)),
+                            fontSize: 11,
+                            color: appPalette(context).onSurfaceVariant)),
                     if (_busy)
                       const Padding(
-                          padding: EdgeInsets.only(top: 10),
-                          child: LinearProgressIndicator()),
+                          padding: const EdgeInsets.only(top: 10),
+                          child: const LinearProgressIndicator()),
                     if (_error != null)
                       GlassCard(
                           padding: const EdgeInsets.all(16),
                           child: Column(children: [
-                            Text(_error!),
+                            Text(friendlyError(_error!, context: context)),
                             TextButton(
                                 onPressed: _busy ? null : _load,
-                                child: const Text('Thử lại'))
+                                child: Text(appL10n(context).msgRetry50))
                           ])),
                     if (_stale)
-                      const Text('Đang cập nhật số liệu trên thiết bị…',
-                          style: TextStyle(fontSize: 12)),
+                      Text(appL10n(context).msgUpdatingOnDeviceTotals502,
+                          style: const TextStyle(fontSize: 12)),
                     if (r != null) ...[
-                      const ReportSectionTitle('Tổng quan tài chính'),
+                      ReportSectionTitle(
+                          appL10n(context).msgFinancialOverview503),
                       AdaptiveReportGrid(children: [
-                        ReportMetric('Thu nhập', r.income,
-                            Icons.arrow_upward_rounded, AppColors.primary),
-                        ReportMetric('Chi tiêu', r.expense,
-                            Icons.arrow_downward_rounded, AppColors.error),
                         ReportMetric(
-                            'Chênh lệch thu − chi',
+                            appL10n(context).msgIncome163,
+                            r.income,
+                            Icons.arrow_upward_rounded,
+                            appPalette(context).primary),
+                        ReportMetric(
+                            appL10n(context).msgExpenses164,
+                            r.expense,
+                            Icons.arrow_downward_rounded,
+                            appPalette(context).error),
+                        ReportMetric(
+                            appL10n(context).msgNetIncomeExpenses504,
                             r.balance,
                             Icons.bar_chart_rounded,
-                            r.balance < 0 ? AppColors.error : AppColors.primary,
+                            r.balance < 0
+                                ? appPalette(context).error
+                                : appPalette(context).primary,
                             signed: true),
                       ]),
-                      const ReportSectionTitle('So với tháng trước'),
+                      ReportSectionTitle(
+                          appL10n(context).msgComparedWithLastMonth505),
                       Text(
-                          'So sánh toàn tháng ${_month.month == 1 ? 12 : _month.month - 1}/${_month.month == 1 ? _month.year - 1 : _month.year}',
-                          style: const TextStyle(
-                              fontSize: 11, color: AppColors.onSurfaceVariant)),
+                          appL10n(context).msgFullMonthComparison506(
+                              (_month.month == 1 ? 12 : _month.month - 1)
+                                  .toString(),
+                              (_month.month == 1
+                                      ? _month.year - 1
+                                      : _month.year)
+                                  .toString()),
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: appPalette(context).onSurfaceVariant)),
                       const SizedBox(height: 10),
                       AdaptiveReportGrid(columns: 2, children: [
                         ReportComparison(
@@ -262,19 +281,21 @@ class _MonthlyReportScreenState extends ConsumerState<MonthlyReportScreen> {
                             current: r.expense,
                             previous: r.previousExpense),
                       ]),
-                      ReportSectionTitle('Cơ cấu chi tiêu',
+                      ReportSectionTitle(
+                          appL10n(context).msgSpendingBreakdown63,
                           action: TextButton(
                               onPressed: () => _showDetails(r, budgets: false),
-                              child: const Text('Xem chi tiết'))),
+                              child: Text(appL10n(context).msgViewDetails507))),
                       ReportCategories(report: r),
-                      ReportSectionTitle('Ngân sách tháng',
+                      ReportSectionTitle(appL10n(context).msgMonthlyBudgets459,
                           action: TextButton(
                               onPressed: () => _showDetails(r, budgets: true),
-                              child: const Text('Xem tất cả'))),
+                              child: Text(appL10n(context).msgViewAll147))),
                       if (r.budgets.isEmpty)
-                        const GlassCard(
-                            padding: EdgeInsets.all(20),
-                            child: Text('Chưa đặt ngân sách tháng này.')),
+                        GlassCard(
+                            padding: const EdgeInsets.all(20),
+                            child: Text(appL10n(context)
+                                .msgNoBudgetsSetForThisMonth508)),
                       for (final b in previewBudgets) ReportBudget(budget: b),
                       const SizedBox(height: 14),
                       GlassCard(
@@ -290,67 +311,83 @@ class _MonthlyReportScreenState extends ConsumerState<MonthlyReportScreen> {
                                     spacing: 8,
                                     runSpacing: 8,
                                     children: [
-                                      const Row(
+                                      Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            TintedIcon(
+                                            const TintedIcon(
                                                 Icons.auto_awesome_outlined,
                                                 size: 30),
-                                            SizedBox(width: 8),
-                                            Text('Góc nhìn từ AI',
-                                                style: TextStyle(
+                                            const SizedBox(width: 8),
+                                            Text(
+                                                appL10n(context)
+                                                    .msgAiPerspective509,
+                                                style: const TextStyle(
                                                     fontWeight:
                                                         FontWeight.w800))
                                           ]),
                                       _Status(
                                           _aiBusy
-                                              ? 'Đang tạo…'
+                                              ? appL10n(context)
+                                                  .msgGenerating510
                                               : _aiError != null
-                                                  ? 'Thử lại'
+                                                  ? appL10n(context).msgRetry50
                                                   : staleAdvice
-                                                      ? 'Cần cập nhật'
+                                                      ? appL10n(context)
+                                                          .msgUpdateNeeded511
                                                       : _advice != null
-                                                          ? 'Đã lưu'
-                                                          : 'Chưa tạo',
+                                                          ? appL10n(context)
+                                                              .msgSaved512
+                                                          : appL10n(context)
+                                                              .msgNotGenerated513,
                                           color: _aiError != null
-                                              ? AppColors.error
+                                              ? appPalette(context).error
                                               : staleAdvice
                                                   ? Colors.orange.shade800
-                                                  : AppColors.primary),
+                                                  : appPalette(context)
+                                                      .primary),
                                     ]),
                                 const SizedBox(height: 10),
-                                const Text('Nhận xét AI (tùy chọn)',
-                                    style: TextStyle(
+                                Text(
+                                    appL10n(context).msgAiCommentaryOptional514,
+                                    style: const TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600)),
                                 const SizedBox(height: 4),
-                                const Text(
-                                    'Phân tích tháng đang xem và toàn tháng trước. Bản đã lưu đọc được ngoại tuyến.',
+                                Text(
+                                    appL10n(context)
+                                        .msgAnalyzesTheSelectedMonthAndThe515,
                                     style: TextStyle(
                                         fontSize: 12,
-                                        color: AppColors.onSurfaceVariant)),
+                                        color: appPalette(context)
+                                            .onSurfaceVariant)),
                                 if (_pending)
-                                  const Padding(
-                                      padding: EdgeInsets.only(top: 10),
+                                  Padding(
+                                      padding: const EdgeInsets.only(top: 10),
                                       child: Text(
-                                          'Có dữ liệu chưa đồng bộ hoặc lỗi/xung đột. Hãy đồng bộ trước khi tạo nhận xét AI.',
-                                          style: TextStyle(fontSize: 12))),
+                                          appL10n(context)
+                                              .msgSomeDataIsUnsyncedOrHas516,
+                                          style:
+                                              const TextStyle(fontSize: 12))),
                                 if (_aiError != null)
                                   Padding(
                                       padding: const EdgeInsets.only(top: 10),
-                                      child: Text(_aiError!,
-                                          style: const TextStyle(
-                                              color: AppColors.error,
+                                      child: Text(
+                                          friendlyError(_aiError!,
+                                              context: context),
+                                          style: TextStyle(
+                                              color: appPalette(context).error,
                                               fontSize: 12))),
                                 if (_advice != null) ...[
                                   if (staleAdvice)
-                                    const Padding(
-                                        padding: EdgeInsets.only(top: 10),
+                                    Padding(
+                                        padding: const EdgeInsets.only(top: 10),
                                         child: Text(
-                                            'Nhận xét đã cũ — dữ liệu đã thay đổi hoặc chưa đồng bộ.',
+                                            appL10n(context)
+                                                .msgThisCommentaryIsOutdatedDataHas517,
                                             style: TextStyle(
                                                 fontSize: 12,
-                                                color: AppColors.tertiary))),
+                                                color: appPalette(context)
+                                                    .tertiary))),
                                   const SizedBox(height: 12),
                                   SelectableText('${_advice!.data['summary']}'),
                                   for (final insight
@@ -370,10 +407,17 @@ class _MonthlyReportScreenState extends ConsumerState<MonthlyReportScreen> {
                                             ])),
                                   const SizedBox(height: 10),
                                   Text(
-                                      'Đã lưu: ${DateFormat('dd/MM/yyyy · HH:mm').format(_advice!.generatedAt.toUtc().add(const Duration(hours: 7)))}',
-                                      style: const TextStyle(
+                                      appL10n(context).msgSaved518(
+                                          (DateFormat('dd/MM/yyyy · HH:mm')
+                                                  .format(_advice!.generatedAt
+                                                      .toUtc()
+                                                      .add(const Duration(
+                                                          hours: 7))))
+                                              .toString()),
+                                      style: TextStyle(
                                           fontSize: 11,
-                                          color: AppColors.onSurfaceVariant)),
+                                          color: appPalette(context)
+                                              .onSurfaceVariant)),
                                 ],
                                 const SizedBox(height: 12),
                                 if (_aiBusy) const LinearProgressIndicator(),
@@ -383,10 +427,13 @@ class _MonthlyReportScreenState extends ConsumerState<MonthlyReportScreen> {
                                         : _generateAdvice,
                                     icon: const Icon(Icons.auto_awesome),
                                     label: Text(_aiBusy
-                                        ? 'Đang tạo nhận xét…'
+                                        ? appL10n(context)
+                                            .msgGeneratingCommentary519
                                         : _advice == null
-                                            ? 'Tạo nhận xét AI'
-                                            : 'Tạo lại nhận xét AI')),
+                                            ? appL10n(context)
+                                                .msgGenerateAiCommentary520
+                                            : appL10n(context)
+                                                .msgRegenerateAiCommentary521)),
                               ])),
                     ],
                   ]))),
@@ -400,14 +447,15 @@ class _MonthlyReportScreenState extends ConsumerState<MonthlyReportScreen> {
             builder: (_) => Scaffold(
                   appBar: AppBar(
                       title: Text(
-                          '${budgets ? 'Ngân sách' : 'Chi theo danh mục'} · ${report.month.month}/${report.month.year}')),
+                          '${budgets ? appL10n(context).msgBudgets8 : appL10n(context).spendingByCategory} · ${report.month.month}/${report.month.year}')),
                   body: NotebookBackground(
                       child: ListView(
                           padding: const EdgeInsets.all(18),
                           children: budgets
                               ? [
                                   if (report.budgets.isEmpty)
-                                    const Text('Chưa đặt ngân sách tháng này.'),
+                                    Text(appL10n(context)
+                                        .msgNoBudgetsSetForThisMonth508),
                                   for (final b in report.budgets)
                                     ReportBudget(budget: b)
                                 ]

@@ -1,8 +1,10 @@
+import '../../../core/utils/localized_format.dart';
+import '../../../core/theme/semantic_colors.dart';
+import '../../../l10n/app_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/error_messages.dart';
 import '../../../core/widgets/form_sheet.dart';
 import '../../../core/widgets/glass.dart';
@@ -40,17 +42,17 @@ class _BudgetsTabState extends ConsumerState<BudgetsTab> {
         showToast(
             context,
             copied == 0
-                ? 'Tháng trước chưa có ngân sách nào'
-                : 'Đã sao chép $copied ngân sách');
+                ? appL10n(context).msgNoBudgetsWereSetLastMonth215
+                : appL10n(context).msgCopiedBudgets216((copied).toString()));
       }
     } catch (e) {
-      if (mounted) showToast(context, friendlyError(e));
+      if (mounted) showToast(context, friendlyError(e, context: context));
     }
   }
 
   Future<void> _openForm({BudgetProgress? initial}) async {
-    final budgets = ref.read(budgetsProvider(_month)).valueOrNull ??
-        const <BudgetProgress>[];
+    final budgets =
+        ref.read(budgetsProvider(_month)).valueOrNull ?? <BudgetProgress>[];
     final saved = await showFormSheet<bool>(
       context,
       _BudgetForm(
@@ -63,16 +65,17 @@ class _BudgetsTabState extends ConsumerState<BudgetsTab> {
 
   Future<void> _delete(BudgetProgress budget) async {
     if (!await confirmDialog(context,
-        title: 'Xoá ngân sách?',
-        message:
-            'Xoá hạn mức "${budget.categoryName ?? 'Tổng chi tiêu'}" của tháng này?')) {
+        title: appL10n(context).msgDeleteBudget217,
+        message: appL10n(context).msgDeleteTheLimitForThisMonth218(
+            (budget.categoryName ?? appL10n(context).msgTotalSpending449)
+                .toString()))) {
       return;
     }
     try {
       await ref.read(planningRepositoryProvider).deleteBudget(budget.id);
       _refresh();
     } catch (e) {
-      if (mounted) showToast(context, friendlyError(e));
+      if (mounted) showToast(context, friendlyError(e, context: context));
     }
   }
 
@@ -94,10 +97,14 @@ class _BudgetsTabState extends ConsumerState<BudgetsTab> {
               onPressed: () => setState(
                   () => _month = DateTime(_month.year, _month.month - 1)),
             ),
-            Text(
-              'Tháng ${_month.month.toString().padLeft(2, '0')}/${_month.year}',
+            Expanded(
+                child: Text(
+              appL10n(context).msgMonth219(
+                  (_month.month.toString().padLeft(2, '0')).toString(),
+                  (_month.year).toString()),
+              textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-            ),
+            )),
             IconButton(
               icon: const Icon(Icons.chevron_right),
               onPressed: () => setState(
@@ -111,10 +118,10 @@ class _BudgetsTabState extends ConsumerState<BudgetsTab> {
               child: ElevatedButton.icon(
                 onPressed: () => _openForm(),
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('Thêm ngân sách'),
+                label: Text(appL10n(context).msgAddBudget220),
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white),
+                    backgroundColor: appPalette(context).primary,
+                    foregroundColor: appPalette(context).onPrimary),
               ),
             ),
             if (isCurrentOrFuture) ...[
@@ -123,7 +130,7 @@ class _BudgetsTabState extends ConsumerState<BudgetsTab> {
                   child: OutlinedButton.icon(
                 onPressed: _copyPrevious,
                 icon: const Icon(Icons.copy_all, size: 18),
-                label: const Text('Sao chép'),
+                label: Text(appL10n(context).msgCopy221),
               )),
             ],
           ],
@@ -134,28 +141,31 @@ class _BudgetsTabState extends ConsumerState<BudgetsTab> {
             padding: const EdgeInsets.all(24),
             child: Center(
               child: budgetsAsync.hasError
-                  ? Text(friendlyError(budgetsAsync.error!))
-                  : const CircularProgressIndicator(color: AppColors.primary),
+                  ? Text(friendlyError(budgetsAsync.error!, context: context))
+                  : CircularProgressIndicator(
+                      color: appPalette(context).primary),
             ),
           )
         else if (budgets.isEmpty)
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLowest,
+              color: appPalette(context).surfaceContainerLowest,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Text(
-              'Chưa đặt ngân sách cho tháng này.\nĐặt hạn mức tổng hoặc cho từng danh mục, Túi Khôn sẽ nhắc khi bạn chi tới 80% và 100%.',
-              style: TextStyle(fontSize: 13, color: AppColors.onSurfaceVariant),
+            child: Text(
+              appL10n(context).msgNoBudgetForThisMonthYet222,
+              style: TextStyle(
+                  fontSize: 13, color: appPalette(context).onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
           )
         else ...[
-          const Padding(
-              padding: EdgeInsets.symmetric(vertical: 14),
-              child: Text('Ngân sách của bạn',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800))),
+          Padding(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              child: Text(appL10n(context).msgYourBudgets223,
+                  style: const TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w800))),
           for (final b in budgets)
             _BudgetCard(
                 budget: b,
@@ -185,7 +195,8 @@ class _BudgetCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ratio = budget.ratio;
-    final color = ratio >= 0.8 ? AppColors.error : AppColors.primaryContainer;
+    final color =
+        ratio >= 0.8 ? appPalette(context).error : AppColors.primaryContainer;
     final left = budget.limitAmount - budget.spent;
     final iconColor = category?.colorValue ?? const Color(0xFFFFA51C);
     return Padding(
@@ -214,7 +225,8 @@ class _BudgetCard extends StatelessWidget {
                                   Expanded(
                                       child: Text(
                                           budget.categoryName ??
-                                              'Tổng chi tiêu tháng',
+                                              appL10n(context)
+                                                  .msgTotalMonthlySpending224,
                                           style: const TextStyle(
                                               fontSize: 13,
                                               fontWeight: FontWeight.w700))),
@@ -223,25 +235,27 @@ class _BudgetCard extends StatelessWidget {
                                       height: 26,
                                       child: IconButton(
                                           padding: EdgeInsets.zero,
-                                          tooltip: 'Xóa ngân sách',
+                                          tooltip: appL10n(context)
+                                              .msgDeleteBudget225,
                                           onPressed: onDelete,
-                                          icon: const Icon(
+                                          icon: Icon(
                                               Icons.delete_outline_rounded,
                                               size: 16,
-                                              color: AppColors.outline)))
+                                              color:
+                                                  appPalette(context).outline)))
                                 ]),
                                 const SizedBox(height: 4),
                                 Wrap(spacing: 4, children: [
-                                  Text(
-                                      CurrencyFormatter.formatVND(budget.spent),
+                                  Text(formatMoney(context, budget.spent),
                                       style: const TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600)),
                                   Text(
-                                      '/ ${CurrencyFormatter.formatVND(budget.limitAmount)}',
-                                      style: const TextStyle(
+                                      '/ ${formatMoney(context, budget.limitAmount)}',
+                                      style: TextStyle(
                                           fontSize: 11,
-                                          color: AppColors.onSurfaceVariant))
+                                          color: appPalette(context)
+                                              .onSurfaceVariant))
                                 ]),
                                 const SizedBox(height: 10),
                                 Row(children: [
@@ -253,7 +267,8 @@ class _BudgetCard extends StatelessWidget {
                                               value: ratio.clamp(0, 1),
                                               minHeight: 8,
                                               backgroundColor:
-                                                  AppColors.surfaceContainerLow,
+                                                  appPalette(context)
+                                                      .surfaceContainerLow,
                                               valueColor:
                                                   AlwaysStoppedAnimation(
                                                       color)))),
@@ -267,10 +282,13 @@ class _BudgetCard extends StatelessWidget {
                                   Padding(
                                       padding: const EdgeInsets.only(top: 6),
                                       child: Text(
-                                          'Vượt ${CurrencyFormatter.formatVND(-left)}',
-                                          style: const TextStyle(
+                                          appL10n(context).msgOverBy226(
+                                              (formatMoney(context, -left))
+                                                  .toString()),
+                                          style: TextStyle(
                                               fontSize: 10,
-                                              color: AppColors.error))),
+                                              color:
+                                                  appPalette(context).error))),
                               ])),
                         ])))));
   }
@@ -298,7 +316,8 @@ class _BudgetFormState extends ConsumerState<_BudgetForm> {
 
   Future<void> _save() async {
     final limit = MoneyField.valueOf(_limit);
-    if (limit <= 0) return showToast(context, 'Nhập hạn mức lớn hơn 0');
+    if (limit <= 0)
+      return showToast(context, appL10n(context).msgEnterALimitGreaterThan227);
     setState(() => _busy = true);
     try {
       await ref.read(planningRepositoryProvider).saveBudget(
@@ -308,7 +327,7 @@ class _BudgetFormState extends ConsumerState<_BudgetForm> {
           );
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
-      if (mounted) showToast(context, friendlyError(e));
+      if (mounted) showToast(context, friendlyError(e, context: context));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -324,7 +343,7 @@ class _BudgetFormState extends ConsumerState<_BudgetForm> {
   Widget build(BuildContext context) {
     final editing = widget.initial != null;
     final categories =
-        (ref.watch(categoriesProvider).valueOrNull ?? const <CategoryModel>[])
+        (ref.watch(categoriesProvider).valueOrNull ?? <CategoryModel>[])
             .where((c) => c.type == TransactionType.expense)
             .where((c) => editing || !widget.taken.contains(c.id))
             .toList();
@@ -337,8 +356,10 @@ class _BudgetFormState extends ConsumerState<_BudgetForm> {
       _selected = options.first;
 
     return FormSheet(
-      title: editing ? 'Sửa ngân sách' : 'Thêm ngân sách',
-      submitLabel: 'Lưu',
+      title: editing
+          ? appL10n(context).msgEditBudget228
+          : appL10n(context).msgAddBudget220,
+      submitLabel: appL10n(context).msgSave43,
       busy: _busy,
       onSubmit: _save,
       children: [
@@ -346,11 +367,12 @@ class _BudgetFormState extends ConsumerState<_BudgetForm> {
           key: ValueKey('budget-${categories.length}'),
           initialValue: _selected,
           isExpanded: true,
-          decoration: sheetInputDecoration('Áp dụng cho'),
+          decoration: sheetInputDecoration(appL10n(context).msgAppliesTo229),
           items: [
             if (totalAvailable)
-              const DropdownMenuItem(
-                  value: _total, child: Text('Tổng chi tiêu tháng')),
+              DropdownMenuItem(
+                  value: _total,
+                  child: Text(appL10n(context).msgTotalMonthlySpending224)),
             for (final c in categories)
               DropdownMenuItem(
                 value: c.id,
@@ -368,7 +390,7 @@ class _BudgetFormState extends ConsumerState<_BudgetForm> {
         const SizedBox(height: 12),
         MoneyField(
             controller: _limit,
-            label: 'Hạn mức trong tháng (VND)',
+            label: appL10n(context).msgMonthlyLimitVnd230,
             autofocus: !editing),
       ],
     );

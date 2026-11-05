@@ -1,11 +1,18 @@
+import '../../../core/utils/debt_labels.dart';
+import '../../../core/utils/localized_format.dart';
+import '../../../core/theme/semantic_colors.dart';
+import '../../../l10n/app_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/offline/local_store.dart';
+import '../../../core/home_widget/home_widget_controller.dart';
+import '../../../core/services/app_lock_service.dart';
+import '../../auth/presentation/app_lock_screen.dart';
+import '../../../core/supabase/supabase_providers.dart';
 import '../../../core/offline/sync_controller.dart';
 import '../../../core/offline/sync_screen.dart';
 import '../../../core/utils/category_icons.dart';
-import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/error_messages.dart';
 import '../../auth/models/user_profile.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -47,45 +54,107 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _isBalanceVisible = true;
   int _currentNavIndex = 0;
   bool _menuOpen = false;
+  bool _entryScheduled = false;
+  bool _entryBusy = false;
+  bool _debtsChecked = false;
 
   @override
   void initState() {
     super.initState();
     if (ref.read(localStoreProvider) != null) {
-      ref.listenManual<String?>(pendingNotificationRouteProvider,
-          (_, route) => _openNotification(route),
+      ref.listenManual<String?>(
+          pendingNotificationRouteProvider, (_, route) => _scheduleEntryWork(),
           fireImmediately: true);
     }
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkDebts());
   }
 
-  void _openNotification(String? route) {
-    if (route == null) return;
+  bool get _entryReady {
+    if (!mounted ||
+        !ref.read(homeWidgetForegroundProvider) ||
+        !ref.read(homeWidgetStartupProvider).hasValue ||
+        ModalRoute.of(context)?.isCurrent != true ||
+        ref.read(appNavigationObserverProvider).hasOverlays ||
+        ref.read(currentUserIdProvider) == null) return false;
+    final lock = ref.read(appLockEnabledProvider);
+    if (lock.isLoading ||
+        lock.hasError ||
+        (lock.valueOrNull == true && !ref.read(appUnlockedProvider)))
+      return false;
+    return ref.read(localStoreProvider) == null ||
+        ref.read(syncControllerProvider).initialized;
+  }
+
+  void _scheduleEntryWork() {
+    if (_entryScheduled || !mounted) return;
+    _entryScheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted) return;
-      ref.read(pendingNotificationRouteProvider.notifier).state = null;
-      if (route.contains('/debts/')) {
-        final id = route.split('/').last;
-        final debt = (await ref.read(debtsProvider.future))
-            .where((d) => d.id == id)
-            .firstOrNull;
-        if (!mounted) return;
-        if (debt != null) {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (_) => DebtHistoryScreen(debt: debt)));
-          return;
+      _entryScheduled = false;
+      if (!_entryReady || _entryBusy) return;
+      _entryBusy = true;
+      final controller = ref.read(homeWidgetControllerProvider.notifier);
+      final request = controller.begin();
+      try {
+        if (request != null) {
+          if (request.action == HomeWidgetAction.quickRecord ||
+              request.action == HomeWidgetAction.scanReceipt) {
+            await Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                    builder: (_) => QuickRecordScreen(
+                        initialAction:
+                            request.action == HomeWidgetAction.scanReceipt
+                                ? QuickRecordStart.scan
+                                : QuickRecordStart.none)));
+          } else {
+            await _addTransaction(request.action == HomeWidgetAction.income
+                ? TransactionType.income
+                : TransactionType.expense);
+          }
+        } else {
+          final route = ref.read(localStoreProvider) == null
+              ? null
+              : ref.read(pendingNotificationRouteProvider);
+          if (route != null) {
+            await _openNotification(route);
+          } else if (!_debtsChecked) {
+            await _checkDebts();
+          }
+        }
+      } finally {
+        if (request != null) controller.finish(request.id);
+        _entryBusy = false;
+        if (mounted && (request != null || controller.hasWork)) {
+          _scheduleEntryWork();
+          WidgetsBinding.instance.ensureVisualUpdate();
         }
       }
-      final now = DateTime.now().toUtc().add(const Duration(hours: 7));
-      final screen = route == '/reports'
-          ? MonthlyReportScreen(initialMonth: DateTime(now.year, now.month - 1))
-          : route == '/payables'
-              ? const PayablesScreen()
-              : route.contains('/debts')
-                  ? const PlanningScreen(initialTab: PlanningTab.debts)
-                  : const QuickRecordScreen();
-      Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
     });
+  }
+
+  Future<void> _openNotification(String route) async {
+    ref.read(pendingNotificationRouteProvider.notifier).state = null;
+    if (route.contains('/debts/')) {
+      final id = route.split('/').last;
+      final debt = (await ref.read(debtsProvider.future))
+          .where((d) => d.id == id)
+          .firstOrNull;
+      if (!mounted) return;
+      if (debt != null) {
+        await Navigator.push(context,
+            MaterialPageRoute(builder: (_) => DebtHistoryScreen(debt: debt)));
+        return;
+      }
+    }
+    final now = DateTime.now().toUtc().add(const Duration(hours: 7));
+    final screen = route == '/reports'
+        ? MonthlyReportScreen(initialMonth: DateTime(now.year, now.month - 1))
+        : route == '/payables'
+            ? const PayablesScreen()
+            : route.contains('/debts')
+                ? const PlanningScreen(initialTab: PlanningTab.debts)
+                : const QuickRecordScreen();
+    if (!mounted) return;
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
   }
 
   /// On opening the app: re-schedule device reminders and ask about debts
@@ -95,8 +164,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     try {
       debts = await ref.read(debtsProvider.future);
     } catch (_) {
+      _debtsChecked = true;
       return;
     }
+    if (!_entryReady ||
+        ref.read(homeWidgetControllerProvider.notifier).hasWork) {
+      return;
+    }
+    _debtsChecked = true;
     ref.read(debtRemindersProvider).sync(debts);
     final today = DateTime.now();
     final due = debts.where((d) => d.isDue(today)).toList();
@@ -122,6 +197,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         return;
       }
     }
+    if (!mounted) return;
     final draft = await showTransactionFormSheet(context,
         initial: tx.toDraft(), excludingId: tx.id);
     if (draft == null || !mounted) return;
@@ -129,7 +205,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       await ref.read(walletRepositoryProvider).updateTransaction(tx.id, draft);
       ref.refreshWalletData();
     } catch (e) {
-      if (mounted) showToast(context, friendlyError(e));
+      if (mounted) showToast(context, friendlyError(e, context: context));
     }
   }
 
@@ -142,14 +218,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _addTransaction(TransactionType type) async {
+    final account = ref.read(currentUserIdProvider);
     final draft = await showTransactionFormSheet(context,
         initial: TransactionDraft(type: type, amount: 0));
-    if (draft == null || !mounted) return;
+    if (draft == null || !mounted || ref.read(currentUserIdProvider) != account)
+      return;
     try {
       await ref.saveTransaction(draft);
-      if (mounted) showToast(context, 'Đã lưu giao dịch');
+      if (mounted) showToast(context, appL10n(context).msgTransactionSaved145);
     } catch (e) {
-      if (mounted) showToast(context, friendlyError(e));
+      if (mounted) showToast(context, friendlyError(e, context: context));
     }
   }
 
@@ -185,6 +263,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(homeWidgetControllerProvider);
+    ref.watch(homeWidgetStartupProvider);
+    ref.watch(homeWidgetForegroundProvider);
+    ref.watch(appNavigationObserverProvider);
+    ref.watch(appLockEnabledProvider);
+    ref.watch(appUnlockedProvider);
+    _scheduleEntryWork();
     if (ref.watch(localStoreProvider) != null) ref.watch(reminderSyncProvider);
     // Only build the selected destination. This avoids starting AI, sync or
     // report work for screens the user has never opened.
@@ -195,16 +280,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       _ => _dashboard(),
     };
     return Scaffold(
-      extendBody: true,
-      body: NotebookBackground(child: page),
+      extendBody: false,
+      body: NotebookBackground(
+          child: SafeArea(
+              top: false,
+              bottom: false,
+              child: Align(
+                  alignment: Alignment.topCenter,
+                  child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 960),
+                      child: page)))),
       bottomNavigationBar: SafeArea(
           top: false,
           minimum: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-          child: NotebookNavigation(
-              index: _currentNavIndex,
-              menuOpen: _menuOpen,
-              onSelect: (value) => setState(() => _currentNavIndex = value),
-              onAdd: _openActions)),
+          child: Align(
+              heightFactor: 1,
+              child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 720),
+                  child: NotebookNavigation(
+                      index: _currentNavIndex,
+                      menuOpen: _menuOpen,
+                      onSelect: (value) =>
+                          setState(() => _currentNavIndex = value),
+                      onAdd: _openActions)))),
     );
   }
 
@@ -215,7 +313,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final unread = ref.watch(unreadNotificationCountProvider);
     return RefreshIndicator(
         onRefresh: _refresh,
-        color: AppColors.primary,
+        color: appPalette(context).primary,
         child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
@@ -238,13 +336,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               child: TextButton.icon(
                                   onPressed: _refresh,
                                   icon: const Icon(Icons.cloud_off_outlined),
-                                  label: Text(
-                                      friendlyError(summaryAsync.error!)))),
+                                  label: Text(friendlyError(summaryAsync.error!,
+                                      context: context)))),
                         _spendingCard(summary),
                         const SizedBox(height: 18),
                         _quickActions(),
                         const SizedBox(height: 22),
-                        _section('Tổng quan nhanh', 'Xem tất cả',
+                        _section(
+                            appL10n(context).msgQuickOverview146,
+                            appL10n(context).msgViewAll147,
                             () => setState(() => _currentNavIndex = 1)),
                         const SizedBox(height: 12),
                         _overview(summary),
@@ -252,8 +352,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         _insight(summary),
                         const SizedBox(height: 22),
                         _section(
-                            'Giao dịch gần đây',
-                            'Xem tất cả',
+                            appL10n(context).msgRecentTransactions148,
+                            appL10n(context).msgViewAll147,
                             () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -261,7 +361,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         const TransactionHistoryScreen()))),
                         const SizedBox(height: 10),
                         _recent(ref.watch(recentTransactionsProvider)),
-                        const SizedBox(height: 120),
+                        const SizedBox(height: 24),
                       ]))),
             ]));
   }
@@ -278,8 +378,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     : NetworkImage(profile!.avatarUrl!),
                 child: profile?.avatarUrl == null
                     ? Text(profile?.initials ?? 'T',
-                        style: const TextStyle(
-                            color: AppColors.primary,
+                        style: TextStyle(
+                            color: appPalette(context).primary,
                             fontWeight: FontWeight.w800))
                     : null)),
         const SizedBox(width: 12),
@@ -288,23 +388,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(
               DateTime.now().hour < 12
-                  ? 'Chào buổi sáng,'
+                  ? appL10n(context).msgGoodMorning149
                   : DateTime.now().hour < 18
-                      ? 'Chào buổi chiều,'
-                      : 'Chào buổi tối,',
+                      ? appL10n(context).msgGoodAfternoon150
+                      : appL10n(context).msgGoodEvening151,
               style: const TextStyle(fontSize: 12)),
-          Text(profile?.displayName ?? 'Bạn',
+          Text(profile?.displayName ?? appL10n(context).msgYou152,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style:
                   const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
           const SizedBox(height: 3),
-          const Text('Ghi chép hôm nay, sống chủ động hơn',
-              style:
-                  TextStyle(fontSize: 10, color: AppColors.onSurfaceVariant)),
+          Text(appL10n(context).msgRecordTodayPlanForTomorrow153,
+              style: TextStyle(
+                  fontSize: 10,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant)),
         ])),
         IconButton(
-            tooltip: 'Thông báo',
+            tooltip: appL10n(context).msgNotifications15,
             onPressed: () => _showNotificationBottomSheet(context),
             icon: Badge(
                 isLabelVisible: unread > 0,
@@ -323,14 +424,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             gradient: const LinearGradient(
                 begin: Alignment.bottomLeft,
                 end: Alignment.topRight,
-                colors: [
+                colors: const [
                   Color(0xFF006443),
                   Color(0xFF00976D),
                   Color(0xFF58C78B)
                 ]),
             boxShadow: [
               BoxShadow(
-                  color: AppColors.primary.withValues(alpha: .2),
+                  color: appPalette(context).primary.withValues(alpha: .2),
                   blurRadius: 22,
                   offset: const Offset(0, 8))
             ]),
@@ -351,7 +452,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       children: [
                         Row(children: [
                           Expanded(
-                              child: Text('Tổng chi tiêu tháng ${month.month}',
+                              child: Text(
+                                  appL10n(context).msgTotalSpendingInMonth154(
+                                      (month.month).toString()),
                                   style: const TextStyle(
                                       fontSize: 14,
                                       color: Colors.white,
@@ -362,8 +465,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               child: IconButton(
                                   padding: EdgeInsets.zero,
                                   tooltip: _isBalanceVisible
-                                      ? 'Ẩn số tiền'
-                                      : 'Hiện số tiền',
+                                      ? appL10n(context).msgHideAmounts155
+                                      : appL10n(context).msgShowAmounts156,
                                   onPressed: () => setState(() =>
                                       _isBalanceVisible = !_isBalanceVisible),
                                   icon: Icon(
@@ -386,8 +489,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ? '••••••••'
                                     : summary == null
                                         ? '…'
-                                        : CurrencyFormatter.formatVND(
-                                            summary.expense),
+                                        : formatMoney(context, summary.expense),
                                 style: const TextStyle(
                                     fontSize: 34,
                                     color: Colors.white,
@@ -399,8 +501,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             child: LinearProgressIndicator(
                                 value: budget == null ? 0 : ratio.clamp(0, 1),
                                 minHeight: 9,
-                                backgroundColor:
-                                    Colors.white.withValues(alpha: .22),
+                                backgroundColor: appPalette(context)
+                                    .surfaceContainer
+                                    .withValues(alpha: .22),
                                 valueColor: AlwaysStoppedAnimation(ratio > 1
                                     ? const Color(0xFFFFCF91)
                                     : AppColors.primaryFixed))),
@@ -412,18 +515,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             children: [
                               Text(
                                   budget == null
-                                      ? 'Chưa đặt ngân sách'
-                                      : 'Đã chi ${(ratio * 100).round()}%',
+                                      ? appL10n(context).msgNoBudgetSet157
+                                      : appL10n(context).msgSpent158(
+                                          ((ratio * 100).round()).toString()),
                                   style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 10,
                                       fontWeight: FontWeight.w600)),
                               Text(
                                   budget == null
-                                      ? 'Đặt hạn mức trong Kế hoạch'
+                                      ? appL10n(context)
+                                          .msgSetALimitInPlanning159
                                       : _isBalanceVisible
-                                          ? 'Hạn mức ${CurrencyFormatter.formatVND(budget.limitAmount)}'
-                                          : 'Hạn mức ••••',
+                                          ? appL10n(context).msgLimit160(
+                                              (formatMoney(context,
+                                                      budget.limitAmount))
+                                                  .toString())
+                                          : appL10n(context).msgLimit161,
                                   style: const TextStyle(
                                       color: Colors.white70, fontSize: 10)),
                             ]),
@@ -436,21 +544,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       height: size,
       decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.white.withValues(alpha: opacity)));
+          color:
+              appPalette(context).surfaceContainer.withValues(alpha: opacity)));
 
   Widget _quickActions() =>
       Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        _quick('Thêm\nchi tiêu', Icons.add_rounded, AppColors.primary,
+        _quick(
+            appL10n(context).msgAddExpense162,
+            Icons.add_rounded,
+            appPalette(context).primary,
             () => _addTransaction(TransactionType.expense)),
         const SizedBox(width: 9),
         _quick(
-            'Thu nhập',
+            appL10n(context).msgIncome163,
             Icons.arrow_upward_rounded,
             AppColors.primaryContainer,
             () => _addTransaction(TransactionType.income)),
         const SizedBox(width: 9),
         _quick(
-            'Sổ nợ',
+            appL10n(context).msgDebtBook9,
             Icons.handshake_outlined,
             const Color(0xFFE58D27),
             () => Navigator.push(
@@ -459,7 +571,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     builder: (_) =>
                         const PlanningScreen(initialTab: PlanningTab.debts)))),
         const SizedBox(width: 9),
-        _quick('Ngân sách', Icons.donut_large_rounded, AppColors.secondary,
+        _quick(
+            appL10n(context).msgBudgets8,
+            Icons.donut_large_rounded,
+            appPalette(context).secondary,
             () => setState(() => _currentNavIndex = 2)),
       ]);
 
@@ -499,10 +614,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Row(children: [
                   Text(action,
-                      style: const TextStyle(
-                          fontSize: 11, color: AppColors.onSurfaceVariant)),
-                  const Icon(Icons.chevron_right_rounded,
-                      size: 16, color: AppColors.onSurfaceVariant)
+                      style: TextStyle(
+                          fontSize: 11,
+                          color:
+                              Theme.of(context).colorScheme.onSurfaceVariant)),
+                  Icon(Icons.chevron_right_rounded,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant)
                 ]))),
       ]);
 
@@ -511,28 +629,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ? '••••••'
         : value == null
             ? '…'
-            : CurrencyFormatter.formatVND(value, showSign: value < 0);
+            : formatMoney(context, value, showSign: value < 0);
     final items = [
       (
-        'Thu nhập',
+        appL10n(context).msgIncome163,
         money(summary?.income),
         Icons.arrow_upward_rounded,
-        AppColors.primary
+        appPalette(context).primary
       ),
       (
-        'Chi tiêu',
+        appL10n(context).msgExpenses164,
         money(summary?.expense),
         Icons.arrow_downward_rounded,
-        AppColors.error
+        appPalette(context).error
       ),
       (
-        'Thu − chi tháng',
+        appL10n(context).msgMonthlyNetIncome165,
         money(summary == null ? null : summary.income - summary.expense),
         Icons.account_balance_wallet_outlined,
         const Color(0xFF238BCC)
       ),
       (
-        'Số dư ghi chép',
+        appL10n(context).msgRecordedBalance166,
         money(summary?.totalBalance),
         Icons.account_balance_outlined,
         const Color(0xFF238BCC)
@@ -558,9 +676,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                           CrossAxisAlignment.start,
                                       children: [
                                     Text(item.$1,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                             fontSize: 10,
-                                            color: AppColors.onSurfaceVariant)),
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurfaceVariant)),
                                     const SizedBox(height: 5),
                                     FittedBox(
                                         fit: BoxFit.scaleDown,
@@ -581,24 +701,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           onTap: () => Navigator.push(context,
               MaterialPageRoute(builder: (_) => const AdvisorScreen())),
           child: Row(children: [
-            const TintedIcon(Icons.auto_awesome_rounded,
-                color: AppColors.secondary, size: 38),
+            TintedIcon(Icons.auto_awesome_rounded,
+                color: appPalette(context).secondary, size: 38),
             const SizedBox(width: 12),
             Expanded(
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                  const Text('Một chút chủ động mỗi ngày',
-                      style:
-                          TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                  Text(appL10n(context).msgALittlePlanningEveryDay167,
+                      style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 4),
                   Text(
                       summary == null
-                          ? 'Đang tổng hợp ghi chép của bạn…'
-                          : 'Hôm nay bạn đã chi ${CurrencyFormatter.formatVND(summary.expenseOn(DateTime.now()))}. Cùng xem gợi ý từ cố vấn.',
-                      style: const TextStyle(
+                          ? appL10n(context).msgSummarizingYourRecords168
+                          : appL10n(context)
+                              .msgYouSpentTodaySeeSuggestionsFrom169(
+                                  (formatMoney(context,
+                                          summary.expenseOn(DateTime.now())))
+                                      .toString()),
+                      style: TextStyle(
                           fontSize: 11,
-                          color: AppColors.onSurfaceVariant,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           height: 1.6)),
                 ])),
             const Icon(Icons.chevron_right_rounded, size: 18),
@@ -607,14 +731,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _recent(AsyncValue<List<TransactionModel>> transactions) =>
       transactions.when(
           loading: () => const Center(
-              child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: CircularProgressIndicator())),
-          error: (e, _) => Text(friendlyError(e)),
+              child: const Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: const CircularProgressIndicator())),
+          error: (e, _) => Text(friendlyError(e, context: context)),
           data: (items) => items.isEmpty
-              ? const GlassCard(
-                  padding: EdgeInsets.all(24),
-                  child: Text('Chưa có giao dịch. Bấm [+] để bắt đầu ghi chép.',
+              ? GlassCard(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(
+                      appL10n(context).msgNoTransactionsYetTapToStart170,
                       textAlign: TextAlign.center))
               : GlassCard(
                   radius: 22,
@@ -626,34 +751,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           onTap: () => _editTransaction(tx),
                           leading: TintedIcon(tx.icon,
                               color: colorFromHex(tx.categoryColor) ??
-                                  AppColors.primary,
+                                  appPalette(context).primary,
                               size: 40),
-                          title: Text(tx.title,
+                          title: Text(transactionDisplayTitle(context, tx),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                   fontSize: 12, fontWeight: FontWeight.w700)),
                           subtitle: Text(
-                              '${tx.categoryName ?? 'Chưa phân loại'} · ${_formatWhen(tx.occurredAt)}',
-                              style: const TextStyle(
+                              '${tx.categoryName ?? appL10n(context).msgUncategorized441} · ${_formatWhen(tx.occurredAt)}',
+                              style: TextStyle(
                                   fontSize: 10,
-                                  color: AppColors.onSurfaceVariant)),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant)),
                           trailing: Text(
                               _isBalanceVisible
-                                  ? CurrencyFormatter.formatVND(tx.signedAmount,
+                                  ? formatMoney(context, tx.signedAmount,
                                       showSign: true)
                                   : '•••••',
                               style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                   color: tx.isIncome
-                                      ? AppColors.primary
-                                      : AppColors.error))),
+                                      ? appPalette(context).primary
+                                      : appPalette(context).error))),
                   ])));
 
   void _showNotificationBottomSheet(BuildContext context) {
-    final notifications = ref.read(notificationsProvider).valueOrNull ??
-        const <NotificationModel>[];
+    final notifications =
+        ref.read(notificationsProvider).valueOrNull ?? <NotificationModel>[];
     final unread = notifications.where((n) => !n.isRead).length;
     if (unread > 0) _markNotificationsRead();
 
@@ -664,9 +791,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       builder: (ctx) {
         return Container(
           height: MediaQuery.of(context).size.height * 0.75,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          decoration: BoxDecoration(
+            color: appPalette(context).surfaceContainer,
+            borderRadius:
+                const BorderRadius.vertical(top: const Radius.circular(28)),
           ),
           child: Column(
             children: [
@@ -690,30 +818,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
+                            color: appPalette(context).primary.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Icon(Icons.notifications_active,
-                              color: AppColors.primary, size: 20),
+                          child: Icon(Icons.notifications_active,
+                              color: appPalette(context).primary, size: 20),
                         ),
                         const SizedBox(width: 10),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Trung tâm thông báo',
+                            Text(
+                              appL10n(context).msgNotificationCenter171,
                               style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.onSurface),
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface),
                             ),
                             Text(
                               unread > 0
-                                  ? '$unread thông báo mới chưa đọc'
-                                  : 'Bạn đã xem hết thông báo',
-                              style: const TextStyle(
+                                  ? appL10n(context).msgUnreadNotifications172(
+                                      (unread).toString())
+                                  : appL10n(context).msgYouAreAllCaughtUp173,
+                              style: TextStyle(
                                   fontSize: 11,
-                                  color: AppColors.onSurfaceVariant),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant),
                             ),
                           ],
                         ),
@@ -729,11 +861,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const Divider(height: 1),
               Expanded(
                 child: notifications.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text(
-                          'Chưa có thông báo nào',
+                          appL10n(context).msgNoNotificationsYet174,
                           style: TextStyle(
-                              fontSize: 13, color: AppColors.onSurfaceVariant),
+                              fontSize: 13,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant),
                         ),
                       )
                     : ListView(
@@ -769,21 +904,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   /// "12:30" today, "Hôm qua", otherwise "dd/MM".
-  static String _formatWhen(DateTime time) {
+  String _formatWhen(DateTime time) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final day = DateTime(time.year, time.month, time.day);
     String two(int v) => v.toString().padLeft(2, '0');
     if (day == today) return '${two(time.hour)}:${two(time.minute)}';
-    if (day == today.subtract(const Duration(days: 1))) return 'Hôm qua';
+    if (day == today.subtract(const Duration(days: 1)))
+      return appL10n(context).msgYesterday175;
     return '${two(time.day)}/${two(time.month)}';
   }
 
-  static String _timeAgo(DateTime time) {
+  String _timeAgo(DateTime time) {
     final diff = DateTime.now().difference(time);
-    if (diff.inMinutes < 1) return 'Vừa xong';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} phút trước';
-    if (diff.inHours < 24) return '${diff.inHours} giờ trước';
+    if (diff.inMinutes < 1) return appL10n(context).msgJustNow176;
+    if (diff.inMinutes < 60)
+      return appL10n(context).msgMinutesAgo177((diff.inMinutes).toString());
+    if (diff.inHours < 24)
+      return appL10n(context).msgHoursAgo178((diff.inHours).toString());
     return _formatWhen(time);
   }
 
@@ -803,12 +941,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: isUnread
-            ? AppColors.primary.withOpacity(0.04)
+            ? appPalette(context).primary.withOpacity(0.04)
             : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isUnread
-              ? AppColors.primary.withOpacity(0.2)
+              ? appPalette(context).primary.withOpacity(0.2)
               : Colors.grey.shade200,
         ),
       ),
@@ -837,10 +975,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         Expanded(
                           child: Text(
                             title,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
-                                color: AppColors.onSurface),
+                                color: Theme.of(context).colorScheme.onSurface),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -873,7 +1011,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: appPalette(context).surfaceContainer,
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: Colors.grey.shade300),
                     ),
@@ -887,8 +1025,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ElevatedButton(
                     onPressed: onAction,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
+                      backgroundColor: appPalette(context).primary,
+                      foregroundColor: appPalette(context).onPrimary,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6),
@@ -920,32 +1058,35 @@ class _DueDebtsSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final today = DateTime.now();
     return FormSheet(
-      title: 'Khoản nợ đã đến hạn',
-      submitLabel: 'Để sau',
+      title: appL10n(context).msgDebtPaymentsAreDue179,
+      submitLabel: appL10n(context).msgLater180,
       onSubmit: () => Navigator.pop(context),
       children: [
-        const Text(
-            'Các khoản dưới đây đã đến hạn. Đã trả hoặc đã nhận tiền thì xác nhận để cập nhật sổ nợ nhé.',
-            style: TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant)),
+        Text(appL10n(context).msgTheseDebtsAreDueIfYou181,
+            style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant)),
         const SizedBox(height: 8),
         for (final d in debts)
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: Text(
               d.type == DebtType.borrow
-                  ? 'Tôi nợ ${d.personName}'
-                  : '${d.personName} nợ tôi',
+                  ? appL10n(context).msgIOwe182((d.personName).toString())
+                  : appL10n(context).msgOwesMe183((d.personName).toString()),
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: Text(
-                '${CurrencyFormatter.formatVND(d.remaining)} • ${d.dueLabel(today) ?? ''}',
-                style: const TextStyle(color: AppColors.error)),
+                '${formatMoney(context, d.remaining)} • ${debtDueLabel(context, d, today) ?? ''}',
+                style: TextStyle(color: appPalette(context).error)),
             trailing: TextButton(
               onPressed: () async {
                 final done = await showSettleDebtDialog(context, ref, d);
                 if (done && context.mounted) Navigator.pop(context);
               },
-              child: Text(d.type == DebtType.borrow ? 'Đã trả' : 'Đã nhận'),
+              child: Text(d.type == DebtType.borrow
+                  ? appL10n(context).msgPaid184
+                  : appL10n(context).msgCollected185),
             ),
           ),
       ],

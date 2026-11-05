@@ -1,3 +1,4 @@
+import '../../../core/utils/app_failure.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/offline/local_store.dart';
@@ -13,7 +14,7 @@ import '../models/wallet_model.dart';
 /// provider below so one account never sees another account's cached data.
 final walletRepositoryProvider = Provider<WalletRepository>((ref) {
   final store = ref.watch(localStoreProvider);
-  if (store == null) throw StateError('Bạn cần đăng nhập');
+  if (store == null) throw AppFailure('failure25', [], 'Bạn cần đăng nhập');
   return OfflineWalletRepository(store);
 });
 
@@ -38,14 +39,18 @@ final monthlySummaryProvider = FutureProvider.autoDispose<MonthlySummary>(
   },
 );
 
-final recentTransactionsProvider = FutureProvider.autoDispose<List<TransactionModel>>(
+final recentTransactionsProvider =
+    FutureProvider.autoDispose<List<TransactionModel>>(
   (ref) {
     ref.watch(localRevisionProvider);
-    return ref.watch(walletRepositoryProvider).fetchRecentTransactions(limit: 10);
+    return ref
+        .watch(walletRepositoryProvider)
+        .fetchRecentTransactions(limit: 10);
   },
 );
 
-final notificationsProvider = FutureProvider.autoDispose<List<NotificationModel>>(
+final notificationsProvider =
+    FutureProvider.autoDispose<List<NotificationModel>>(
   (ref) {
     ref.watch(localRevisionProvider);
     return ref.watch(walletRepositoryProvider).fetchNotifications();
@@ -53,7 +58,13 @@ final notificationsProvider = FutureProvider.autoDispose<List<NotificationModel>
 );
 
 final unreadNotificationCountProvider = Provider.autoDispose<int>(
-  (ref) => ref.watch(notificationsProvider).valueOrNull?.where((n) => !n.isRead).length ?? 0,
+  (ref) =>
+      ref
+          .watch(notificationsProvider)
+          .valueOrNull
+          ?.where((n) => !n.isRead)
+          .length ??
+      0,
 );
 
 /// The "khoản nợ đến hạn" prompt is shown once per app session.

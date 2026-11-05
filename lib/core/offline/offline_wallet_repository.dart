@@ -1,3 +1,4 @@
+import '../utils/app_failure.dart';
 import '../../features/home/data/wallet_repository.dart';
 import '../../features/home/models/category_model.dart';
 import '../../features/home/models/monthly_summary.dart';
@@ -12,19 +13,27 @@ import 'local_store.dart';
 class OfflineWalletRepository implements WalletRepository {
   OfflineWalletRepository(this.store);
   final LocalStore store;
-  static DateTime _vn(DateTime instant) => instant.toUtc().add(const Duration(hours: 7));
+  static DateTime _vn(DateTime instant) =>
+      instant.toUtc().add(const Duration(hours: 7));
 
   @override
   Future<List<CategoryModel>> fetchCategories() async =>
-      (await store.rows('categories')).map(CategoryModel.fromJson).toList()..sort((a, b) => a.name.compareTo(b.name));
+      (await store.rows('categories')).map(CategoryModel.fromJson).toList()
+        ..sort((a, b) => a.name.compareTo(b.name));
   @override
   Future<List<WalletModel>> fetchWallets() async {
     final transactions = await store.rows('transactions');
     return (await store.rows('wallets')).map((w) {
-      final balance = transactions.where((t) => t['wallet_id'] == w['id']).fold<int>(
-          (w['initial_balance'] as num? ?? 0).toInt(),
-          (sum, t) => sum + (t['type'] == 'income' ? 1 : -1) * (t['amount'] as num).toInt());
-      return WalletModel.fromJson({...w, 'wallet_id': w['id'], 'balance': balance});
+      final balance = transactions
+          .where((t) => t['wallet_id'] == w['id'])
+          .fold<int>(
+              (w['initial_balance'] as num? ?? 0).toInt(),
+              (sum, t) =>
+                  sum +
+                  (t['type'] == 'income' ? 1 : -1) *
+                      (t['amount'] as num).toInt());
+      return WalletModel.fromJson(
+          {...w, 'wallet_id': w['id'], 'balance': balance});
     }).toList();
   }
 
@@ -32,24 +41,33 @@ class OfflineWalletRepository implements WalletRepository {
     final categories = {for (final c in await fetchCategories()) c.id: c};
     final wallets = {for (final w in await fetchWallets()) w.id: w};
     return (await store.rows('transactions'))
-        .map((r) => TransactionModel.fromJson(r, categories: categories, wallets: wallets))
+        .map((r) => TransactionModel.fromJson(r,
+            categories: categories, wallets: wallets))
         .toList()
       ..sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
   }
 
   @override
-  Future<List<TransactionModel>> fetchRecentTransactions({int limit = 10}) async =>
+  Future<List<TransactionModel>> fetchRecentTransactions(
+          {int limit = 10}) async =>
       (await allTransactions()).take(limit).toList();
   @override
-  Future<List<TransactionModel>> fetchTransactions(TransactionFilter filter, {int offset = 0, int limit = 50}) async =>
+  Future<List<TransactionModel>> fetchTransactions(TransactionFilter filter,
+          {int offset = 0, int limit = 50}) async =>
       (await allTransactions())
           .where((t) =>
-              !_vn(t.occurredAt).isBefore(DateTime.utc(filter.month.year, filter.month.month)) &&
-              _vn(t.occurredAt).isBefore(DateTime.utc(filter.month.year, filter.month.month + 1)) &&
+              !_vn(t.occurredAt).isBefore(
+                  DateTime.utc(filter.month.year, filter.month.month)) &&
+              _vn(t.occurredAt).isBefore(
+                  DateTime.utc(filter.month.year, filter.month.month + 1)) &&
               (filter.type == null || filter.type == t.type) &&
-              (filter.categoryId == null || filter.categoryId == t.categoryId) &&
+              (filter.categoryId == null ||
+                  filter.categoryId == t.categoryId) &&
               (filter.walletId == null || filter.walletId == t.walletId) &&
-              (filter.search.isEmpty || (t.note ?? '').toLowerCase().contains(filter.search.toLowerCase())))
+              (filter.search.isEmpty ||
+                  (t.note ?? '')
+                      .toLowerCase()
+                      .contains(filter.search.toLowerCase())))
           .skip(offset)
           .take(limit)
           .toList();
@@ -61,19 +79,29 @@ class OfflineWalletRepository implements WalletRepository {
         end = DateTime.utc(d.year, d.month + 1),
         previous = DateTime.utc(d.year, d.month - 1);
     final tx = await allTransactions();
-    final current = tx.where((t) => !_vn(t.occurredAt).isBefore(start) && _vn(t.occurredAt).isBefore(end)).toList();
-    final prior = tx.where((t) => !_vn(t.occurredAt).isBefore(previous) && _vn(t.occurredAt).isBefore(start));
+    final current = tx
+        .where((t) =>
+            !_vn(t.occurredAt).isBefore(start) &&
+            _vn(t.occurredAt).isBefore(end))
+        .toList();
+    final prior = tx.where((t) =>
+        !_vn(t.occurredAt).isBefore(previous) &&
+        _vn(t.occurredAt).isBefore(start));
     int sum(Iterable<TransactionModel> rows, TransactionType type) =>
         rows.where((t) => t.type == type).fold(0, (n, t) => n + t.amount);
     final categories = {for (final c in await fetchCategories()) c.id: c};
     final budgets = (await store.rows('budgets'))
-        .where((b) => (b['month'] as String).startsWith('${d.year}-${d.month.toString().padLeft(2, '0')}'))
+        .where((b) => (b['month'] as String)
+            .startsWith('${d.year}-${d.month.toString().padLeft(2, '0')}'))
         .map((b) => BudgetProgress(
             id: b['id'] as String,
             categoryId: b['category_id'] as String?,
             categoryName: categories[b['category_id']]?.name,
             limitAmount: (b['limit_amount'] as num).toInt(),
-            spent: sum(current.where((t) => b['category_id'] == null || t.categoryId == b['category_id']),
+            spent: sum(
+                current.where((t) =>
+                    b['category_id'] == null ||
+                    t.categoryId == b['category_id']),
                 TransactionType.expense)))
         .toList();
     final days = <String, List<TransactionModel>>{};
@@ -101,23 +129,34 @@ class OfflineWalletRepository implements WalletRepository {
   @override
   Future<void> addTransaction(TransactionDraft draft) =>
       store.put('transactions', {'id': newUuidV4(), ...draft.toInsertJson()});
-  Future<void> addTransactions(List<TransactionDraft> drafts) => store.writeBatch([
-        for (final d in drafts) LocalMutation('transactions', {'id': newUuidV4(), ...d.toInsertJson()})
+  Future<void> addTransactions(List<TransactionDraft> drafts) =>
+      store.writeBatch([
+        for (final d in drafts)
+          LocalMutation(
+              'transactions', {'id': newUuidV4(), ...d.toInsertJson()})
       ]);
   @override
   Future<void> updateTransaction(String id, TransactionDraft draft) async {
-    final linked = (await store.rows('debt_payments')).any((p) => p['transaction_id'] == id);
-    if (linked) throw StateError('Hãy sửa lần trả nợ trong Sổ nợ để cập nhật giao dịch liên kết');
-    final occurrence = (await store.rows('payable_occurrences')).where((p) => p['transaction_id'] == id).firstOrNull;
+    final linked = (await store.rows('debt_payments'))
+        .any((p) => p['transaction_id'] == id);
+    if (linked)
+      throw AppFailure('failure16', [],
+          'Hãy sửa lần trả nợ trong Sổ nợ để cập nhật giao dịch liên kết');
+    final occurrence = (await store.rows('payable_occurrences'))
+        .where((p) => p['transaction_id'] == id)
+        .firstOrNull;
     if (occurrence != null) {
-      if (draft.type != TransactionType.expense) throw StateError('Khoản phải trả phải là một khoản chi');
+      if (draft.type != TransactionType.expense)
+        throw AppFailure(
+            'failure17', [], 'Khoản phải trả phải là một khoản chi');
       await store.put('payable_occurrences', {
         ...occurrence,
         'amount': draft.amount,
         'wallet_id': draft.walletId,
         'category_id': draft.categoryId,
         'note': draft.note,
-        'paid_at': (draft.occurredAt ?? DateTime.now()).toUtc().toIso8601String()
+        'paid_at':
+            (draft.occurredAt ?? DateTime.now()).toUtc().toIso8601String()
       });
       return;
     }
@@ -126,27 +165,37 @@ class OfflineWalletRepository implements WalletRepository {
 
   @override
   Future<void> deleteTransaction(String id) async {
-    if ((await store.rows('debt_payments')).any((p) => p['transaction_id'] == id))
-      throw StateError('Hãy hoàn tác lần trả nợ trong Sổ nợ');
-    final occurrence = (await store.rows('payable_occurrences')).where((p) => p['transaction_id'] == id).firstOrNull;
+    if ((await store.rows('debt_payments'))
+        .any((p) => p['transaction_id'] == id))
+      throw AppFailure('failure18', [], 'Hãy hoàn tác lần trả nợ trong Sổ nợ');
+    final occurrence = (await store.rows('payable_occurrences'))
+        .where((p) => p['transaction_id'] == id)
+        .firstOrNull;
     if (occurrence != null) {
-      await store.put('payable_occurrences', {...occurrence, 'status': 'pending'});
+      await store
+          .put('payable_occurrences', {...occurrence, 'status': 'pending'});
       return;
     }
     await store.remove('transactions', id);
   }
 
   @override
-  Future<void> saveCategory(CategoryModel category) =>
-      store.put('categories', {'id': category.id.isEmpty ? newUuidV4() : category.id, ...category.toJson()});
+  Future<void> saveCategory(CategoryModel category) => store.put('categories', {
+        'id': category.id.isEmpty ? newUuidV4() : category.id,
+        ...category.toJson()
+      });
   @override
   Future<void> deleteCategory(String id) => store.remove('categories', id);
   @override
-  Future<void> saveWallet(WalletModel wallet) => store.put('wallets',
-      {'id': wallet.id.isEmpty ? newUuidV4() : wallet.id, 'is_archived': wallet.isArchived, ...wallet.toJson()});
+  Future<void> saveWallet(WalletModel wallet) => store.put('wallets', {
+        'id': wallet.id.isEmpty ? newUuidV4() : wallet.id,
+        'is_archived': wallet.isArchived,
+        ...wallet.toJson()
+      });
   @override
   Future<bool> removeWallet(String id) async {
-    final used = (await store.rows('transactions')).any((t) => t['wallet_id'] == id);
+    final used =
+        (await store.rows('transactions')).any((t) => t['wallet_id'] == id);
     if (used) {
       await store.put('wallets', {'id': id, 'is_archived': true});
     } else {
@@ -157,11 +206,14 @@ class OfflineWalletRepository implements WalletRepository {
 
   @override
   Future<List<NotificationModel>> fetchNotifications({int limit = 30}) async =>
-      (await store.rows('notifications')).map(NotificationModel.fromJson).toList()
+      (await store.rows('notifications'))
+          .map(NotificationModel.fromJson)
+          .toList()
         ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   @override
   Future<void> markAllNotificationsRead() async => store.writeBatch([
         for (final n in await store.rows('notifications'))
-          if (n['is_read'] != true) LocalMutation('notifications', {...n, 'is_read': true})
+          if (n['is_read'] != true)
+            LocalMutation('notifications', {...n, 'is_read': true})
       ]);
 }

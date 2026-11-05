@@ -1,3 +1,6 @@
+import '../../l10n/app_l10n.dart';
+import '../../core/utils/app_failure.dart';
+import '../../core/utils/error_messages.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -22,7 +25,8 @@ class _DataExchangeScreenState extends ConsumerState<DataExchangeScreen> {
   List<JsonRow> _wallets = [], _categories = [];
   final Map<String, String> _mapping = {};
   bool _busy = false, _skipDuplicates = true, _create = false;
-  String? _message;
+  Object? _message;
+  int? _importedCount;
   List<int>? _bytes;
   final Set<int> _selected = {};
   CsvImportPlan _plan = CsvImportPlan();
@@ -35,11 +39,12 @@ class _DataExchangeScreenState extends ConsumerState<DataExchangeScreen> {
     setState(() {
       _busy = true;
       _message = null;
+      _importedCount = null;
     });
     try {
       await action();
     } catch (e) {
-      if (mounted) setState(() => _message = '$e');
+      if (mounted) setState(() => _message = e);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -47,7 +52,7 @@ class _DataExchangeScreenState extends ConsumerState<DataExchangeScreen> {
 
   LocalStore get _store =>
       ref.read(localStoreProvider) ??
-      (throw StateError('Đăng nhập để dùng dữ liệu cục bộ'));
+      (throw AppFailure('csvLocalSignIn', [], 'Local sign-in required'));
 
   Future<void> _share(String name, String csv) async {
     final directory = await getTemporaryDirectory();
@@ -67,7 +72,7 @@ class _DataExchangeScreenState extends ConsumerState<DataExchangeScreen> {
     if (picked.isEmpty) return;
     final selectedFile = File(picked.single.path!);
     if (await selectedFile.length() > 20 * 1024 * 1024) {
-      throw const FormatException('Tệp tối đa 20 MB');
+      throw AppFormatFailure('csvFileSize', [], 'CSV exceeds 20MB');
     }
     _bytes = await selectedFile.readAsBytes();
     _mapping.clear();
@@ -88,7 +93,7 @@ class _DataExchangeScreenState extends ConsumerState<DataExchangeScreen> {
     final categories = await store.rows('categories');
     final existing = await store.rows('transactions');
     if (!mounted || !identical(store, ref.read(localStoreProvider))) {
-      throw StateError('Tài khoản đã thay đổi');
+      throw AppFailure('accountChanged', [], 'Account changed');
     }
     _wallets = wallets;
     _categories = categories;
@@ -141,7 +146,7 @@ class _DataExchangeScreenState extends ConsumerState<DataExchangeScreen> {
         allowCreation: _create,
         skipDuplicates: _skipDuplicates);
     if (!mounted || !identical(store, ref.read(localStoreProvider))) {
-      throw StateError('Tài khoản đã thay đổi');
+      throw AppFailure('accountChanged', [], 'Account changed');
     }
     _plan = plan;
   }
@@ -150,14 +155,17 @@ class _DataExchangeScreenState extends ConsumerState<DataExchangeScreen> {
     final store = _store;
     await _refreshPreview();
     await _recheck();
-    if (_plan.errors.isNotEmpty) throw StateError(_plan.errors.values.first);
+    if (_plan.errors.isNotEmpty)
+      throw AppFailure(
+          'csvMapping', [], 'Resolve CSV row errors before importing');
     if (!identical(store, ref.read(localStoreProvider))) {
-      throw StateError('Tài khoản đã thay đổi');
+      throw AppFailure('accountChanged', [], 'Account changed');
     }
     await store.writeBatch(_plan.mutations);
     if (mounted) {
       setState(() {
-        _message = 'Đã nhập ${_plan.transactionCount} giao dịch';
+        _message = null;
+        _importedCount = _plan.transactionCount;
         _preview = [];
         _bytes = null;
         _selected.clear();
@@ -205,15 +213,14 @@ class _DataExchangeScreenState extends ConsumerState<DataExchangeScreen> {
       }
     }
     return Scaffold(
-        appBar: AppBar(title: const Text('Nhập / xuất CSV')),
+        appBar: AppBar(title: Text(appL10n(context).csvExchange)),
         body: ListView(padding: const EdgeInsets.all(16), children: [
-          const Text(
-              'CSV UTF-8, tối đa 10.000 dòng. Số tiền nguyên VND; ngày ISO 8601 có múi giờ. Nguồn tiền = wallet; source = cách ghi nhận.'),
-          const Text(
-              'Nguồn ghi nhận: manual, ai, voice, receipt, debt. Giao dịch debt nhập vào là giao dịch độc lập, không liên kết thanh toán nợ.'),
+          Text(appL10n(context).msgUtfCsvUpToRowsWhole471),
+          Text(appL10n(context).msgRecordingMethodsManualAiVoiceReceipt472),
           SwitchListTile(
-              title: const Text('Xuất theo bộ lọc'),
-              subtitle: const Text('Tắt để xuất tất cả giao dịch'),
+              title: Text(appL10n(context).msgExportFilteredRecords473),
+              subtitle:
+                  Text(appL10n(context).msgTurnOffToExportAllTransactions474),
               value: _filteredExport,
               onChanged:
                   _busy ? null : (v) => setState(() => _filteredExport = v)),
@@ -232,28 +239,36 @@ class _DataExchangeScreenState extends ConsumerState<DataExchangeScreen> {
                         }
                       },
                 child: Text(_dateRange == null
-                    ? 'Chọn khoảng ngày (UTC+7)'
+                    ? appL10n(context).msgSelectDateRangeUtc475
                     : '${_dateRange!.start.toString().substring(0, 10)} → ${_dateRange!.end.toString().substring(0, 10)}')),
             if (_dateRange != null)
               TextButton(
                   onPressed:
                       _busy ? null : () => setState(() => _dateRange = null),
-                  child: const Text('Bỏ lọc ngày')),
+                  child: Text(appL10n(context).msgClearDateFilter476)),
             DropdownButtonFormField<String>(
                 initialValue: _exportType,
-                decoration: const InputDecoration(labelText: 'Loại giao dịch'),
-                items: const [
-                  DropdownMenuItem(value: null, child: Text('Tất cả')),
-                  DropdownMenuItem(value: 'income', child: Text('Thu nhập')),
-                  DropdownMenuItem(value: 'expense', child: Text('Chi tiêu'))
+                decoration: InputDecoration(
+                    labelText: appL10n(context).msgTransactionType477),
+                items: [
+                  DropdownMenuItem(
+                      value: null, child: Text(appL10n(context).msgAll206)),
+                  DropdownMenuItem(
+                      value: 'income',
+                      child: Text(appL10n(context).msgIncome163)),
+                  DropdownMenuItem(
+                      value: 'expense',
+                      child: Text(appL10n(context).msgExpenses164))
                 ],
                 onChanged:
                     _busy ? null : (v) => setState(() => _exportType = v)),
             DropdownButtonFormField<String>(
                 initialValue: _exportSource,
-                decoration: const InputDecoration(labelText: 'Nguồn ghi nhận'),
+                decoration: InputDecoration(
+                    labelText: appL10n(context).msgRecordingMethod478),
                 items: [
-                  const DropdownMenuItem(value: null, child: Text('Tất cả')),
+                  DropdownMenuItem(
+                      value: null, child: Text(appL10n(context).msgAll206)),
                   for (final source in CsvExchange.sources)
                     DropdownMenuItem(value: source, child: Text(source))
                 ],
@@ -266,26 +281,33 @@ class _DataExchangeScreenState extends ConsumerState<DataExchangeScreen> {
                     ? null
                     : () => _run(
                         () => _share('mau-giao-dich', CsvExchange.template())),
-                child: const Text('Tải / chia sẻ mẫu')),
+                child: Text(appL10n(context).msgDownloadShareTemplate479)),
             OutlinedButton(
                 onPressed: _busy ? null : () => _run(_export),
-                child:
-                    Text(_filteredExport ? 'Xuất theo bộ lọc' : 'Xuất tất cả')),
+                child: Text(_filteredExport
+                    ? appL10n(context).msgExportFilteredRecords473
+                    : appL10n(context).msgExportAll480)),
             FilledButton(
                 onPressed: _busy ? null : () => _run(_load),
-                child: const Text('Chọn CSV')),
+                child: Text(appL10n(context).msgChooseCsv481)),
           ]),
           if (_busy) const LinearProgressIndicator(),
-          if (_message != null) Text(_message!),
+          if (_message != null)
+            Text(friendlyError(_message!, context: context)),
+          if (_importedCount != null)
+            Text(appL10n(context).msgImportedTransactions470(_importedCount!)),
           if (_preview.isNotEmpty) ...[
-            Text(
-                '${_preview.length} dòng • ${_preview.where((p) => p.error != null).length} lỗi • ${_preview.where((p) => p.duplicate).length} trùng • ${_preview.where((p) => p.conflict).length} xung đột ID'),
-            const Text(
-                'Dòng lỗi và ID khác nội dung luôn bị bỏ qua. ID hiện có không được cập nhật.'),
-            Text(
-                'Đã chọn ${_selected.length} dòng • có thể trùng: ${_plan.duplicates.length} • sẽ nhập: ${_plan.transactionCount}'),
-            const Text(
-                'Có thể trùng = cùng loại, số tiền, nguồn tiền đã ánh xạ trong vòng 10 phút, đối chiếu dữ liệu hiện có và các dòng đã chọn.'),
+            Text(appL10n(context).msgRowsErrorsDuplicatesIdConflicts482(
+                (_preview.length).toString(),
+                (_preview.where((p) => p.error != null).length).toString(),
+                (_preview.where((p) => p.duplicate).length).toString(),
+                (_preview.where((p) => p.conflict).length).toString())),
+            Text(appL10n(context).msgInvalidRowsAndIdsWithDifferent483),
+            Text(appL10n(context).msgRowsSelectedPossibleDuplicatesToImport484(
+                (_selected.length).toString(),
+                (_plan.duplicates.length).toString(),
+                (_plan.transactionCount).toString())),
+            Text(appL10n(context).msgAPossibleDuplicateHasTheSame485),
             Wrap(children: [
               TextButton(
                   onPressed: _busy
@@ -296,7 +318,7 @@ class _DataExchangeScreenState extends ConsumerState<DataExchangeScreen> {
                                 .map((p) => p.line));
                             await _recheck();
                           }),
-                  child: const Text('Chọn tất cả hợp lệ')),
+                  child: Text(appL10n(context).msgSelectAllValidRows486)),
               TextButton(
                   onPressed: _busy
                       ? null
@@ -304,7 +326,7 @@ class _DataExchangeScreenState extends ConsumerState<DataExchangeScreen> {
                             _selected.clear();
                             await _recheck();
                           }),
-                  child: const Text('Bỏ chọn tất cả'))
+                  child: Text(appL10n(context).msgDeselectAll487))
             ]),
             CheckboxListTile(
                 value: _skipDuplicates,
@@ -314,7 +336,8 @@ class _DataExchangeScreenState extends ConsumerState<DataExchangeScreen> {
                           _skipDuplicates = v!;
                           await _recheck();
                         }),
-                title: const Text('Bỏ qua giao dịch có thể trùng (10 phút)')),
+                title:
+                    Text(appL10n(context).msgSkipPossibleDuplicatesMinutes488)),
             for (final entry in mappings.entries)
               DropdownButtonFormField<String>(
                 key: ValueKey('${entry.key}-${_mapping[entry.key]}'),
@@ -322,10 +345,11 @@ class _DataExchangeScreenState extends ConsumerState<DataExchangeScreen> {
                 isExpanded: true,
                 decoration: InputDecoration(
                     labelText:
-                        '${entry.value.$1 == 'wallets' ? 'Nguồn tiền' : 'Danh mục'}: ${entry.key.split('|').last}'),
+                        '${entry.value.$1 == 'wallets' ? appL10n(context).wallets : appL10n(context).categories}: ${entry.key.split('|').last}'),
                 items: [
-                  const DropdownMenuItem<String>(
-                      value: null, child: Text('Chưa chọn / tạo mới')),
+                  DropdownMenuItem<String>(
+                      value: null,
+                      child: Text(appL10n(context).msgNotMappedCreateNew489)),
                   for (final o in _options(entry.value.$1, entry.value.$2))
                     DropdownMenuItem(
                         value: '${o['id']}', child: Text('${o['name']}'))
@@ -349,8 +373,8 @@ class _DataExchangeScreenState extends ConsumerState<DataExchangeScreen> {
                           _create = v!;
                           await _recheck();
                         }),
-                title: const Text(
-                    'Xác nhận tạo danh mục / nguồn tiền chưa ánh xạ (số dư ban đầu 0)')),
+                title: Text(appL10n(context)
+                    .msgConfirmCreationOfUnmappedCategoriesMoney490)),
             for (final p in _preview.skip(_page * 100).take(100))
               CheckboxListTile(
                   value: _selected.contains(p.line),
@@ -364,24 +388,35 @@ class _DataExchangeScreenState extends ConsumerState<DataExchangeScreen> {
                             }
                             await _recheck();
                           }),
-                  title: Text(
-                      'Dòng ${p.line}: ${p.values['amount'] ?? ''} ${p.values['note'] ?? ''}'),
-                  subtitle: Text(p.error ??
-                      _plan.errors[p.line] ??
+                  title: Text(appL10n(context).msgRow491(
+                      (p.line).toString(),
+                      (p.values['amount'] ?? '').toString(),
+                      (p.values['note'] ?? '').toString())),
+                  subtitle: Text((p.issue != null
+                          ? csvIssueMessage(appL10n(context), p.issue!)
+                          : null) ??
+                      (_plan.issues[p.line] != null
+                          ? csvIssueMessage(
+                              appL10n(context), _plan.issues[p.line]!)
+                          : null) ??
                       (p.conflict
-                          ? 'ID đã tồn tại với nội dung khác — bỏ qua'
+                          ? appL10n(context)
+                              .msgIdExistsWithDifferentContentsSkipped492
                           : _plan.existingIds.contains(p.line)
-                              ? 'ID hiện có — không nhập lại'
+                              ? appL10n(context)
+                                  .msgExistingIdDoNotImportAgain493
                               : _plan.duplicates.contains(p.line)
-                                  ? 'Có thể trùng trong vòng 10 phút'
-                                  : 'Hợp lệ'))),
+                                  ? appL10n(context)
+                                      .msgPossibleDuplicateWithinMinutes494
+                                  : appL10n(context).msgValid495))),
             if (_preview.length > 100)
               Row(children: [
                 IconButton(
                     onPressed:
                         _page == 0 ? null : () => setState(() => _page--),
                     icon: const Icon(Icons.chevron_left)),
-                Text('Trang ${_page + 1}/${(_preview.length / 100).ceil()}'),
+                Text(appL10n(context)
+                    .pageOf(_page + 1, (_preview.length / 100).ceil())),
                 IconButton(
                     onPressed: (_page + 1) * 100 >= _preview.length
                         ? null
@@ -392,8 +427,21 @@ class _DataExchangeScreenState extends ConsumerState<DataExchangeScreen> {
                 onPressed: _busy || _selected.isEmpty || _plan.errors.isNotEmpty
                     ? null
                     : () => _run(_save),
-                child: const Text('Xác nhận nhập các dòng đã chọn')),
+                child:
+                    Text(appL10n(context).msgConfirmSelectedRowsForImport496)),
           ],
         ]));
   }
 }
+
+String csvIssueMessage(AppLocalizations l, CsvIssue issue) =>
+    switch (issue.code) {
+      CsvIssueCode.columns => l.csvColumns,
+      CsvIssueCode.type => l.csvType,
+      CsvIssueCode.amount => l.csvAmount,
+      CsvIssueCode.date => l.csvDate,
+      CsvIssueCode.wallet => l.csvWallet,
+      CsvIssueCode.source => l.csvSource,
+      CsvIssueCode.id => l.csvId,
+      CsvIssueCode.mapping => l.csvMapping(issue.label),
+    };

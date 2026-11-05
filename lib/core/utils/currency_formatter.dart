@@ -13,12 +13,17 @@ class CurrencyFormatter {
 
   /// Formats an integer or double into standard Vietnamese currency string.
   /// Example: 42850000 -> "42.850.000 ₫"
-  static String formatVND(num amount, {bool showSign = false}) {
-    final formatted = _formatter.format(amount.abs()).trim();
-    if (showSign) {
-      if (amount > 0) return '+$formatted';
-      if (amount < 0) return '-$formatted';
-    }
+  static String formatVND(num amount,
+      {bool showSign = false, String locale = 'vi_VN'}) {
+    final formatter = locale.startsWith('vi')
+        ? _formatter
+        : NumberFormat.currency(
+            locale: locale, name: 'VND', symbol: '₫', decimalDigits: 0);
+    final formatted = formatter.format(amount.abs()).trim();
+    // A negative notebook balance must never look like money available.
+    // showSign controls the optional plus on positive amounts only.
+    if (amount < 0) return '-$formatted';
+    if (showSign && amount > 0) return '+$formatted';
     return formatted;
   }
 
@@ -28,16 +33,20 @@ class CurrencyFormatter {
     final lower = input.toLowerCase().trim();
 
     // Check for "củ" (1 củ = 1,000,000 VND)
-    final cuMatch = RegExp(r'(\d+([\.,]\d+)?)\s*(củ|triệu|tr)').firstMatch(lower);
+    final cuMatch =
+        RegExp(r'(\d+([\.,]\d+)?)\s*(củ|triệu|tr)').firstMatch(lower);
     if (cuMatch != null) {
-      final numberPart = double.tryParse(cuMatch.group(1)!.replaceAll(',', '.')) ?? 0;
+      final numberPart =
+          double.tryParse(cuMatch.group(1)!.replaceAll(',', '.')) ?? 0;
       return (numberPart * 1000000).round();
     }
 
     // Check for "k" or "nghìn" (1k = 1,000 VND)
-    final kMatch = RegExp(r'(\d+([\.,]\d+)?)\s*(k|nghìn|ngàn)').firstMatch(lower);
+    final kMatch =
+        RegExp(r'(\d+([\.,]\d+)?)\s*(k|nghìn|ngàn)').firstMatch(lower);
     if (kMatch != null) {
-      final numberPart = double.tryParse(kMatch.group(1)!.replaceAll(',', '.')) ?? 0;
+      final numberPart =
+          double.tryParse(kMatch.group(1)!.replaceAll(',', '.')) ?? 0;
       return (numberPart * 1000).round();
     }
 

@@ -1,4 +1,7 @@
+import '../../../l10n/app_l10n.dart';
+import '../../../core/theme/appearance.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show Locale;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,6 +12,8 @@ import '../models/payable.dart';
 final pendingNotificationRouteProvider = StateProvider<String?>((ref) => null);
 final reminderSchedulerProvider = Provider<ReminderScheduler>((ref) =>
     ReminderScheduler(
+        localizations: () =>
+            lookupAppLocalizations(ref.read(effectiveLocaleProvider)),
         onRoute: (route) =>
             ref.read(pendingNotificationRouteProvider.notifier).state = route));
 
@@ -28,7 +33,12 @@ class ReminderNotice {
 }
 
 class ReminderScheduler {
-  ReminderScheduler({required this.onRoute});
+  ReminderScheduler(
+      {required this.onRoute, AppLocalizations Function()? localizations})
+      : _localizations =
+            localizations ?? (() => lookupAppLocalizations(const Locale('vi')));
+  final AppLocalizations Function() _localizations;
+  AppLocalizations get strings => _localizations();
   final void Function(String) onRoute;
   final plugin = FlutterLocalNotificationsPlugin();
   Future<void>? _ready;
@@ -95,7 +105,7 @@ class ReminderScheduler {
           scheduledDate: tz.TZDateTime.from(n.date, tz.local),
           notificationDetails: NotificationDetails(
               android: AndroidNotificationDetails(
-                  'reminders_$group', 'Nhắc nhở $group'),
+                  'reminders_$group', strings.notificationChannel),
               iOS: const DarwinNotificationDetails()),
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
           matchDateTimeComponents: group == 'diary'
@@ -118,7 +128,7 @@ class ReminderScheduler {
           for (final before in [1, 0]) {
             notices.add(ReminderNotice(
                 '${p.occurrenceId(date)}:$before',
-                'Khoản phải trả',
+                strings.payables,
                 p.title,
                 DateTime(date.year, date.month, date.day - before, 8),
                 '/payables'));
@@ -141,8 +151,8 @@ class ReminderScheduler {
       if (prefs.getBool('reminder_diary') ?? false)
         ReminderNotice(
             'daily',
-            'Ghi chép hôm nay',
-            'Dành một phút ghi lại thu chi hôm nay.',
+            strings.diaryNoticeTitle,
+            strings.diaryNoticeBody,
             today.isAfter(now)
                 ? today
                 : DateTime(now.year, now.month, now.day + 1, hour, minute),
@@ -152,8 +162,8 @@ class ReminderScheduler {
       if (prefs.getBool('reminder_report') ?? true)
         ReminderNotice(
             'monthly',
-            'Báo cáo tháng',
-            'Xem lại thu chi tháng vừa qua.',
+            strings.monthlyReport,
+            strings.reportNoticeBody,
             first.isAfter(now)
                 ? first
                 : DateTime(now.year, now.month + 1, 1, 8),

@@ -1,8 +1,11 @@
+import '../../../core/utils/debt_labels.dart';
+import '../../../core/utils/localized_format.dart';
+import '../../../core/theme/semantic_colors.dart';
+import '../../../l10n/app_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/error_messages.dart';
 import '../../../core/widgets/glass.dart';
 import '../../home/providers/home_providers.dart';
@@ -13,16 +16,19 @@ import 'debt_actions.dart';
 import 'debt_payment_sheet.dart';
 import 'debts_tab.dart';
 
-String debtStatus(DebtModel debt, DateTime vietnamToday) {
-  if (debt.isSettled || debt.remaining <= 0) return 'Đã tất toán';
+String debtStatus(DebtModel debt, DateTime vietnamToday,
+    {BuildContext? context}) {
+  if (debt.isSettled || debt.remaining <= 0)
+    return appL10n(context).msgSettled238;
   final days = debt.daysUntilDue(vietnamToday);
-  if (days != null && days < 0) return 'Quá hạn';
-  if (days == 0) return 'Đến hạn hôm nay';
-  if (days != null && days <= 3) return 'Sắp đến hạn';
-  return 'Đang còn nợ';
+  if (days != null && days < 0) return appL10n(context).msgOverdue269;
+  if (days == 0) return appL10n(context).msgDueToday270;
+  if (days != null && days <= 3) return appL10n(context).msgDueSoon271;
+  return appL10n(context).msgOutstanding272;
 }
 
-String _money(num value) => CurrencyFormatter.formatVND(value);
+String _money(num value, {BuildContext? context}) =>
+    formatMoney(context, value);
 
 class DebtHistoryScreen extends ConsumerStatefulWidget {
   const DebtHistoryScreen({super.key, required this.debt});
@@ -41,19 +47,24 @@ class _DebtHistoryScreenState extends ConsumerState<DebtHistoryScreen> {
         context: context,
         builder: (context) => AlertDialog(
                 icon: const TintedIcon(Icons.history, color: Colors.orange),
-                title: const Text('Hoàn tác lần trả nợ'),
-                content: Text(
-                    'Hoàn tác ${_money(row['amount'] as num)} (${paymentDate(row['paid_at'])})? '
-                    'Khoản nợ còn lại sẽ tăng tương ứng.${linked ? ' Khoản thu/chi liên kết sẽ được xóa và số dư nguồn tiền được cập nhật.' : ' Không thay đổi thu/chi.'}'),
+                title: Text(appL10n(context).msgUndoDebtPayment273),
+                content: Text(appL10n(context)
+                    .msgUndoTheOutstandingDebtWillIncrease274(
+                        (_money(row['amount'] as num, context: context))
+                            .toString(),
+                        (paymentDate(row['paid_at'])).toString(),
+                        (linked
+                            ? appL10n(context).undoLinkedEffect
+                            : appL10n(context).undoNoCashEffect))),
                 actions: [
                   TextButton(
                       onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Hủy')),
+                      child: Text(appL10n(context).msgCancel275)),
                   FilledButton(
                       style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.error),
+                          backgroundColor: appPalette(context).error),
                       onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Hoàn tác'))
+                      child: Text(appL10n(context).msgUndo276))
                 ]));
     if (accepted != true || !mounted) return;
     setState(() => _undoBusy = true);
@@ -65,8 +76,8 @@ class _DebtHistoryScreenState extends ConsumerState<DebtHistoryScreen> {
       await ref.refreshDebts();
     } catch (e) {
       if (mounted)
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(friendlyError(e))));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(friendlyError(e, context: context))));
     } finally {
       if (mounted) setState(() => _undoBusy = false);
     }
@@ -86,9 +97,9 @@ class _DebtHistoryScreenState extends ConsumerState<DebtHistoryScreen> {
     final borrow = debt.type == DebtType.borrow;
     return Scaffold(
       extendBody: true,
-      appBar: AppBar(title: const Text('Chi tiết khoản nợ'), actions: [
+      appBar: AppBar(title: Text(appL10n(context).msgDebtDetails277), actions: [
         IconButton(
-            tooltip: 'Chỉnh sửa khoản nợ',
+            tooltip: appL10n(context).msgEditDebtInformation278,
             icon: const Icon(Icons.edit_outlined),
             onPressed: () => showDebtForm(context, initial: debt))
       ]),
@@ -100,12 +111,12 @@ class _DebtHistoryScreenState extends ConsumerState<DebtHistoryScreen> {
                   radius: 22,
                   child: EmeraldButton(
                       label: _undoBusy
-                          ? 'Đang hoàn tác…'
+                          ? appL10n(context).msgUndoing279
                           : settled
-                              ? 'Đã tất toán'
+                              ? appL10n(context).msgSettled238
                               : borrow
-                                  ? 'Ghi trả nợ'
-                                  : 'Ghi thu nợ',
+                                  ? appL10n(context).msgRecordRepayment280
+                                  : appL10n(context).msgRecordCollection281,
                       icon: settled
                           ? Icons.check_circle_outline
                           : Icons.add_circle_outline,
@@ -124,38 +135,49 @@ class _DebtHistoryScreenState extends ConsumerState<DebtHistoryScreen> {
                 spacing: 12,
                 children: [
                   Text(
-                      'Lịch sử ${borrow ? 'trả' : 'thu'} nợ • ${history.valueOrNull?.length ?? 0} lần',
+                      (borrow
+                          ? appL10n(context).repaymentHistory(
+                              history.valueOrNull?.length ?? 0)
+                          : appL10n(context).collectionHistory(
+                              history.valueOrNull?.length ?? 0)),
                       style: const TextStyle(
                           fontWeight: FontWeight.w800, fontSize: 16)),
                   DropdownButton<bool>(
                       value: _newest,
                       underline: const SizedBox.shrink(),
-                      items: const [
-                        DropdownMenuItem(value: true, child: Text('Mới nhất')),
-                        DropdownMenuItem(value: false, child: Text('Cũ nhất'))
+                      items: [
+                        DropdownMenuItem(
+                            value: true,
+                            child: Text(appL10n(context).msgNewest283)),
+                        DropdownMenuItem(
+                            value: false,
+                            child: Text(appL10n(context).msgOldest284))
                       ],
                       onChanged: (v) => setState(() => _newest = v ?? true)),
                 ]),
             if (_undoBusy) const LinearProgressIndicator(),
             history.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () =>
+                    const Center(child: const CircularProgressIndicator()),
                 error: (e, _) => GlassCard(
                     padding: const EdgeInsets.all(20),
                     child: Column(children: [
-                      Text(friendlyError(e)),
+                      Text(friendlyError(e, context: context)),
                       TextButton(
                           onPressed: () =>
                               ref.invalidate(debtHistoryProvider(debt.id!)),
-                          child: const Text('Thử lại'))
+                          child: Text(appL10n(context).msgRetry50))
                     ])),
                 data: (rows) => rows.isEmpty
-                    ? const GlassCard(
-                        padding: EdgeInsets.all(24),
+                    ? GlassCard(
+                        padding: const EdgeInsets.all(24),
                         child: Column(children: [
-                          TintedIcon(Icons.receipt_long_outlined),
-                          SizedBox(height: 12),
-                          Text('Chưa có lịch sử thanh toán'),
-                          Text('Mỗi lần ghi nhận sẽ xuất hiện tại đây.',
+                          const TintedIcon(Icons.receipt_long_outlined),
+                          const SizedBox(height: 12),
+                          Text(appL10n(context).msgNoPaymentHistoryYet285),
+                          Text(
+                              appL10n(context)
+                                  .msgEachPaymentYouRecordWillAppear286,
                               textAlign: TextAlign.center)
                         ]))
                     : Column(children: [
@@ -171,15 +193,17 @@ class _DebtHistoryScreenState extends ConsumerState<DebtHistoryScreen> {
                                           height: 10,
                                           margin: const EdgeInsets.fromLTRB(
                                               0, 24, 10, 0),
-                                          decoration: const BoxDecoration(
-                                              color: AppColors.primary,
+                                          decoration: BoxDecoration(
+                                              color:
+                                                  appPalette(context).primary,
                                               shape: BoxShape.circle)),
                                       Container(
                                           width: 2,
                                           height: 96,
                                           margin:
                                               const EdgeInsets.only(right: 10),
-                                          color: AppColors.primary
+                                          color: appPalette(context)
+                                              .primary
                                               .withValues(alpha: .12))
                                     ]),
                                     Expanded(
@@ -211,9 +235,11 @@ class _DebtHistoryScreenState extends ConsumerState<DebtHistoryScreen> {
                                                                         .start,
                                                                 children: [
                                                               Text(
-                                                                  _money(row[
-                                                                          'amount']
-                                                                      as num),
+                                                                  _money(
+                                                                      row['amount']
+                                                                          as num,
+                                                                      context:
+                                                                          context),
                                                                   style: const TextStyle(
                                                                       fontWeight:
                                                                           FontWeight
@@ -225,16 +251,18 @@ class _DebtHistoryScreenState extends ConsumerState<DebtHistoryScreen> {
                                                               Text(
                                                                   paymentDate(row[
                                                                       'paid_at']),
-                                                                  style: const TextStyle(
+                                                                  style: TextStyle(
                                                                       fontSize:
                                                                           12,
-                                                                      color: AppColors
+                                                                      color: appPalette(
+                                                                              context)
                                                                           .onSurfaceVariant))
                                                             ])),
                                                         PopupMenuButton<String>(
                                                             enabled: !_undoBusy,
-                                                            tooltip:
-                                                                'Thao tác lần thanh toán',
+                                                            tooltip: appL10n(
+                                                                    context)
+                                                                .msgPaymentActions287,
                                                             onSelected: (v) => v ==
                                                                     'undo'
                                                                 ? _undo(row)
@@ -245,31 +273,39 @@ class _DebtHistoryScreenState extends ConsumerState<DebtHistoryScreen> {
                                                                     payment:
                                                                         row),
                                                             itemBuilder:
-                                                                (_) => const [
+                                                                (_) => [
                                                                       PopupMenuItem(
                                                                           value:
                                                                               'edit',
                                                                           child:
-                                                                              Text('Chỉnh sửa')),
+                                                                              Text(appL10n(context).msgEdit288)),
                                                                       PopupMenuItem(
                                                                           value:
                                                                               'undo',
                                                                           child:
-                                                                              Text('Hoàn tác'))
+                                                                              Text(appL10n(context).msgUndo276))
                                                                     ]),
                                                       ]),
                                                   const SizedBox(height: 10),
                                                   _Badge(
                                                       row['is_legacy'] == true
-                                                          ? 'Số tiền trước nâng cấp'
+                                                          ? appL10n(context)
+                                                              .msgPaidBeforeTheUpgrade289
                                                           : row['record_transaction'] ==
                                                                   true
-                                                              ? 'Đã ghi khoản ${borrow ? 'chi' : 'thu'}'
-                                                              : 'Chỉ ghi nhận',
+                                                              ? (borrow
+                                                                  ? appL10n(context)
+                                                                      .recordExpense
+                                                                  : appL10n(
+                                                                          context)
+                                                                      .recordIncome)
+                                                              : appL10n(context)
+                                                                  .msgRecordOnly291,
                                                       color:
                                                           row['record_transaction'] ==
                                                                   true
-                                                              ? AppColors
+                                                              ? appPalette(
+                                                                      context)
                                                                   .primary
                                                               : const Color(
                                                                   0xFF6366D9)),
@@ -286,12 +322,14 @@ class _DebtHistoryScreenState extends ConsumerState<DebtHistoryScreen> {
                                                                         row[
                                                                             'wallet_id'])
                                                                     .map((w) =>
-                                                                        '${w['name']}${w['is_archived'] == true ? ' · Đã lưu trữ' : ''}')
+                                                                        '${w['name']}${w['is_archived'] == true ? appL10n(context).archivedSuffix : ''}')
                                                                     .firstOrNull ??
-                                                                'Nguồn tiền không còn hoạt động',
-                                                            style: const TextStyle(
+                                                                appL10n(context)
+                                                                    .msgMoneySourceNoLongerAvailable292,
+                                                            style: TextStyle(
                                                                 fontSize: 12,
-                                                                color: AppColors
+                                                                color: appPalette(
+                                                                        context)
                                                                     .onSurfaceVariant))),
                                                   if ('${row['note'] ?? ''}'
                                                       .isNotEmpty)
@@ -302,15 +340,17 @@ class _DebtHistoryScreenState extends ConsumerState<DebtHistoryScreen> {
                                                         child: Text(
                                                             '${row['note']}')),
                                                   if (row['is_legacy'] == true)
-                                                    const Padding(
+                                                    Padding(
                                                         padding:
-                                                            EdgeInsets.only(
-                                                                top: 6),
+                                                            const EdgeInsets
+                                                                .only(top: 6),
                                                         child: Text(
-                                                            'Tổng đã trả trước nâng cấp, không có chi tiết từng lần.',
+                                                            appL10n(context)
+                                                                .msgTotalPaidBeforeTheUpgradeIndividual293,
                                                             style: TextStyle(
                                                                 fontSize: 12,
-                                                                color: AppColors
+                                                                color: appPalette(
+                                                                        context)
                                                                     .onSurfaceVariant))),
                                                 ]))),
                                   ])),
@@ -341,12 +381,13 @@ class _DebtSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final now = vietnamTime(DateTime.now());
-    final status = debtStatus(debt, now);
+    final status = debtStatus(debt, now, context: context);
+    final days = debt.daysUntilDue(now);
     final ratio = debt.amount <= 0
         ? 0.0
         : (debt.paidAmount / debt.amount).clamp(0.0, 1.0);
     final borrow = debt.type == DebtType.borrow;
-    final urgent = status == 'Quá hạn' || status == 'Đến hạn hôm nay';
+    final urgent = debt.remaining > 0 && days != null && days <= 0;
     return GlassCard(
         padding: const EdgeInsets.all(18),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -357,8 +398,8 @@ class _DebtSummary extends StatelessWidget {
                 child: Text(
                     debt.personName.characters.firstOrNull?.toUpperCase() ??
                         '?',
-                    style: const TextStyle(
-                        color: AppColors.primary,
+                    style: TextStyle(
+                        color: appPalette(context).primary,
                         fontWeight: FontWeight.w800))),
             const SizedBox(width: 12),
             Expanded(
@@ -368,29 +409,38 @@ class _DebtSummary extends StatelessWidget {
                   Text(debt.personName,
                       style: const TextStyle(
                           fontSize: 19, fontWeight: FontWeight.w800)),
-                  Text(borrow ? 'Tôi đang nợ' : 'Người này nợ tôi',
-                      style: const TextStyle(
-                          color: AppColors.onSurfaceVariant, fontSize: 12)),
+                  Text(
+                      borrow
+                          ? appL10n(context).msgIOweMoney231
+                          : appL10n(context).msgThisPersonOwesMe294,
+                      style: TextStyle(
+                          color: appPalette(context).onSurfaceVariant,
+                          fontSize: 12)),
                 ])),
           ]),
           const SizedBox(height: 12),
           _Badge(status,
               color: urgent
-                  ? AppColors.error
-                  : status == 'Sắp đến hạn'
+                  ? appPalette(context).error
+                  : debt.remaining > 0 && days != null && days > 0 && days <= 3
                       ? Colors.orange.shade800
-                      : AppColors.primary),
+                      : appPalette(context).primary),
           const SizedBox(height: 18),
-          const Text('Còn lại', style: TextStyle(fontSize: 12)),
-          Text(_money(debt.remaining),
-              style: const TextStyle(
+          Text(appL10n(context).msgRemaining295,
+              style: const TextStyle(fontSize: 12)),
+          Text(_money(debt.remaining, context: context),
+              style: TextStyle(
                   fontSize: 29,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF006657))),
+                  color: appPalette(context).primary)),
           const SizedBox(height: 14),
           Wrap(spacing: 32, runSpacing: 12, children: [
-            _Amount('Tổng nợ', debt.amount),
-            _Amount(borrow ? 'Đã trả' : 'Đã thu', debt.paidAmount)
+            _Amount(appL10n(context).msgTotalDebt296, debt.amount),
+            _Amount(
+                borrow
+                    ? appL10n(context).msgPaid184
+                    : appL10n(context).msgCollected297,
+                debt.paidAmount)
           ]),
           const SizedBox(height: 14),
           ClipRRect(
@@ -398,19 +448,23 @@ class _DebtSummary extends StatelessWidget {
               child: LinearProgressIndicator(
                   value: ratio,
                   minHeight: 8,
-                  backgroundColor: const Color(0xFFE7ECEF))),
+                  backgroundColor:
+                      adaptiveSurface(context, const Color(0xFFE7ECEF)))),
           const SizedBox(height: 8),
           Wrap(alignment: WrapAlignment.spaceBetween, spacing: 12, children: [
             Text(
-                '${borrow ? 'Đã trả' : 'Đã thu'} ${NumberFormat('0.0', 'vi').format(ratio * 100)}%',
-                style: const TextStyle(
+                '${borrow ? appL10n(context).msgPaid184 : appL10n(context).msgCollected297} ${NumberFormat('0.0', appL10n(context).localeName).format(ratio * 100)}%',
+                style: TextStyle(
                     fontSize: 11,
-                    color: AppColors.primary,
+                    color: appPalette(context).primary,
                     fontWeight: FontWeight.w700)),
             Text(
-                'Còn lại ${NumberFormat('0.0', 'vi').format((1 - ratio) * 100)}%',
-                style: const TextStyle(
-                    fontSize: 11, color: AppColors.onSurfaceVariant))
+                appL10n(context).msgRemaining298(
+                    (NumberFormat('0.0', appL10n(context).localeName)
+                            .format((1 - ratio) * 100))
+                        .toString()),
+                style: TextStyle(
+                    fontSize: 11, color: appPalette(context).onSurfaceVariant))
           ]),
           const SizedBox(height: 16),
           Wrap(
@@ -420,14 +474,16 @@ class _DebtSummary extends StatelessWidget {
               children: [
                 const Icon(Icons.calendar_month_outlined, size: 20),
                 Text(debt.dueDate == null
-                    ? 'Chưa đặt hạn'
-                    : 'Hạn ${DateFormat('dd/MM/yyyy').format(debt.dueDate!)}'),
+                    ? appL10n(context).msgNoDueDate299
+                    : appL10n(context).msgDue300(
+                        (DateFormat('dd/MM/yyyy').format(debt.dueDate!))
+                            .toString())),
                 if (debt.dueDate != null && debt.remaining > 0)
-                  Text(debt.dueLabel(now)!,
+                  Text(debtDueLabel(context, debt, now)!,
                       style: TextStyle(
                           color: urgent
-                              ? AppColors.error
-                              : AppColors.onSurfaceVariant,
+                              ? appPalette(context).error
+                              : appPalette(context).onSurfaceVariant,
                           fontSize: 12)),
               ]),
           if (debt.note?.trim().isNotEmpty == true)
@@ -436,14 +492,15 @@ class _DebtSummary extends StatelessWidget {
                 margin: const EdgeInsets.only(top: 14),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                    color: const Color(0xFFF0F4F5),
+                    color: adaptiveSurface(context, const Color(0xFFF0F4F5)),
                     borderRadius: BorderRadius.circular(14)),
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Ghi chú',
+                      Text(appL10n(context).msgNote24,
                           style: TextStyle(
-                              fontSize: 11, color: AppColors.onSurfaceVariant)),
+                              fontSize: 11,
+                              color: appPalette(context).onSurfaceVariant)),
                       const SizedBox(height: 4),
                       Text(debt.note!)
                     ])),
@@ -459,9 +516,10 @@ class _Amount extends StatelessWidget {
   Widget build(BuildContext context) =>
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label,
-            style: const TextStyle(
-                color: AppColors.onSurfaceVariant, fontSize: 12)),
+            style: TextStyle(
+                color: appPalette(context).onSurfaceVariant, fontSize: 12)),
         const SizedBox(height: 4),
-        Text(_money(value), style: const TextStyle(fontWeight: FontWeight.w700))
+        Text(_money(value, context: context),
+            style: const TextStyle(fontWeight: FontWeight.w700))
       ]);
 }

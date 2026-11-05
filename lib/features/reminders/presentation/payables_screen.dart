@@ -1,8 +1,9 @@
+import '../../../core/utils/localized_format.dart';
+import '../../../l10n/app_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/offline/local_store.dart';
 import '../../../core/utils/id_generator.dart';
-import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/error_messages.dart';
 import '../../../core/widgets/form_sheet.dart';
 import '../../home/providers/home_providers.dart';
@@ -19,18 +20,18 @@ class PayablesScreen extends ConsumerWidget {
     final record = await showDialog<bool>(
         context: context,
         builder: (context) => SimpleDialog(
-              title: Text(
-                  'Xác nhận đã trả ${CurrencyFormatter.formatVND(p.amount)}'),
+              title: Text(appL10n(context).msgConfirmPaymentOf395(
+                  (formatMoney(context, p.amount)).toString())),
               children: [
                 SimpleDialogOption(
                     onPressed: () => Navigator.pop(context, false),
-                    child: const Text('Chỉ đánh dấu đã trả')),
+                    child: Text(appL10n(context).msgOnlyMarkAsPaid396)),
                 SimpleDialogOption(
                     onPressed: () => Navigator.pop(context, true),
-                    child: const Text('Ghi khoản chi')),
+                    child: Text(appL10n(context).msgRecordExpense397)),
                 SimpleDialogOption(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('Huỷ')),
+                    child: Text(appL10n(context).msgCancel42)),
               ],
             ));
     if (record == null || !context.mounted) return;
@@ -45,7 +46,7 @@ class PayablesScreen extends ConsumerWidget {
           ));
       if (draft == null || !context.mounted) return;
       if (draft.type != TransactionType.expense) {
-        showToast(context, 'Vui lòng chọn khoản chi cho khoản phải trả');
+        showToast(context, appL10n(context).msgSelectAnExpenseForThisBill398);
         return;
       }
     }
@@ -56,7 +57,8 @@ class PayablesScreen extends ConsumerWidget {
       ref.invalidate(payablePaymentsProvider);
       ref.refreshWalletData();
     } catch (e) {
-      if (context.mounted) showToast(context, friendlyError(e));
+      if (context.mounted)
+        showToast(context, friendlyError(e, context: context));
     }
   }
 
@@ -82,16 +84,19 @@ class PayablesScreen extends ConsumerWidget {
     ref.listen(payablesProvider, (_, next) => sync());
     ref.listen(payablePaymentsProvider, (_, next) => sync());
     return Scaffold(
-        appBar: AppBar(title: const Text('Khoản phải trả')),
+        appBar: AppBar(title: Text(appL10n(context).payables)),
         floatingActionButton: FloatingActionButton(
             onPressed: () => showFormSheet<void>(context, const _PayableForm()),
             child: const Icon(Icons.add)),
         body: payables.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text(friendlyError(e))),
+          loading: () => const Center(child: const CircularProgressIndicator()),
+          error: (e, _) =>
+              Center(child: Text(friendlyError(e, context: context))),
           data: (items) => payments.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text(friendlyError(e))),
+              loading: () =>
+                  const Center(child: const CircularProgressIndicator()),
+              error: (e, _) =>
+                  Center(child: Text(friendlyError(e, context: context))),
               data: (paid) {
                 final ids = paid
                     .where((r) => r['status'] == 'paid')
@@ -101,18 +106,17 @@ class PayablesScreen extends ConsumerWidget {
                 return ListView(
                     padding: const EdgeInsets.only(bottom: 90),
                     children: [
-                      const ListTile(
-                          subtitle: Text(
-                              'Lịch nhắc không tự tạo khoản chi. Bạn xác nhận từng lần thanh toán.')),
+                      ListTile(
+                          subtitle: Text(appL10n(context)
+                              .msgRemindersDoNotCreateExpensesAutomatically399)),
                       if (items.isEmpty)
-                        const ListTile(
-                            title:
-                                Text('Chưa có khoản phải trả. Bấm + để thêm.')),
+                        ListTile(
+                            title: Text(
+                                appL10n(context).msgNoBillsYetTapToAdd400)),
                       for (final p in items.where((p) => p.active)) ...[
                         ListTile(
                             title: Text(p.title),
-                            subtitle:
-                                Text(CurrencyFormatter.formatVND(p.amount)),
+                            subtitle: Text(formatMoney(context, p.amount)),
                             trailing: IconButton(
                                 icon: const Icon(Icons.edit),
                                 onPressed: () => showFormSheet<void>(
@@ -121,11 +125,12 @@ class PayablesScreen extends ConsumerWidget {
                           ListTile(
                             title: Text(payableDateKey(date)),
                             trailing: ids.contains(p.occurrenceId(date))
-                                ? const Text('Đã trả')
+                                ? Text(appL10n(context).msgPaid184)
                                 : TextButton(
                                     onPressed: () =>
                                         _pay(context, ref, p, date),
-                                    child: const Text('Đánh dấu đã trả')),
+                                    child: Text(
+                                        appL10n(context).msgMarkAsPaid401)),
                           ),
                       ],
                     ]);
@@ -161,12 +166,12 @@ class _PayableFormState extends ConsumerState<_PayableForm> {
 
   @override
   Widget build(BuildContext context) => FormSheet(
-          title: 'Khoản phải trả',
-          submitLabel: 'Lưu',
+          title: appL10n(context).payables,
+          submitLabel: appL10n(context).msgSave43,
           busy: busy,
           onSubmit: () async {
             if (title.text.trim().isEmpty || MoneyField.valueOf(amount) <= 0) {
-              showToast(context, 'Nhập tên và số tiền lớn hơn 0');
+              showToast(context, appL10n(context).msgEnterANameAndAnAmount402);
               return;
             }
             final store = ref.read(localStoreProvider);
@@ -187,7 +192,8 @@ class _PayableFormState extends ConsumerState<_PayableForm> {
               ref.invalidate(payablesProvider);
               if (context.mounted) Navigator.pop(context);
             } catch (e) {
-              if (context.mounted) showToast(context, friendlyError(e));
+              if (context.mounted)
+                showToast(context, friendlyError(e, context: context));
             } finally {
               if (mounted) setState(() => busy = false);
             }
@@ -195,35 +201,37 @@ class _PayableFormState extends ConsumerState<_PayableForm> {
           children: [
             TextField(
                 controller: title,
-                decoration:
-                    const InputDecoration(labelText: 'Tên khoản phải trả')),
-            MoneyField(controller: amount, label: 'Số tiền'),
+                decoration: InputDecoration(
+                    labelText: appL10n(context).msgBillName403)),
+            MoneyField(controller: amount, label: appL10n(context).msgAmount26),
             TextField(
                 controller: note,
                 maxLength: 255,
                 maxLines: 3,
-                decoration:
-                    const InputDecoration(labelText: 'Ghi chú (tuỳ chọn)')),
+                decoration: InputDecoration(
+                    labelText: appL10n(context).msgNoteOptional255)),
             DatePickerTile(
-                label: 'Ngày bắt đầu',
+                label: appL10n(context).msgStartDate404,
                 value: date,
                 onChanged: (v) {
                   if (v != null) setState(() => date = v);
                 }),
             DropdownButtonFormField<PayableFrequency>(
                 value: frequency,
-                items: const [
+                items: [
                   DropdownMenuItem(
-                      value: PayableFrequency.once, child: Text('Một lần')),
+                      value: PayableFrequency.once,
+                      child: Text(appL10n(context).msgOnce405)),
                   DropdownMenuItem(
-                      value: PayableFrequency.weekly, child: Text('Hàng tuần')),
+                      value: PayableFrequency.weekly,
+                      child: Text(appL10n(context).msgWeekly406)),
                   DropdownMenuItem(
                       value: PayableFrequency.monthly,
-                      child: Text('Hàng tháng'))
+                      child: Text(appL10n(context).msgMonthly407))
                 ],
                 onChanged: (v) => setState(() => frequency = v!)),
             SwitchListTile(
-                title: const Text('Đang hoạt động'),
+                title: Text(appL10n(context).msgActive408),
                 value: active,
                 onChanged: (v) => setState(() => active = v)),
           ]);

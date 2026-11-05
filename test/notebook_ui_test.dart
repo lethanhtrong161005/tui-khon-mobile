@@ -73,10 +73,13 @@ void main() {
   Future<void> pump(WidgetTester tester,
       {Widget home = const HomeScreen(),
       double width = 390,
-      double scale = 1}) async {
-    tester.view.physicalSize = Size(width, 844);
+      double height = 844,
+      double scale = 1,
+      FakeViewPadding padding =
+          const FakeViewPadding(top: 28, bottom: 16)}) async {
+    tester.view.physicalSize = Size(width, height);
     tester.view.devicePixelRatio = 1;
-    tester.view.padding = const FakeViewPadding(top: 28, bottom: 16);
+    tester.view.padding = padding;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(RepaintBoundary(
         key: boundary,
@@ -196,6 +199,34 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
+
+  for (final size in [
+    const Size(320, 568),
+    const Size(390, 844),
+    const Size(411, 914),
+    const Size(844, 390),
+    const Size(768, 1024),
+    const Size(1024, 768)
+  ]) {
+    testWidgets('safe insets and navigation ${size.width}x${size.height}',
+        (tester) async {
+      await pump(tester,
+          width: size.width,
+          height: size.height,
+          scale: 1.4,
+          padding:
+              const FakeViewPadding(top: 44, bottom: 34, left: 24, right: 24));
+      final add = tester.getRect(find.byTooltip('Mở menu thêm'));
+      expect(add.bottom, lessThanOrEqualTo(size.height - 34));
+      final greeting = tester.getRect(find.text('Hoàng Phúc'));
+      expect(greeting.top, greaterThanOrEqualTo(44));
+      expect(greeting.left, greaterThanOrEqualTo(24));
+      await tester.tap(find.byTooltip('Mở menu thêm'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    });
+  }
 
   test('statistics includes more than 500 rows and groups by category ID',
       () async {
