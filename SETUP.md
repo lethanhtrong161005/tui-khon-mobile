@@ -86,6 +86,7 @@ Cài dependencies và test không cần backend:
 
 ```sh
 flutter pub get
+flutter gen-l10n
 flutter test
 ```
 
@@ -226,11 +227,11 @@ Trong Dashboard → **Authentication** (tên menu con có thể đổi):
 
 1. **Sign In / Providers → Email:** bật đăng ký email và **Confirm email**.
 2. Đặt email OTP **6 chữ số**, hết hạn **600 giây**, thời gian chờ gửi lại tối thiểu 60 giây.
-3. **Emails → Templates:** dùng `supabase/templates/confirmation.html` cho Confirm signup và `supabase/templates/recovery.html` cho Reset password. Giữ `{{ .Token }}` để gửi mã; app không dùng flow bấm magic link.
-4. **Emails → SMTP Settings / Custom SMTP:** nhập sender email/name, SMTP host/port/username/password từ nhà cung cấp; xác minh domain/sender theo yêu cầu của họ. Có thể dùng SMTP của dịch vụ như Resend.
+3. **Emails → SMTP Settings / Custom SMTP:** nhập sender email/name, SMTP host/port/username/password từ nhà cung cấp; xác minh domain/sender theo yêu cầu của họ. Có thể dùng SMTP của dịch vụ như Resend.
+4. **Emails → Templates:** sau khi có SMTP riêng, dùng `supabase/templates/confirmation.html` cho Confirm signup và `supabase/templates/recovery.html` cho Reset password. Giữ `{{ .Token }}` để gửi mã; app nhập OTP 6 số.
 5. Thử gửi tới email người test truy cập được; kiểm tra Spam, sandbox/allowed recipients của nhà cung cấp và Auth/email logs.
 
-SMTP mặc định có hạn chế gửi/người nhận; cấu hình SMTP riêng để nhóm test email thật. Thông tin SMTP chỉ ở Dashboard/server, không thêm vào env Flutter. [Tài liệu SMTP Supabase](https://supabase.com/docs/guides/auth/auth-smtp).
+SMTP mặc định chỉ gửi cho email thành viên quản trị organization và giới hạn khoảng 2 email/giờ. Tại thời điểm kiểm tra 30/10/2026, Dashboard khóa sửa mẫu email trên Free khi chưa có SMTP riêng; mẫu đăng ký mặc định gửi **link xác nhận**, không gửi mã cho màn OTP của app. Có thể thử đăng ký với email quản trị, bấm link trong email rồi quay lại màn Đăng nhập; đây chưa phải nghiệm thu luồng OTP. Cần SMTP riêng để test đầy đủ OTP đăng ký và khôi phục mật khẩu, cũng như gửi cho người dùng ngoài nhóm quản trị. Thông tin SMTP chỉ ở Dashboard/server, không thêm vào env Flutter. [Tài liệu SMTP Supabase](https://supabase.com/docs/guides/auth/auth-smtp).
 
 ### 4.4. Secrets Gemini và Edge Functions
 
@@ -526,6 +527,7 @@ Thay email trước khi chạy. Helper nạp giao dịch, nguồn tiền, ngân 
 | `401` / invalid API key | URL và publishable key phải cùng project/môi trường; không dùng secret/service-role. |
 | Emulator không gọi được local | Android `10.0.2.2`, iOS Simulator `127.0.0.1`; kiểm tra cổng/backend. Máy thật dùng cloud hoặc LAN phù hợp. |
 | OTP cloud không tới | Confirm email, SMTP/sender/domain, sandbox người nhận, Spam và Auth/email logs; template giữ `{{ .Token }}`. |
+| Email cloud chỉ có link, không có mã 6 số | Free + email mặc định chưa cho sửa template. Cấu hình SMTP riêng rồi dùng hai template trong repo; xem mục 4.3. |
 | OTP local không tới email thật | Xem Mailpit từ `supabase status`; local không gửi ra hộp thư thật. |
 | Google chưa cấu hình/`DEVELOPER_ERROR`/ID token bị từ chối | Web server client ID, package/SHA-1 của bản ký, bundle/URL scheme, test users, Supabase accepted IDs; không dùng dummy. |
 | AI fallback/chưa cấu hình | Kiểm tra key ở server đúng môi trường, Functions deploy/serve, quota/model và log; không thêm Gemini key vào Flutter. |
@@ -586,3 +588,75 @@ node supabase/tests/run-debt-concurrency.cjs
 
 Lệnh Node cuối chỉ chạy khi Docker/Supabase local đang bật. Các bộ SQL trong
 `supabase/tests` dùng cơ sở dữ liệu tạm hoặc tài khoản thử được dọn sau kiểm thử.
+
+<a id="giao-dien-va-i18n"></a>
+
+## Giao diện và i18n Việt–Anh
+
+Không cần key, backend hoặc migration mới cho theme/ngôn ngữ. Cài Flutter 3.47.7
+(Dart 3.13) như phần công cụ, giữ `pubspec.lock`, rồi chạy:
+
+```sh
+flutter pub get
+flutter gen-l10n
+flutter analyze --no-fatal-infos
+flutter test
+flutter run --dart-define-from-file=.env.local
+```
+
+- Cá nhân → **Giao diện & Ngôn ngữ** có hai lựa chọn độc lập. Login/Register
+  có nút theme và nút ngôn ngữ ở góc trên, không cần đăng nhập để đổi.
+- Mặc định: theme Theo hệ thống, ngôn ngữ Tiếng Việt. Khi chọn ngôn ngữ Theo hệ thống,
+  `en` dùng Anh, `vi` dùng Việt, ngôn ngữ khác dùng Việt.
+- Lựa chọn được nạp từ SharedPreferences trước UI và lưu theo thiết bị, không theo
+  tài khoản. Đăng xuất không xóa lựa chọn; lỗi lưu giữ lựa chọn cũ và hiện thông báo.
+- Đổi ngôn ngữ lập lại các nhóm nhắc đang bật với cùng ID, giờ và route; không xin
+  quyền lần nữa hoặc bật nhóm đã tắt. Ngày tiền tệ vẫn theo Việt Nam, VND không có lẻ.
+- Ghi chú/tên do người dùng nhập, AI/server, email OTP không được dịch tự động.
+  Mic và ghi nhanh vẫn ưu tiên tiếng Việt kể cả khi giao diện English.
+
+Sửa chuỗi ở `lib/l10n/app_vi.arb` và `app_en.arb`, giữ cùng khóa/placeholder.
+`l10n.yaml` sinh `AppLocalizations` vào `lib/l10n/generated/`; không sửa/commit
+generated. Dùng `appL10n(context)`, placeholder/plural cho câu động, semantic colors
+qua `appPalette(context)`. Không dùng bản dịch làm enum/khóa DB. Quy trình dựa theo
+[gen-l10n của Flutter](https://docs.flutter.dev/ui/internationalization).
+
+Nếu thiếu `AppLocalizations`/file generated, chạy `flutter gen-l10n` tại gốc repo.
+Nếu còn thấy app cũ, dừng phiên Flutter cũ rồi chạy lại lệnh dùng đúng `.env.local`;
+chỉ hot reload không cập nhật dependency, asset hoặc dart-define. Không gỡ app để
+cập nhật: Android dùng `adb install -r build/app/outputs/flutter-apk/app-debug.apk`
+với `-s <device-id>` khi có nhiều emulator để giữ dữ liệu.
+
+Kiểm tra theme/ngôn ngữ bằng `test/appearance_behavior_test.dart` và ma trận màn
+`test/localization_screens_test.dart`: cả hai theme/ngôn ngữ, màn 320/390/411 dp,
+chữ 200%, bàn phím; có test lưu lỗi, thay đổi hệ thống, giữ dữ liệu và lịch nhắc.
+
+## Widget màn hình chính Android và nhập số tiền
+
+- Cài APK cập nhật bằng `adb -s DEVICE_ID install -r build/app/outputs/flutter-apk/app-debug.apk`
+  để giữ SQLite và dữ liệu chưa đồng bộ. Không gỡ app để cập nhật.
+- Nhấn giữ vùng trống trên launcher → Widgets → Túi Khôn → kéo **Túi Khôn — Ghi nhanh**
+  ra màn hình. Mặc định 4×2 ô; có thể thay đổi kích thước, thêm nhiều widget.
+- Ba nút có icon, theo thứ tự **Chi | Quét ảnh | Thu**. Chi/Thu mở form tương ứng;
+  Quét ảnh mở lựa chọn chụp hoặc chọn ảnh hóa đơn. Chọn ảnh không tự lưu giao dịch.
+- Vẫn phải đăng nhập, bootstrap lần đầu và mở khóa sinh trắc nếu đã bật. Ghi tay
+  chạy offline sau bootstrap; AI nhận dạng ảnh cần Gemini server và mạng.
+- Yêu cầu mới đợi form/page đang mở đóng; chạm lặp cùng thao tác đang mở không
+  tạo thêm form. Widget ưu tiên trước nhắc nợ tự động. Đăng xuất/đổi tài khoản hủy
+  yêu cầu cũ. Widget không chứa token, tài khoản, số dư hoặc dữ liệu giao dịch.
+- Theme/ngôn ngữ theo lựa chọn trên thiết bị; nhãn lấy từ ARB Việt–Anh và được lưu
+  native để widget vẫn vẽ khi app không chạy. Widget không chạy sync nền.
+- Các ô số tiền có dấu tách hàng nghìn khi nhập: `65000` → `65.000` (Việt) hoặc
+  `65,000` (Anh). Giá trị lưu luôn `65000` VND nguyên. Các chuỗi dán có số lẻ,
+  số mũ hoặc dạng `65k` trong ô tiền nhập tay bị từ chối để tránh đổi sai giá trị;
+  ghi nhanh bằng câu tự nhiên vẫn có bộ phân tích riêng. CSV giữ nguyên hợp đồng.
+
+Kiểm thử thêm:
+
+```sh
+flutter test test/home_widget_test.dart test/vnd_amount_input_test.dart
+```
+
+Logo mới: `assets/images/tui_khon_logo_v1.png`, PNG nền trong suốt; prompt và nguồn
+công cụ ở `docs/LOGO_PROMPT.md`. Đây là tài sản thiết kế mới, chưa thay icon launcher
+hoặc các asset thương hiệu đang có.

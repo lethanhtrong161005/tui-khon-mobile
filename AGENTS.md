@@ -15,7 +15,10 @@
 - Không commit env thật, key, token, DB/backup hoặc build artifacts. Gemini key
   chỉ nằm ở server; cấu hình Flutter lấy từ `--dart-define-from-file`.
 - Tái sử dụng theme, font đóng gói và widget hiện có; kiểm tra màn nhỏ, chữ lớn,
-  bàn phím và offline khi thay UI. Dark theme/i18n chưa có, xem HANDOFF trước khi thêm.
+  bàn phím và offline khi thay UI. Dùng semantic colors và `appL10n(context)` từ ARB Việt–Anh; xem HANDOFF trước khi mở rộng.
+- Chạy `flutter pub get` và `flutter gen-l10n` sau clone/sửa ARB. Không commit
+  `lib/l10n/generated/`; giữ VND, kỳ Việt Nam, CSV và nội dung người dùng/AI.
+  Theme/ngôn ngữ lưu theo thiết bị; đổi tài khoản không được xóa chúng.
 - Kiểm tra thay đổi bằng `flutter analyze --no-fatal-infos` và `flutter test`;
   khi sửa sync/migration, chạy thêm SQL tests trong `supabase/tests/README.md`.
 - Tôn trọng diff của người dùng. Không tự merge, tạo PR, force-push hoặc viết lại

@@ -23,6 +23,7 @@ Túi Khôn không giữ tiền, liên kết ngân hàng hoặc thực hiện tha
 | Sổ nợ | Vay/cho vay, hạn trả, lịch sử trả từng phần; sửa/hoàn tác cập nhật giao dịch liên kết nếu có |
 | Nhắc nhở | Nhắc ghi chép, hạn nợ, khoản phải trả một lần/tuần/tháng; không tự tạo khoản chi khi đến hạn |
 | Báo cáo & AI | Báo cáo tháng offline, so sánh tháng trước, nhận xét AI có cache; cố vấn 30/90 ngày |
+| Giao diện | Sáng / Tối / Theo hệ thống; Tiếng Việt / English / Theo hệ thống; lưu riêng trên thiết bị |
 | CSV | Xuất toàn bộ/theo bộ lọc; nhập tối đa 10.000 giao dịch có xem trước lỗi/trùng và ánh xạ danh mục/nguồn tiền |
 
 ## Kiến trúc
@@ -67,7 +68,7 @@ git switch --track origin/feature/offline-ai-history
 ```
 
 Nếu nhánh local đã tồn tại, dùng `git switch feature/offline-ai-history`.
-Đọc [context bàn giao](docs/HANDOFF.md) trước khi tiếp tục dark theme/i18n.
+Đọc [context bàn giao](docs/HANDOFF.md) trước khi phát triển tiếp.
 Laptop mới cần dựng backend và env riêng; Git không mang theo tài khoản hoặc DB local.
 
 ### 2. Cài dependencies
@@ -77,6 +78,7 @@ Theo lockfile: **Flutter ≥3.47 / Dart ≥3.13**; môi trường đã kiểm th
 ```sh
 flutter doctor -v
 flutter pub get
+flutter gen-l10n
 flutter test
 ```
 
@@ -150,3 +152,19 @@ flutter test
 [SETUP](SETUP.md#9-kiem-tra-sau-setup) có kiểm thử SQL/Edge Functions và checklist nghiệm thu. DB đã có dữ liệu cần áp migration bổ sung theo [OFFLINE_UPGRADE](docs/OFFLINE_UPGRADE.md); không reset dữ liệu cần giữ. Không commit env đã điền key.
 
 Để test đăng ký/OTP/email mà chưa có project cloud, xem phần **Chạy thử ngay với backend local** cuối [SETUP.md](SETUP.md). Chạy app bằng `.env.local`; OTP xem trong Mailpit. Google và Gemini cần cấu hình riêng trước khi thử thật.
+
+## Giao diện và ngôn ngữ
+
+Trong **Cá nhân → Giao diện & Ngôn ngữ**, chọn Sáng / Tối / Theo hệ thống hoặc
+Tiếng Việt / English / Theo hệ thống. Login và Register có hai nút ở góc trên:
+biểu tượng sáng/tối và biểu tượng dịch. Áp dụng ngay, giữ nội dung form và route.
+Mặc định theme theo hệ thống, ngôn ngữ Tiếng Việt; ngôn ngữ hệ thống khác Việt/Anh
+fallback về Việt. Lựa chọn được giữ khi đăng xuất/đổi tài khoản, dùng được offline.
+
+Giao diện, validation, lỗi local và lịch nhắc local được dịch. Tên danh mục,
+ghi chú, nội dung AI/server và email OTP giữ nguyên. Ghi nhanh/mic ưu tiên tiếng Việt.
+Tiền vẫn là VND nguyên; lịch tài chính theo Việt Nam, CSV giữ hợp đồng cũ.
+
+ARB trong `lib/l10n/` là source; `lib/l10n/generated/` được Git bỏ qua. Sau khi
+clone hoặc sửa ARB, chạy `flutter gen-l10n`. Xem [SETUP](SETUP.md#giao-dien-va-i18n)
+và [HANDOFF](docs/HANDOFF.md#6-giao-dien-va-i18n) để mở rộng.
