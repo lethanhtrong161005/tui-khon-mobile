@@ -426,9 +426,13 @@ Kiểm tra đã chạy:
 - Build thường vẫn có package và SHA-1 cá nhân ban đầu; MainActivity và receiver
   widget trong manifest Team vẫn trỏ đúng class Kotlin.
 
-OAuth Android Team đã điền sẵn package và SHA-1 khóa mới trong Google Console;
-chờ xác nhận tại bước tạo client để hoàn tất đăng ký và bổ sung client vào Supabase.
-Các client hiện tại được giữ nguyên. Gmail thành viên cần được chủ dự án thêm
-vào Test users; không ghi danh sách cá nhân vào Git. Chưa nghiệm thu Google native
-trên máy thành viên hoặc thay trạng thái Gemini; không suy ra chúng đã xong từ
-kết quả build/setup.
+Sau khi người dùng xác nhận, đã tạo OAuth Android **Tui Khon Team Windows debug**
+cho package Team và SHA-1 khóa chung. Client Team đã bổ sung vào Supabase Google
+provider; mở lại form xác nhận đã lưu đủ ba client: Web đứng đầu, Android cá nhân
+và Android Team. Giữ kiểm tra nonce, yêu cầu email và secret Web hiện tại.
+Danh sách client trong `supabase/.env` private được cập nhật; `.env.team`, ZIP,
+khóa ký và APK không thay đổi nên không phải phát lại bộ setup.
+
+Gmail thành viên cần được chủ dự án thêm vào Test users; không ghi danh sách cá
+nhân vào Git. Chưa nghiệm thu Google native trên máy thành viên hoặc thay trạng
+thái Gemini; không suy ra chúng đã xong từ kết quả build/setup hay lưu OAuth.

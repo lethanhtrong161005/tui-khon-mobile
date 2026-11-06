@@ -104,6 +104,11 @@ không khớp OAuth đã đăng ký chung. Chế độ Team từ chối build re
 
 ## 6. Dành cho người giữ cấu hình nhóm
 
+**Trạng thái bộ setup hiện tại:** OAuth Android cho package và khóa Team đã tạo
+và được Supabase chấp nhận. Thành viên dùng nguyên ZIP đã bàn giao; không tạo
+lại client/khóa. Các bước quản trị dưới đây dùng khi đóng gói lại hoặc chủ động
+thay môi trường/khóa; không phải bước setup của từng thành viên.
+
 ```powershell
 .\tool\team.ps1 pack
 ```
