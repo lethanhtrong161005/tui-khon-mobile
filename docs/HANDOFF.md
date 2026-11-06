@@ -1,10 +1,14 @@
-# Context bàn giao Túi Khôn — 28/10/2026
+# Context bàn giao Túi Khôn
+
+Cập nhật mới nhất **07/11/2026**: xem mục 13 về `.env`/bundle Team v2 và kết quả Gemini thật. Các mục trước giữ lịch sử các đợt bàn giao; trạng thái mới nhất được ưu tiên.
 
 ## 1. Đọc trước khi tiếp tục
 
 - Repository: https://github.com/lethanhtrong161005/tui-khon-mobile
-- Nhánh bàn giao: **`feature/offline-ai-history`**. Dùng `git log -1 --oneline`
-  để xác định commit đang làm; không mặc định clone xong là đã ở đúng nhánh.
+- Nhánh bàn giao setup v2: **`codex/shared-env-ai`**, review bằng PR vào `dev`,
+  nền `f4bdd64`. Dùng `git log -1 --oneline` và `git status` để kiểm tra.
+  `feature/offline-ai-history` là nhánh bàn giao ban đầu, không phải hướng dẫn lấy
+  bộ Team v2 mới nhất.
 - Bản bàn giao giữ 9 commit nền trước đó, bổ sung toàn bộ UI, sửa nghiệp vụ trả nợ
   và tài liệu mới. Không merge vào `dev`, chưa tạo PR; không tạo `main` trong đợt này.
 - `feature/supabase-backend` là bản trước offline. Ba nhánh PRM-3, PRM-4 và
@@ -436,3 +440,92 @@ khóa ký và APK không thay đổi nên không phải phát lại bộ setup.
 Gmail thành viên cần được chủ dự án thêm vào Test users; không ghi danh sách cá
 nhân vào Git. Chưa nghiệm thu Google native trên máy thành viên hoặc thay trạng
 thái Gemini; không suy ra chúng đã xong từ kết quả build/setup hay lưu OAuth.
+
+
+## 13. Một `.env` và bộ setup Team v2 — 07/11/2026
+
+Đã triển khai ở nhánh `codex/shared-env-ai`; bàn giao bằng PR vào `dev`, không tự merge.
+Không đổi Flutter business code, API, schema, RPC, package, backend hoặc khóa ký.
+Các hướng dẫn cũ dùng `.env.team` ở mục 12 là lịch sử v1; đường chạy hiện tại
+chỉ dùng **`.env`**. Hướng dẫn duy nhất cho thành viên: [TEAM_SETUP](TEAM_SETUP.md);
+mẫu báo lỗi: [TEAM_BUG_REPORT](TEAM_BUG_REPORT.md).
+
+### Cấu hình và script
+
+- Máy chủ dự án đã nhập chính ZIP v2, dùng cùng bốn biến app với thành viên:
+  `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `GOOGLE_WEB_CLIENT_ID`, `GOOGLE_IOS_CLIENT_ID`.
+  Đã sao lưu nguyên `.env` có các biến Firebase/VietQR cũ trước khi chuẩn hóa;
+  backup ở `.team/backups/`, bị Git bỏ qua. Không đưa các giá trị cũ vào bundle.
+- ZIP private chuẩn nằm tại thư mục `TuiKhon-Team-Private` cạnh checkout:
+  `TuiKhon-Team-Setup.zip`, chứa đúng `.env`, manifest v2, signing properties và JKS.
+  Bản ZIP/manifest/env v1 được giữ trong `backups/` private; env cũ không còn là
+  cấu hình chạy. Không đóng gói Gemini key, OAuth secret hoặc SMTP password.
+- `setup` hỗ trợ cả v1/v2; kiểm tra trước khi ghi, chuyển v1 sang `.env` chuẩn,
+  sao lưu byte gốc và giữ nguyên khóa. Env khác yêu cầu `-ReplaceEnv` rõ ràng;
+  tùy chọn này không cho phép thay signing material. `pack` chỉ dùng khóa có sẵn,
+  không sinh khóa mới. Cùng bundle có thể nhập lại mà không đổi cấu hình.
+- `doctor` khóa chính xác Flutter **3.47.7**, Dart **3.13.5**, Java **17**;
+  đọc compile SDK **36** / NDK **28.2.13676358** từ Flutter, Gradle **9.3.1** từ
+  wrapper. Phát hiện SDK path mâu thuẫn, SDK/NDK thiếu/lệch và file bị sửa.
+- `run/build` chạy kiểm tra trước, luôn Team + `.env`. VS Code mặc định chỉ còn
+  cấu hình Team, có pre-launch doctor; Android Studio dùng `.env` + Team và
+  hướng dẫn chạy doctor trước trong Terminal. Không đổi cách build app cũ.
+- Báo cáo `.team/diagnostics.json` chứa commit, sourceDirty, bundle/tool versions,
+  backend host, SHA-256 cấu hình, SHA-1 cert và trạng thái; không chứa giá trị key,
+  mật khẩu/token hoặc email thành viên. Có thể chia sẻ báo cáo đã kiểm tra qua
+  kênh nhóm, không chia sẻ env/ZIP/backup để báo lỗi.
+
+### Kiểm tra thực tế
+
+- **21 kiểm tra tích hợp script qua** bằng PowerShell 5.1: v1/v2, setup lặp,
+  explicit replacement + backup nguyên gốc, env sửa, chữ ký sửa, Flutter/Dart/
+  NDK lệch, JDK không xác minh được, ZIP corrupt/path traversal, run/build đúng
+  Team + `.env`, report không chứa credential. Runner dùng env/Flutter giả trong
+  `.dart_tool/`, không thay SDK hoặc dữ liệu app thật.
+- Clone Git cục bộ mới vào `.dart_tool/team-v2-clean-check`, sau đó áp cùng diff
+  chưa commit để kiểm tra phiên bản source mới. **Đây không phải clone trực tiếp
+  từ GitHub đã có các thay đổi v2**; hai report cùng commit nền và sourceDirty=true.
+  Setup với ZIP thật v2, nhập ZIP v1 thật đã sao lưu rồi trở lại v2 đều qua;
+  `pub get`/`gen-l10n` qua, không đổi lockfile/khóa.
+- Máy chính và clone có cùng config SHA-256
+  `708337C2A6C6543CBD88F8F1C3E52DD00252E366ACFFC4170F155E534A621482`, cùng backend,
+  chứng chỉ và công cụ. SHA-1 Team vẫn
+  `A9:A4:57:FB:2A:42:AB:AD:73:D0:F6:93:DB:D6:35:3A:8C:F0:38:5C`.
+- Build APK Team thành công ở cả hai checkout; `aapt`/`apksigner` xác nhận cùng
+  package `com.example.tui_khon_mobile.team`, compile SDK 36 và chứng chỉ trên.
+- Emulator riêng `TuiKhonWidgetQA`: cài APK Team cũ từ clone v1, tạo canary trong
+  sandbox, cập nhật lần lượt bằng APK máy chính và APK clone v2; canary vẫn còn.
+  App cũ `com.example.tui_khon_mobile` và Team cùng tồn tại. Đã xóa riêng canary
+  và tắt emulator. Đây là kiểm tra installer giữ file dữ liệu, **chưa nghiệm thu
+  dữ liệu SQLite thật hoặc thao tác Google/widget trên máy thành viên**.
+- **7 Edge Function test và type-check qua**. Không sửa Flutter hoặc sync/migration
+  nên không chạy lại Flutter/SQL suites trong lượt này; số **431 Flutter test,
+  6 nhóm SQL** ở trên là kết quả đã xác minh của lượt trước, không phải test mới.
+
+### Google, Gemini và phần còn chưa qua
+
+- Đã lưu thêm bốn địa chỉ do người dùng cung cấp vào Google Test users, giữ owner;
+  mở lại Audience xác nhận **5 test users**. Danh sách cá nhân không đưa vào Git.
+  Google native trên máy từng thành viên vẫn cần nghiệm thu riêng sau khi nhận
+  đúng source/bundle; không suy ra đã qua từ kết quả OAuth Web trước đây.
+- Đã đọc riêng Gemini key từ `supabase/.env`, đưa **chỉ key và model** lên Supabase,
+  model `gemini-flash-latest`; file triển khai secret tạm đã xóa. Không đưa server
+  env vào bundle. Hai Functions deploy ACTIVE version 3, giữ JWT + kiểm tra Auth
+  phía server; không nới xác thực, không đổi quota hoặc billing.
+- Fixture Auth mới có nonce riêng, xác minh email bằng Admin API để không gửi thư,
+  đăng nhập thật và seed qua `sync_push`: 4 giao dịch cô lập, tháng 11 thu 12 triệu,
+  chi 165.000 VND, tháng 10 chi 150.000 VND. Advisor vì vậy đi qua nhánh có chi tiêu,
+  không dùng fallback tháng rỗng để báo AI thành công.
+- Kết quả thật: ghi nhanh HTTP **504 AI_TIMEOUT**, ảnh hóa đơn mẫu **504 AI_TIMEOUT**,
+  advisor **502 AI_UPSTREAM_ERROR**. Gọi trực tiếp cùng key/model hai lần riêng nhận
+  **503 UNAVAILABLE**, thông báo high demand từ Google. Không nhận được kết quả AI
+  hợp lệ nên **cả ba luồng AI thật còn chưa qua nghiệm thu**; không đổi model/nâng gói.
+- Request thiếu đăng nhập bị từ chối 401. Snapshot giao dịch trước/sau ba lời gọi
+  AI giống nhau, không tự thêm/sửa giao dịch. Kiểm tra UUID/email/metadata nonce
+  trước khi xóa riêng fixture; Auth Admin API trả 404 khi kiểm tra lại. Không tác
+  động tài khoản thật. Kết quả chi tiết chỉ ở `.dart_tool/prm393/`, bị Git bỏ qua.
+
+Còn lại: thử lại ba luồng khi `gemini-flash-latest` hoạt động; nghiệm thu Google
+native trên máy thành viên và UI/dữ liệu SQLite thật. Thành viên dùng v2 clone
+đúng nhánh `codex/shared-env-ai` trong khi chờ PR merge vào `dev`;
+không phát ZIP v2 kèm script v1. SMTP giữ cấu hình/nghiệm thu trước đó.

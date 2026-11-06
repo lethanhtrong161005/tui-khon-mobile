@@ -3,7 +3,7 @@
 Hướng dẫn cho người nhận source lần đầu. Repo có app Flutter và backend Supabase; không cần Java backend riêng, Firebase hoặc dịch vụ thanh toán. Giao diện dùng SQLite/Drift trên thiết bị rồi đồng bộ với Supabase.
 
 **Thành viên Nhóm 5 trên Windows:** ưu tiên [bộ chạy nhanh Team](docs/TEAM_SETUP.md).
-Dùng cloud, SMTP và OAuth hiện có với ZIP private; không cần tạo lại dịch vụ hoặc
+Cả nhóm dùng cùng `.env` bốn biến, khóa ký/profile Team và Flutter 3.47.7 / Dart 3.13.5 / Java 17. Dùng cloud, SMTP và OAuth hiện có với ZIP private v2 (vẫn nhập được ZIP v1); không cần tạo lại dịch vụ hoặc
 cài Docker/Supabase CLI. Các mục tạo backend/key bên dưới dành cho người phát triển
 server hoặc chủ động dùng môi trường riêng.
 
