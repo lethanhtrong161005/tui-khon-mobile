@@ -140,3 +140,7 @@ supabase/.branches/
 
 # Generated localization output
 lib/l10n/generated/
+
+# Private Team onboarding configuration and development signing material
+/.team/
+TuiKhon-Team-Setup.zip

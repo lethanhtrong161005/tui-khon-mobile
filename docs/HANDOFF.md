@@ -339,3 +339,100 @@ Gemini key/Google Web + Android OAuth ở SETUP mục 6–7; credentials chỉ �
 file private/server. Google, Gemini và OTP email vẫn là phần cần hoàn tất sau
 khi có cấu hình. Chưa nghiệm thu iOS, thiết bị vật lý hoặc concurrency SQL nhiều
 connection; hai emulator sửa offline không thay thế test đó.
+
+## 11. Cấu hình Google và SMTP thật — 06/11/2026
+
+Đã tạo project Google Cloud riêng **Tui Khon PRM393**
+(`amazing-chemist-513912-e6`), không sửa các project Google khác. Google Auth
+Platform dùng External/Testing, chỉ khai báo `openid`, `userinfo.email` và
+`userinfo.profile`; đã thêm tài khoản chủ dự án vào danh sách người thử.
+
+- Đã tạo OAuth Web với callback của đúng project Supabase và OAuth Android cho
+  `com.example.tui_khon_mobile`, khớp SHA-1 của APK ký trên máy này. Máy khác hoặc
+  chứng chỉ ký khác cần đăng ký OAuth Android tương ứng theo SETUP.
+- Supabase Google provider đã bật, chấp nhận Web ID đứng đầu rồi Android ID.
+  Giữ kiểm tra nonce và yêu cầu có email; không nới các thiết lập này.
+- Web client ID đã điền vào `.env`; danh sách client IDs và Web secret nằm trong
+  `supabase/.env` private và cấu hình Auth cloud. Không ghi giá trị secret vào Git,
+  tài liệu, ảnh nghiệm thu hoặc APK. Không dùng Edge Function secrets để thay cho
+  cấu hình Google provider.
+- Đã nghiệm thu Google OAuth thật qua trình duyệt bằng PKCE: đổi authorization
+  code thành phiên Supabase, gọi Auth `/user`, xác nhận identity Google và email
+  đã xác minh. Phiên QA được đăng xuất với `scope=local`; không đăng xuất các
+  phiên khác hoặc sửa dữ liệu tài chính. Đây là nghiệm thu OAuth Web/server,
+  **chưa thay thế đăng nhập Google native trên Android**.
+- Gmail SMTP đã lưu trên cloud: host `smtp.gmail.com`, cổng 587, sender Túi Khôn.
+  Chủ dự án tự tạo và nhập App password; mật khẩu không được lấy về source.
+  Hai mẫu Confirm signup / Reset password đã áp HTML từ `supabase/templates/`
+  với `{{ .Token }}`. Cloud đang dùng OTP 6 số, hết hạn sau 600 giây.
+- APK debug từ `lib/main.dart` đã build lại thành công với
+  `--dart-define-from-file=.env`; chứng chỉ APK khớp OAuth Android đã đăng ký.
+
+Đã nghiệm thu SMTP thật bằng một tài khoản Auth fixture mới, dùng Gmail plus
+alias có nonce riêng, sau khi người dùng cho phép gửi và đọc đúng hai email thử:
+
+- Email đăng ký và khôi phục đều được Gmail nhận trong **Inbox**. Nội dung đúng
+  template tiếng Việt, mã OTP 6 số; không đưa mã vào log, ảnh hoặc tài liệu.
+- Xác nhận OTP đăng ký thành công, sau đó đăng nhập email/mật khẩu thành công.
+- Xác nhận OTP khôi phục, đổi mật khẩu ngẫu nhiên của **chỉ fixture** và đăng nhập
+  bằng mật khẩu mới đều thành công. Các phiên thử được đăng xuất `scope=local`.
+- Đã kiểm tra identity guard (UUID, đúng email và nonce trong user metadata)
+  trước khi xóa riêng fixture; Auth Admin API trả 404 khi kiểm tra lại user đó.
+  Không thay mật khẩu hoặc xóa tài khoản thật, không sửa dữ liệu tài chính thật.
+- Đây là nghiệm thu Auth API và email thật; chưa phải kiểm thử thao tác đầy đủ
+  trên màn đăng ký/khôi phục của APK mới.
+
+Bộ QA tạm và bằng chứng chi tiết ở `.dart_tool/prm393/`, bị Git bỏ qua. Các tab
+Gmail/QA và server kiểm tra được dọn sau khi lưu bằng chứng; không lưu token hoặc
+mật khẩu fixture. Chưa có thiết bị Android kết nối trong lượt này để nghiệm thu
+Google native/cài cập nhật APK mới. Gemini chưa nghiệm thu ở lượt cấu hình này;
+không suy ra cấu hình Google OAuth là đã có Gemini key.
+
+## 12. Bộ chạy Windows cho Nhóm 5 — 06/11/2026
+
+Nhánh `codex/team-windows-setup` bổ sung `tool/team.ps1` và
+`docs/TEAM_SETUP.md`. Thành viên clone source, nhận ZIP private, chạy `setup`
+rồi `run`; dùng backend cloud đã có, không dựng Supabase/SMTP/Functions lại.
+Đã sửa hướng dẫn clone cũ vốn trỏ về nhánh trước theme/i18n/widget.
+
+- Dùng Flutter 3.47.7 / Dart 3.13.5; minimum trong pubspec đã khớp lockfile
+  (Flutter >=3.47, Dart >=3.13,<4). Không nâng dependency hoặc đổi lockfile.
+- `.env.team` chỉ có URL, publishable/anon key và Google Web client ID; không có
+  server secret. `.team/` giữ signing properties, JKS và manifest private.
+- ZIP `TuiKhon-Team-Setup.zip` nằm trong thư mục `TuiKhon-Team-Private` cạnh
+  checkout, không nằm trong Git và không mã hóa. Chủ dự án chia sẻ qua kênh riêng.
+  Khóa Team mới chỉ dành cho debug; `pack` giữ khóa cũ khi đóng gói lại.
+- `TUI_KHON_TEAM=1` bật package `com.example.tui_khon_mobile.team` và nhãn
+  **Túi Khôn (Nhóm 5)**, dùng khóa Team. Namespace Kotlin và nghiệp vụ giữ nguyên.
+  Build thường vẫn là `com.example.tui_khon_mobile` với chứng chỉ debug cá nhân
+  ban đầu. Không ghi đè `.env` hoặc keystore trong thư mục Android cá nhân.
+- Có cấu hình chạy Team cho VS Code và Android Studio; terminal có lệnh doctor,
+  setup, run, build. Team từ chối task release/profile. Không tự cài SDK hay chấp
+  nhận giấy phép, không gỡ app/xóa dữ liệu khi lỗi cài đặt.
+
+Kiểm tra đã chạy:
+
+- **431 Flutter test qua**, analyze 0 error/warning, 199 info lint.
+- Clone sạch vào thư mục kiểm tra riêng: thiếu/corrupt ZIP bị từ chối; server key
+  bị từ chối dù checksum đúng; setup/doctor thành công; setup lặp không đổi khóa
+  hoặc `.env` cá nhân; file bị sửa không bị ghi đè; thiếu Flutter/SDK cũ báo lỗi.
+- `pack` lặp giữ nguyên JKS/password; Team release signing bị chặn đúng điều kiện.
+- Build APK Team thành công cả ở checkout chính và clone sạch, cùng package và
+  cùng SHA-1; cấu hình client từ clone truy cập Auth cloud và thấy Google/email bật.
+- Emulator riêng `TuiKhonWidgetQA`: cài Team song song với app cũ; cài cập nhật
+  bằng APK build từ clone sạch giữ được file canary trong sandbox Team. Đã dọn
+  canary và tắt emulator sau kiểm tra. Đây là kiểm tra installer giữ dữ liệu,
+  chưa phải nghiệm thu SQLite/Google native/widget qua UI trên máy thành viên.
+- Build thường vẫn có package và SHA-1 cá nhân ban đầu; MainActivity và receiver
+  widget trong manifest Team vẫn trỏ đúng class Kotlin.
+
+Sau khi người dùng xác nhận, đã tạo OAuth Android **Tui Khon Team Windows debug**
+cho package Team và SHA-1 khóa chung. Client Team đã bổ sung vào Supabase Google
+provider; mở lại form xác nhận đã lưu đủ ba client: Web đứng đầu, Android cá nhân
+và Android Team. Giữ kiểm tra nonce, yêu cầu email và secret Web hiện tại.
+Danh sách client trong `supabase/.env` private được cập nhật; `.env.team`, ZIP,
+khóa ký và APK không thay đổi nên không phải phát lại bộ setup.
+
+Gmail thành viên cần được chủ dự án thêm vào Test users; không ghi danh sách cá
+nhân vào Git. Chưa nghiệm thu Google native trên máy thành viên hoặc thay trạng
+thái Gemini; không suy ra chúng đã xong từ kết quả build/setup hay lưu OAuth.

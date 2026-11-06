@@ -2,7 +2,8 @@
 
 Đọc [docs/HANDOFF.md](docs/HANDOFF.md) để lấy context bàn giao; dùng
 [SETUP.md](SETUP.md) để chạy source và [docs/NGHIEP_VU.md](docs/NGHIEP_VU.md)
-để đối chiếu nghiệp vụ. Bản bàn giao nằm trên `feature/offline-ai-history`.
+để đối chiếu nghiệp vụ. Bản chạy chung nhóm nằm trên `codex/team-windows-setup`;
+xem `docs/TEAM_SETUP.md` cho cloud dùng chung và signing Team private.
 
 - Đây là sổ ghi chép tài chính, không phải ví điện tử. Không tự thêm thanh toán,
   liên kết ngân hàng, chia tiền nhóm hoặc gói PRO.
