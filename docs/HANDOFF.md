@@ -387,3 +387,48 @@ Gmail/QA và server kiểm tra được dọn sau khi lưu bằng chứng; khôn
 mật khẩu fixture. Chưa có thiết bị Android kết nối trong lượt này để nghiệm thu
 Google native/cài cập nhật APK mới. Gemini chưa nghiệm thu ở lượt cấu hình này;
 không suy ra cấu hình Google OAuth là đã có Gemini key.
+
+## 12. Bộ chạy Windows cho Nhóm 5 — 06/11/2026
+
+Nhánh `codex/team-windows-setup` bổ sung `tool/team.ps1` và
+`docs/TEAM_SETUP.md`. Thành viên clone source, nhận ZIP private, chạy `setup`
+rồi `run`; dùng backend cloud đã có, không dựng Supabase/SMTP/Functions lại.
+Đã sửa hướng dẫn clone cũ vốn trỏ về nhánh trước theme/i18n/widget.
+
+- Dùng Flutter 3.47.7 / Dart 3.13.5; minimum trong pubspec đã khớp lockfile
+  (Flutter >=3.47, Dart >=3.13,<4). Không nâng dependency hoặc đổi lockfile.
+- `.env.team` chỉ có URL, publishable/anon key và Google Web client ID; không có
+  server secret. `.team/` giữ signing properties, JKS và manifest private.
+- ZIP `TuiKhon-Team-Setup.zip` nằm trong thư mục `TuiKhon-Team-Private` cạnh
+  checkout, không nằm trong Git và không mã hóa. Chủ dự án chia sẻ qua kênh riêng.
+  Khóa Team mới chỉ dành cho debug; `pack` giữ khóa cũ khi đóng gói lại.
+- `TUI_KHON_TEAM=1` bật package `com.example.tui_khon_mobile.team` và nhãn
+  **Túi Khôn (Nhóm 5)**, dùng khóa Team. Namespace Kotlin và nghiệp vụ giữ nguyên.
+  Build thường vẫn là `com.example.tui_khon_mobile` với chứng chỉ debug cá nhân
+  ban đầu. Không ghi đè `.env` hoặc keystore trong thư mục Android cá nhân.
+- Có cấu hình chạy Team cho VS Code và Android Studio; terminal có lệnh doctor,
+  setup, run, build. Team từ chối task release/profile. Không tự cài SDK hay chấp
+  nhận giấy phép, không gỡ app/xóa dữ liệu khi lỗi cài đặt.
+
+Kiểm tra đã chạy:
+
+- **431 Flutter test qua**, analyze 0 error/warning, 199 info lint.
+- Clone sạch vào thư mục kiểm tra riêng: thiếu/corrupt ZIP bị từ chối; server key
+  bị từ chối dù checksum đúng; setup/doctor thành công; setup lặp không đổi khóa
+  hoặc `.env` cá nhân; file bị sửa không bị ghi đè; thiếu Flutter/SDK cũ báo lỗi.
+- `pack` lặp giữ nguyên JKS/password; Team release signing bị chặn đúng điều kiện.
+- Build APK Team thành công cả ở checkout chính và clone sạch, cùng package và
+  cùng SHA-1; cấu hình client từ clone truy cập Auth cloud và thấy Google/email bật.
+- Emulator riêng `TuiKhonWidgetQA`: cài Team song song với app cũ; cài cập nhật
+  bằng APK build từ clone sạch giữ được file canary trong sandbox Team. Đã dọn
+  canary và tắt emulator sau kiểm tra. Đây là kiểm tra installer giữ dữ liệu,
+  chưa phải nghiệm thu SQLite/Google native/widget qua UI trên máy thành viên.
+- Build thường vẫn có package và SHA-1 cá nhân ban đầu; MainActivity và receiver
+  widget trong manifest Team vẫn trỏ đúng class Kotlin.
+
+OAuth Android Team đã điền sẵn package và SHA-1 khóa mới trong Google Console;
+chờ xác nhận tại bước tạo client để hoàn tất đăng ký và bổ sung client vào Supabase.
+Các client hiện tại được giữ nguyên. Gmail thành viên cần được chủ dự án thêm
+vào Test users; không ghi danh sách cá nhân vào Git. Chưa nghiệm thu Google native
+trên máy thành viên hoặc thay trạng thái Gemini; không suy ra chúng đã xong từ
+kết quả build/setup.
