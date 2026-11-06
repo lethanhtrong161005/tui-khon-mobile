@@ -1,0 +1,3 @@
+Official Google Identity asset: https://developers.google.com/static/identity/images/g-logo.png
+Branding guidance: https://developers.google.com/identity/branding-guidelines
+Downloaded unchanged for the Google authentication button.

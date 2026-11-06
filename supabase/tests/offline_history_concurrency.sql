@@ -1,0 +1,21 @@
+-- Manual two-session regression, run ONLY on a disposable PostgreSQL copy.
+-- PGlite cannot exercise multi-session transaction advisory locks.
+-- Use the same seeded auth user U in both sessions.
+--
+-- A: BEGIN;
+-- A: SET LOCAL request.jwt.claim.sub = 'U';
+-- A: SELECT public.sync_push('OP','wallets','W',0,'{"name":"Pending"}',false);
+-- A: Leave transaction open (its journal entry is uncommitted).
+-- B: BEGIN;
+-- B: SET LOCAL request.jwt.claim.sub = 'U';
+-- B: SELECT public.sync_pull(0,5000);
+-- EXPECT: B blocks until A commits or rolls back; no cursor can skip A's entry.
+-- A: COMMIT;
+-- EXPECT: B returns W, including its committed version; B COMMIT.
+-- Repeat with A ROLLBACK: B returns no W; a later committed write is still pulled.
+-- Repeat with a different user in B: B must not wait for A or return A's rows.
+-- Repeat two pushes with same op_id: second waits, then returns identical response.
+-- Repeat two pushes with same base_version: one applied, one conflict after waiting.
+-- Sequence holes caused by rollback are allowed; cursors use returned seq, not counts.
+-- REPEATABLE READ/SERIALIZABLE sync calls must raise SQLSTATE 25001.
+select 'Run the two-session schedule above on a disposable PostgreSQL copy' as concurrency_test_instructions;

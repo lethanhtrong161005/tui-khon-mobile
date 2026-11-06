@@ -1,0 +1,6 @@
+{
+  "name": "prm-offline-history-sql-tests",
+  "private": true,
+  "scripts": { "test": "node run-offline-history.cjs" },
+  "dependencies": { "@electric-sql/pglite": "0.5.12" }
+}

@@ -133,3 +133,10 @@ migrate_working_dir/
 **/.vagrant/
 **/DerivedData/
 **/dgph
+
+# Supabase CLI
+supabase/.temp/
+supabase/.branches/
+
+# Generated localization output
+lib/l10n/generated/

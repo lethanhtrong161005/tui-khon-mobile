@@ -1,133 +1,170 @@
-# 🪙 Túi Khôn (Smart Wallet) - Standalone Flutter Mobile App
+# Túi Khôn — Sổ ghi chép tài chính cá nhân
 
-> **Comprehensive Cross-Platform (iOS & Android) Personal Finance App**  
-> 100% Standalone & Local-First (No external backend required!)  
-> Built with **Flutter 3.x**, **Clean Architecture**, **Riverpod State Management**, and **Local Repository Pattern**.
+Ứng dụng Flutter cho **Android/iOS** để ghi thu/chi, theo dõi ngân sách, nợ và mục tiêu tiết kiệm. Có thể nhập tay, nói tiếng Việt, gõ câu tự nhiên hoặc quét hóa đơn để AI đề xuất trước khi xác nhận.
 
----
+Túi Khôn không giữ tiền, liên kết ngân hàng hoặc thực hiện thanh toán. Mọi chức năng dùng được mà không mua gói.
 
-## 🚀 Key Highlights & Architectural Decisions
+- **Cài source, dựng backend, tạo key và chạy app:** [SETUP.md](SETUP.md).
+- **Context để tiếp tục trên máy khác:** [docs/HANDOFF.md](docs/HANDOFF.md).
+- **Nghiệp vụ:** [docs/NGHIEP_VU.md](docs/NGHIEP_VU.md).
+- **Nâng cấp giữ dữ liệu:** [docs/OFFLINE_UPGRADE.md](docs/OFFLINE_UPGRADE.md).
+- **Backend và SQL tests:** [supabase/README.md](supabase/README.md), [supabase/tests/README.md](supabase/tests/README.md).
 
-- **No External Backend (BE) Required**: Operates completely on-device using local repository storage, embedded Vietnamese natural language parsing rules, and reactive state management.
-- **True Cross-Platform Responsiveness**:
-  - **iOS**: Respects Apple Human Interface Guidelines, safe areas (Dynamic Island, top notch, bottom home indicator bar), Cupertino styling touches, and haptic feedback.
-  - **Android**: Supports Material 3 dynamic styling, Android edge-to-edge transparent navigation, and camera hole-punch insets.
-- **Embedded Vietnamese NLP Engine**: Parses phrases like *"50 củ"* into `50,000,000 ₫`, *"Ăn phở 65k"* into `65,000 ₫`, and classifies categories (Ăn uống, Di chuyển, Thu nhập).
-- **Interactive VietQR Generator**: Automatically generates dynamic payment QR codes using standard VietQR specs (Napas247) with zero backend dependency.
-- **Fully Documented in English**: Every class, function, and state controller includes comprehensive English comments explaining its purpose and behavior.
+## Chức năng
 
----
+| Nhóm | Chức năng |
+| --- | --- |
+| Tài khoản | Email/mật khẩu, OTP 6 số, quên mật khẩu, Google tùy chọn, avatar, khóa Face ID/vân tay |
+| Ghi nhanh | Nhập tay, giọng nói, ảnh; AI tối đa 10 bản nháp, hỏi bổ sung từng khoản; sửa/chọn trước khi lưu; cảnh báo trùng |
+| Offline | SQLite/Drift riêng từng tài khoản, hàng đợi bền vững, đồng bộ khi có mạng; chọn bản giữ khi hai thiết bị sửa cùng dữ liệu |
+| Lịch sử | Lọc tháng/thu chi/danh mục/nguồn tiền, tìm ghi chú, sửa/xóa và xem ảnh hóa đơn |
+| Nguồn tiền & danh mục | Nguồn tiền tự khai và số dư đầu; quản lý danh mục, quy tắc phân loại đã học |
+| Kế hoạch | Ngân sách tháng tổng/từng danh mục, tiến độ 80%/100%; mục tiêu có nạp/rút số ghi chú |
+| Sổ nợ | Vay/cho vay, hạn trả, lịch sử trả từng phần; sửa/hoàn tác cập nhật giao dịch liên kết nếu có |
+| Nhắc nhở | Nhắc ghi chép, hạn nợ, khoản phải trả một lần/tuần/tháng; không tự tạo khoản chi khi đến hạn |
+| Báo cáo & AI | Báo cáo tháng offline, so sánh tháng trước, nhận xét AI có cache; cố vấn 30/90 ngày |
+| Giao diện | Sáng / Tối / Theo hệ thống; Tiếng Việt / English / Theo hệ thống; lưu riêng trên thiết bị |
+| CSV | Xuất toàn bộ/theo bộ lọc; nhập tối đa 10.000 giao dịch có xem trước lỗi/trùng và ánh xạ danh mục/nguồn tiền |
 
-## 📂 Project Directory Structure
+## Kiến trúc
 
 ```text
-flutter_tui_khon/
-├── pubspec.yaml                        # Flutter package configuration & assets
-├── README.md                           # Complete project guide and architecture
-└── lib/
-    ├── main.dart                       # App entry point with Riverpod ProviderScope
-    │
-    ├── core/                           # Core infrastructure & utilities
-    │   ├── constants/
-    │   │   ├── app_colors.dart         # Emerald (#006948), Gold (#825100), Indigo theme palette
-    │   │   └── app_typography.dart     # Plus Jakarta Sans typographic scales
-    │   ├── theme/
-    │   │   └── app_theme.dart          # Adaptive ThemeData for Light/Dark & iOS/Android
-    │   ├── network/                    # Enterprise API client & error handler
-    │   │   ├── api_config.dart         # Base URLs, timeouts, endpoints dictionary
-    │   │   ├── api_client.dart         # MobileApiClient with Bearer auth, retries & timeout
-    │   │   └── api_exceptions.dart     # ApiException with Vietnamese UX messages
-    │   ├── utils/
-    │   │   ├── currency_formatter.dart # Vietnamese currency formatting (VND)
-    │   │   └── responsive_helper.dart  # Screen dimension & safe-area helpers
-    │   └── services/
-    │       ├── local_storage_service.dart # SharedPreferences wrapper for on-device persistence
-    │       └── vietnamese_nlp_service.dart# Rule-based natural language parser for slang & amounts
-    │
-    ├── common/                         # Shared UI components
-    │   └── widgets/
-    │       ├── custom_button.dart      # Reusable styled button with tactile animations
-    │       ├── gradient_card.dart      # Emerald balance card with privacy toggle
-    │       ├── transaction_tile.dart   # Standard transaction list item
-    │       ├── vietqr_dialog.dart      # VietQR display dialog with copy & share
-    │       └── app_bottom_nav.dart     # Floating bottom navigation bar
-    │
-    └── features/                       # Feature-based clean architecture modules
-        ├── auth/                       # Initial Login Gateway Module
-        │   └── presentation/
-        │       └── login_screen.dart   # 1-Tap Google Sign-In, Phone & Password login
-        │
-        ├── home/
-        │   ├── models/
-        │   │   └── transaction_model.dart # Transaction & category entities
-        │   ├── data/
-        │   │   └── local_wallet_repository.dart # Local repository with mock seed data
-        │   ├── controllers/
-        │   │   └── home_controller.dart   # Manages balance, mask visibility, and transactions
-        │   └── presentation/
-        │       └── home_screen.dart       # Dashboard screen with balance & budget progress
-        │
-        ├── quick_record/
-        │   ├── controllers/
-        │   │   └── quick_record_controller.dart # Chat message stream & STT simulation
-        │   └── presentation/
-        │       └── quick_record_screen.dart # Natural language input & confirmation card
-        │
-        ├── split_bill/
-        │   ├── models/
-        │   │   └── split_bill_model.dart  # Group split session, members, and debt status
-        │   ├── controllers/
-        │   │   └── split_bill_controller.dart # Member settlement toggles & VietQR link
-        │   └── presentation/
-        │       └── split_bill_screen.dart # Split bill groups, reminders & recurring bills
-        │
-        ├── advisor/
-        │   ├── models/
-        │   │   └── advisor_report_model.dart # Category breakdown & 4-week forecast metrics
-        │   └── presentation/
-        │       └── advisor_screen.dart    # Donut chart & forecast bar charts
-        │
-        ├── pro/
-            ├── controllers/
-            │   └── pro_controller.dart    # Subscription plan selection & voucher logic
-            └── presentation/
-                ├── pro_upgrade_screen.dart# Tier selection (1-Year 40% OFF, 3-Month, 1-Month)
-                └── checkout_screen.dart   # Checkout with VietQR, MoMo & 7-day trial
-        │
-        └── profile/
-            └── presentation/
-                └── profile_settings_screen.dart # User account, biometric lock, & safe logout bottom sheet
+Flutter + Riverpod
+       |
+       v
+SQLite / Drift theo tài khoản <--> Hàng đợi đồng bộ
+                                         |
+                                         v
+                             Supabase sync_push / sync_pull
+                                         |
+                                         v
+                                 PostgreSQL + RLS
+
+Flutter --> Supabase Auth / Storage
+Flutter --> Edge Functions --> Gemini (key chỉ ở server)
 ```
 
----
+Giao diện đọc SQLite, gồm số dư, ngân sách và báo cáo. Mỗi thay đổi được lưu cùng hàng đợi trong một transaction. Supabase xác thực tài khoản, giữ dữ liệu đồng bộ và ảnh; Gemini chạy qua Edge Functions.
 
-## 🛠️ How to Run on iOS and Android
+**Lần đăng nhập và tải dữ liệu đầu tiên cần mạng.** Sau đó ghi chép dùng được offline. AI cloud, xác thực và đồng bộ vẫn cần kết nối; khi AI không khả dụng, bộ phân tích tiếng Việt trên máy hỗ trợ ghi nhanh cơ bản. Đồng bộ có thể dừng khi hệ điều hành đóng app và tiếp tục khi mở lại.
 
-### Prerequisites
-1. Install [Flutter SDK](https://docs.flutter.dev/get-started/install) (version $\ge$ 3.16.0).
-2. For iOS: macOS with Xcode 15+ and CocoaPods installed.
-3. For Android: Android Studio with Android SDK 34+.
+## Bắt đầu khi lấy project về
 
-### Commands:
-```bash
-# 1. Navigate to the project directory
-cd flutter_tui_khon
+### 1. Lấy source và chọn nhánh bàn giao
 
-# 2. Get dependencies
+```sh
+git clone --branch feature/offline-ai-history https://github.com/lethanhtrong161005/tui-khon-mobile.git
+cd tui-khon-mobile
+git branch --show-current
+git log -1 --oneline
+```
+
+Nhánh bàn giao là **`feature/offline-ai-history`**. `dev` đang là bản khởi tạo;
+`feature/supabase-backend` là bản trước offline. Nếu đã clone repo vào nhánh khác:
+
+```sh
+git fetch origin
+git switch --track origin/feature/offline-ai-history
+```
+
+Nếu nhánh local đã tồn tại, dùng `git switch feature/offline-ai-history`.
+Đọc [context bàn giao](docs/HANDOFF.md) trước khi phát triển tiếp.
+Laptop mới cần dựng backend và env riêng; Git không mang theo tài khoản hoặc DB local.
+
+### 2. Cài dependencies
+
+Theo lockfile: **Flutter ≥3.47 / Dart ≥3.13**; môi trường đã kiểm thử dùng **Flutter 3.47.7**. Node.js ≥20 dùng cho Supabase CLI. Android cần SDK/JDK; iOS cần macOS/Xcode; Docker chỉ bắt buộc khi dựng backend local.
+
+```sh
+flutter doctor -v
 flutter pub get
-
-# 3. Run on connected iOS Simulator or Device
-flutter run -d ios
-
-# 4. Run on connected Android Emulator or Device
-flutter run -d android
+flutter gen-l10n
+flutter test
 ```
 
----
+### 3. Dựng backend và tạo env
 
-## 💡 State Management Architecture (Riverpod)
+| Cách | Phù hợp | Env Flutter |
+| --- | --- | --- |
+| [Supabase cloud](SETUP.md#4-supabase-cloud) | Demo, thiết bị thật, backend dùng chung nhóm | `.env` |
+| [Supabase local](SETUP.md#5-supabase-local) | Dev backend trên máy với Docker | `.env.local` |
 
-The app utilizes **Riverpod 2.x** with `StateNotifier` and `StateNotifierProvider`:
-- **Predictable State Flow**: UI triggers actions on the controller $\rightarrow$ Controller updates repository $\rightarrow$ New immutable state is emitted $\rightarrow$ UI re-renders only affected widgets.
-- **Testable**: StateNotifiers have zero dependency on BuildContext, making unit testing straightforward.
-- **Zero Backend Required**: All controllers read and write to `LocalWalletRepository`, keeping all data cached on device.
+**Bắt buộc:** `SUPABASE_URL`, `SUPABASE_ANON_KEY` của backend đã áp migrations. Tên biến `SUPABASE_ANON_KEY` giữ theo code; giá trị nên là **publishable key**. **Tùy chọn:** Gemini key ở server để bật AI, OAuth client IDs để đăng nhập Google. Email/nhập tay dùng được khi chưa bật hai phần tùy chọn này.
+
+Làm phần backend và [env/key trong SETUP](SETUP.md#3-env-va-cach-lay-key) trước khi chạy app; chỉ `flutter pub get` chưa đủ.
+
+### 4. Chạy app
+
+```sh
+flutter devices
+# Thay DEVICE_ID bằng id thực tế; dùng cloud:
+flutter run -d DEVICE_ID --dart-define-from-file=.env
+```
+
+Với Android emulator + backend local, dùng `.env.local`, URL `http://10.0.2.2:54321`. iOS Simulator dùng `http://127.0.0.1:54321`. [SETUP](SETUP.md#8-chay-app-ide-va-build) có lệnh máy thật, IDE và build APK.
+
+## Cấu trúc
+
+```text
+tui-khon-mobile/
+├── lib/
+│   ├── main.dart                 # Supabase → AuthGate
+│   ├── core/
+│   │   ├── offline/              # SQLite, outbox, đồng bộ, xung đột, chống trùng
+│   │   └── ...                   # Config, providers, services, utils, widgets
+│   └── features/
+│       ├── auth/                 # Đăng nhập, OTP, khóa app
+│       ├── home/                 # Dashboard, dữ liệu ghi chép
+│       ├── quick_record/         # AI nhiều bản nháp, quy tắc đã học
+│       ├── receipt/              # Chụp, lưu local, upload/xem ảnh
+│       ├── transactions/         # Lịch sử giao dịch
+│       ├── planning/             # Ngân sách, nợ/lịch sử trả, mục tiêu
+│       ├── reminders/            # Khoản phải trả, lịch thông báo
+│       ├── statistics/           # Biểu đồ thống kê
+│       ├── reports/              # Báo cáo tháng, cache nhận xét AI
+│       ├── data_exchange/        # CSV: xuất, xem trước, ánh xạ, nhập
+│       ├── advisor/              # Cố vấn 30/90 ngày
+│       ├── settings/             # Nguồn tiền, danh mục
+│       └── profile/              # Hồ sơ, cài đặt
+├── android/                      # Nền tảng Android
+├── ios/                          # Nền tảng iOS
+├── supabase/
+│   ├── migrations/               # Schema, RLS, RPC, journal
+│   ├── functions/                # ai-quick-record, ai-advisor
+│   ├── templates/                # Email OTP
+│   ├── tests/                    # SQL tests cô lập
+│   └── config.toml               # Cấu hình local
+├── test/                         # Flutter unit/widget tests
+├── docs/                         # HANDOFF, nghiệp vụ, hướng dẫn nâng cấp
+├── .env.example                  # Mẫu Flutter, không chứa key thật
+├── AGENTS.md                     # Điểm bắt đầu cho coding agent
+├── README.md
+└── SETUP.md
+```
+
+## Kiểm tra và nâng cấp
+
+```sh
+flutter analyze --no-fatal-infos
+flutter test
+```
+
+[SETUP](SETUP.md#9-kiem-tra-sau-setup) có kiểm thử SQL/Edge Functions và checklist nghiệm thu. DB đã có dữ liệu cần áp migration bổ sung theo [OFFLINE_UPGRADE](docs/OFFLINE_UPGRADE.md); không reset dữ liệu cần giữ. Không commit env đã điền key.
+
+Để test đăng ký/OTP/email mà chưa có project cloud, xem phần **Chạy thử ngay với backend local** cuối [SETUP.md](SETUP.md). Chạy app bằng `.env.local`; OTP xem trong Mailpit. Google và Gemini cần cấu hình riêng trước khi thử thật.
+
+## Giao diện và ngôn ngữ
+
+Trong **Cá nhân → Giao diện & Ngôn ngữ**, chọn Sáng / Tối / Theo hệ thống hoặc
+Tiếng Việt / English / Theo hệ thống. Login và Register có hai nút ở góc trên:
+biểu tượng sáng/tối và biểu tượng dịch. Áp dụng ngay, giữ nội dung form và route.
+Mặc định theme theo hệ thống, ngôn ngữ Tiếng Việt; ngôn ngữ hệ thống khác Việt/Anh
+fallback về Việt. Lựa chọn được giữ khi đăng xuất/đổi tài khoản, dùng được offline.
+
+Giao diện, validation, lỗi local và lịch nhắc local được dịch. Tên danh mục,
+ghi chú, nội dung AI/server và email OTP giữ nguyên. Ghi nhanh/mic ưu tiên tiếng Việt.
+Tiền vẫn là VND nguyên; lịch tài chính theo Việt Nam, CSV giữ hợp đồng cũ.
+
+ARB trong `lib/l10n/` là source; `lib/l10n/generated/` được Git bỏ qua. Sau khi
+clone hoặc sửa ARB, chạy `flutter gen-l10n`. Xem [SETUP](SETUP.md#giao-dien-va-i18n)
+và [HANDOFF](docs/HANDOFF.md#6-giao-dien-va-i18n) để mở rộng.

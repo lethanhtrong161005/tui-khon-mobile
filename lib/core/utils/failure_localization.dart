@@ -1,0 +1,53 @@
+import 'package:flutter/widgets.dart';
+import '../../l10n/app_l10n.dart';
+import 'app_failure.dart';
+
+String codedFailureMessage(BuildContext? context, CodedFailure error) {
+  final l = appL10n(context);
+  return switch (error.code) {
+    'failure0' => l.failure0,
+    'failure1' => l.failure1,
+    'failure2' => l.failure2,
+    'failure3' => l.failure3,
+    'failure4' => l.failure4,
+    'failure5' => l.failure5,
+    'failure6' => l.failure6,
+    'failure7' => l.failure7,
+    'failure8' => l.failure8,
+    'failure9' => l.failure9,
+    'failure10' => l.failure10,
+    'failure11' => l.failure11,
+    'failure12' => l.failure12,
+    'failure13' => l.failure13,
+    'failure14' => l.failure14,
+    'failure15' => l.failure15,
+    'failure16' => l.failure16,
+    'failure17' => l.failure17,
+    'failure18' => l.failure18,
+    'failure19' => l.failure19,
+    'failure20' => l.failure20,
+    'failure21' => l.failure21,
+    'failure22' => l.failure22,
+    'failure23' => l.failure23,
+    'failure24' => l.failure24,
+    'failure25' => l.failure25,
+    'failure26' => l.failure26,
+    'failure27' => l.failure27,
+    'failure28' => l.failure28,
+    'failure29' => l.failure29(error.arguments[0]),
+    'failure30' => l.failure30,
+    'failure31' => l.failure31,
+    'failure32' => l.failure32,
+    'failure33' => l.failure33,
+    'failure34' => l.failure34,
+    'failure35' => l.failure35,
+    'failure36' => l.failure36,
+    'failure37' => l.failure37,
+    'failure38' => l.failure38,
+    'csvLocalSignIn' => l.msgSignInToUseLocalData467,
+    'accountChanged' => l.msgTheAccountHasChanged469,
+    'csvFileSize' => l.msgMaximumFileSizeIsMb468,
+    'reportSignIn' => l.msgSignInToViewLocalReports498,
+    _ => l.errorUnknown,
+  };
+}

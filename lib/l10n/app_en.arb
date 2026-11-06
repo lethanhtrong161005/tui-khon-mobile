@@ -1,0 +1,2778 @@
+{
+  "@@locale": "en",
+  "homeWidgetTitle": "Túi Khôn — Quick record",
+  "homeWidgetExpense": "Expense",
+  "homeWidgetIncome": "Income",
+  "homeWidgetScanReceipt": "Scan photo",
+  "homeWidgetQuickRecord": "Quick record",
+  "homeWidgetHelpSubtitle": "Add a widget to your Android home screen",
+  "homeWidgetHelpClose": "Got it",
+  "homeWidgetHelp": "Touch and hold an empty area on your home screen → Widgets → Túi Khôn — Quick record → drag the widget onto your home screen. Menu names vary by phone.\n\nTap Expense, Scan photo or Income to open the form or select a receipt image directly. Review and tap Save in the app. The widget shows no balances and never records transactions automatically.\n\nSign in and download your data online first. You can then record manually offline; unlock with biometrics if enabled. Image recognition and live AI require connectivity and server configuration.",
+  "appearance": "Appearance",
+  "language": "Language",
+  "system": "System default",
+  "light": "Light",
+  "dark": "Dark",
+  "savePreferencesError": "Could not save your preference. Please try again.",
+  "profile": "Profile",
+  "manageNotebook": "MANAGE NOTEBOOK",
+  "security": "SECURITY",
+  "preferences": "DISPLAY PREFERENCES",
+  "dataSync": "Data & sync",
+  "csvExchange": "Import / export CSV",
+  "monthlyReport": "Monthly report",
+  "reminderSettings": "Reminder settings",
+  "payables": "Bills & payments",
+  "learnedRules": "Learned category rules",
+  "wallets": "Money sources",
+  "walletsSubtitle": "Cash and accounts you track manually",
+  "categories": "Categories",
+  "categoriesSubtitle": "Add, edit and delete income or expense categories",
+  "biometricLock": "Lock with Face ID / fingerprint",
+  "biometricSubtitle": "Require biometric authentication to open the app",
+  "signOut": "Sign out",
+  "stay": "Stay",
+  "signOutTitle": "Sign out of Túi Khôn?",
+  "signedOut": "Signed out",
+  "lockEnabled": "App lock enabled",
+  "lockDisabled": "App lock disabled",
+  "appDescription": "Túi Khôn v1.0.0 • Personal finance notebook",
+  "home": "Home",
+  "statistics": "Statistics",
+  "planning": "Planning",
+  "addMenu": "Open actions",
+  "closeMenu": "Close actions",
+  "editProfile": "Edit profile",
+  "signOutLocalNote": "Your data stays on this device, isolated to this account. You can sign in again later.",
+  "pendingSignOut": "There {count, plural, one{is 1 unsynced change} other{are {count} unsynced changes}}. Signing out keeps them on this device for your next sign-in.",
+  "@pendingSignOut": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chooseTheme": "Choose appearance",
+  "chooseLanguage": "Choose language",
+  "msgSyncing0": "Syncing…",
+  "@msgSyncing0": {
+    "description": "Đang đồng bộ…"
+  },
+  "msgItemsNeedReview1": "{p0, plural, one{1 item needs} other{{p0} items need}} review",
+  "@msgItemsNeedReview1": {
+    "placeholders": {
+      "p0": {
+        "type": "int"
+      }
+    }
+  },
+  "msgChangesOnThisDevice2": "{p0, plural, one{1 change} other{{p0} changes}} on this device",
+  "@msgChangesOnThisDevice2": {
+    "placeholders": {
+      "p0": {
+        "type": "int"
+      }
+    }
+  },
+  "msgSynced3": "Synced",
+  "@msgSynced3": {
+    "description": "Đã đồng bộ"
+  },
+  "msgYourRecordsAreStillSavedOn4": "Your records are still saved on this device",
+  "@msgYourRecordsAreStillSavedOn4": {
+    "description": "Ghi chép vẫn lưu trên máy"
+  },
+  "msgTransactions5": "Transactions",
+  "@msgTransactions5": {
+    "description": "Giao dịch"
+  },
+  "msgBudgets8": "Budgets",
+  "@msgBudgets8": {
+    "description": "Ngân sách"
+  },
+  "msgDebtBook9": "Debt book",
+  "@msgDebtBook9": {
+    "description": "Sổ nợ"
+  },
+  "msgPaymentHistory10": "Payment history",
+  "@msgPaymentHistory10": {
+    "description": "Lịch sử trả nợ"
+  },
+  "msgGoals11": "Goals",
+  "@msgGoals11": {
+    "description": "Mục tiêu"
+  },
+  "msgPaymentOccurrence13": "Payment occurrence",
+  "@msgPaymentOccurrence13": {
+    "description": "Lần thanh toán"
+  },
+  "msgCategoryRules14": "Category rules",
+  "@msgCategoryRules14": {
+    "description": "Quy tắc phân loại"
+  },
+  "msgNotifications15": "Notifications",
+  "@msgNotifications15": {
+    "description": "Thông báo"
+  },
+  "msgRecord16": "Record",
+  "@msgRecord16": {
+    "description": "Ghi chép"
+  },
+  "msgCheckThePaymentAmountAndRemaining17": "Check the payment amount and remaining debt. Tap to edit its history.",
+  "@msgCheckThePaymentAmountAndRemaining17": {
+    "description": "Kiểm tra số tiền trả và khoản nợ còn lại. Bấm để sửa lịch sử."
+  },
+  "msgCheckTheContentsInThenTry18": "Check the contents in {p0}, then try syncing again.",
+  "@msgCheckTheContentsInThenTry18": {
+    "description": "Kiểm tra nội dung trong mục {p0}, rồi thử đồng bộ lại.",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgClose19": "Close",
+  "@msgClose19": {
+    "description": "Đóng"
+  },
+  "msgDeleted20": "Deleted",
+  "@msgDeleted20": {
+    "description": "Đã xoá"
+  },
+  "msgDoesNotExistYet21": "Does not exist yet",
+  "@msgDoesNotExistYet21": {
+    "description": "Chưa tồn tại"
+  },
+  "msgName22": "Name",
+  "@msgName22": {
+    "description": "Tên"
+  },
+  "msgPerson23": "Person",
+  "@msgPerson23": {
+    "description": "Người liên quan"
+  },
+  "msgNote24": "Note",
+  "@msgNote24": {
+    "description": "Ghi chú"
+  },
+  "msgType25": "Type",
+  "@msgType25": {
+    "description": "Loại"
+  },
+  "msgAmount26": "Amount",
+  "@msgAmount26": {
+    "description": "Số tiền"
+  },
+  "msgPaymentDate27": "Payment date",
+  "@msgPaymentDate27": {
+    "description": "Ngày trả"
+  },
+  "msgDateAndTime28": "Date and time",
+  "@msgDateAndTime28": {
+    "description": "Thời điểm"
+  },
+  "msgSaved29": "Saved",
+  "@msgSaved29": {
+    "description": "Đã để dành"
+  },
+  "msgLimit30": "Limit",
+  "@msgLimit30": {
+    "description": "Hạn mức"
+  },
+  "msgPendingChangesConflicts32": "{p0} pending changes · {p1} conflicts",
+  "@msgPendingChangesConflicts32": {
+    "description": "{p0} thay đổi đang chờ · {p1} xung đột",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      },
+      "p1": {
+        "type": "String"
+      }
+    }
+  },
+  "msgLastSuccessfulSync33": "Last successful sync: {p0}",
+  "@msgLastSuccessfulSync33": {
+    "description": "Lần cuối: {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgSyncing34": "Syncing",
+  "@msgSyncing34": {
+    "description": "Đang đồng bộ"
+  },
+  "msgSyncNow35": "Sync now",
+  "@msgSyncNow35": {
+    "description": "Đồng bộ ngay"
+  },
+  "msgYourDataStaysOnThisDevice36": "Your data stays on this device while offline. If two devices edit the same record, choose which version to keep below.",
+  "@msgYourDataStaysOnThisDevice36": {
+    "description": "Dữ liệu trên máy được giữ khi chưa có mạng. Nếu hai thiết bị sửa cùng một mục, chọn bản muốn giữ bên dưới."
+  },
+  "msgOnThisDevice37": "On this device",
+  "@msgOnThisDevice37": {
+    "description": "Trên máy"
+  },
+  "msgOnTheServer38": "On the server",
+  "@msgOnTheServer38": {
+    "description": "Trên server"
+  },
+  "msgKeepDeviceVersion39": "Keep device version",
+  "@msgKeepDeviceVersion39": {
+    "description": "Giữ bản trên máy"
+  },
+  "msgKeepServerVersion40": "Keep server version",
+  "@msgKeepServerVersion40": {
+    "description": "Giữ bản server"
+  },
+  "msgDelete41": "Delete",
+  "@msgDelete41": {
+    "description": "Xoá"
+  },
+  "msgCancel42": "Cancel",
+  "@msgCancel42": {
+    "description": "Huỷ"
+  },
+  "msgSave43": "Save",
+  "@msgSave43": {
+    "description": "Lưu"
+  },
+  "msgReportsAiAdvisor44": "Reports & AI advisor",
+  "@msgReportsAiAdvisor44": {
+    "description": "Báo cáo & Cố vấn AI"
+  },
+  "msgAnalyzeAgain45": "Analyze again",
+  "@msgAnalyzeAgain45": {
+    "description": "Phân tích lại"
+  },
+  "msgViewingAdviceSavedOnThisDevice46": "Viewing advice saved on this device",
+  "@msgViewingAdviceSavedOnThisDevice46": {
+    "description": "Đang xem nhận xét đã lưu trên máy"
+  },
+  "msgYourDataHasChangedSyncAnd47": "Your data has changed. Sync and analyze again to update this advice.",
+  "@msgYourDataHasChangedSyncAnd47": {
+    "description": "Dữ liệu đã thay đổi. Đồng bộ rồi phân tích lại để cập nhật nhận xét."
+  },
+  "msgRecordWithTheAiAssistant48": "Record with the AI assistant",
+  "@msgRecordWithTheAiAssistant48": {
+    "description": "Trò chuyện chi tiết với Cố vấn AI"
+  },
+  "msgPastDays49": "Past {p0} days",
+  "@msgPastDays49": {
+    "description": "{p0} ngày qua",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgRetry50": "Retry",
+  "@msgRetry50": {
+    "description": "Thử lại"
+  },
+  "msgGeminiIsAnalyzingYourSpending51": "Gemini is analyzing your spending…",
+  "@msgGeminiIsAnalyzingYourSpending51": {
+    "description": "Gemini đang phân tích chi tiêu của bạn..."
+  },
+  "msgOverallTrend52": "OVERALL TREND",
+  "@msgOverallTrend52": {
+    "description": "XU HƯỚNG TỔNG THỂ"
+  },
+  "msgSpendingComparedWithThePreviousDays53": "Spending {p0} {p1}% compared with the previous {p2} days",
+  "@msgSpendingComparedWithThePreviousDays53": {
+    "description": "Chi tiêu {p0} {p1}% so với {p2} ngày trước đó",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      },
+      "p1": {
+        "type": "String"
+      },
+      "p2": {
+        "type": "String"
+      }
+    }
+  },
+  "msgAnalysesUsedToday54": "{p0}/{p1} analyses used today",
+  "@msgAnalysesUsedToday54": {
+    "description": "Đã dùng {p0}/{p1} lượt phân tích hôm nay",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      },
+      "p1": {
+        "type": "String"
+      }
+    }
+  },
+  "msgDetailedAnalysisByGeminiAi55": "Detailed analysis by Gemini AI",
+  "@msgDetailedAnalysisByGeminiAi55": {
+    "description": "Phân tích chuyên sâu bởi Gemini AI"
+  },
+  "msgSuggestion56": "Suggestion",
+  "@msgSuggestion56": {
+    "description": "Gợi ý"
+  },
+  "msgWarning57": "Warning",
+  "@msgWarning57": {
+    "description": "Cảnh báo"
+  },
+  "msgPositive58": "Positive",
+  "@msgPositive58": {
+    "description": "Tích cực"
+  },
+  "msgCategoriesAtRiskOfOverspending59": ", categories at risk of overspending: {p0}",
+  "@msgCategoriesAtRiskOfOverspending59": {
+    "description": ", danh mục dễ vượt chi: {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgForecastForTheNextDays60": "🔮 Forecast for the next 30 days",
+  "@msgForecastForTheNextDays60": {
+    "description": "🔮 Dự báo 30 ngày tới"
+  },
+  "msgAiEstimate61": "AI estimate",
+  "@msgAiEstimate61": {
+    "description": "Ước tính AI"
+  },
+  "msgEstimatedSpending62": "Estimated spending: {p0}{p1}.",
+  "@msgEstimatedSpending62": {
+    "description": "Dự kiến chi khoảng {p0}{p1}.",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      },
+      "p1": {
+        "type": "String"
+      }
+    }
+  },
+  "msgSpendingBreakdown63": "Spending breakdown",
+  "@msgSpendingBreakdown63": {
+    "description": "Cơ cấu chi tiêu"
+  },
+  "msgTotalSpendingOverDays64": "Total spending over {p0} days: {p1}",
+  "@msgTotalSpendingOverDays64": {
+    "description": "Tổng chi {p0} ngày: {p1}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      },
+      "p1": {
+        "type": "String"
+      }
+    }
+  },
+  "msgNoExpensesInThisPeriodYet65": "No expenses in this period yet",
+  "@msgNoExpensesInThisPeriodYet65": {
+    "description": "Chưa có khoản chi nào trong giai đoạn này"
+  },
+  "msgDays66": "{p0} DAYS",
+  "@msgDays66": {
+    "description": "{p0} NGÀY",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgCategories67": "{p0, plural, one{1 category} other{{p0} categories}}",
+  "@msgCategories67": {
+    "placeholders": {
+      "p0": {
+        "type": "int"
+      }
+    }
+  },
+  "msgTransactions68": "{p0, plural, one{1 transaction} other{{p0} transactions}}",
+  "@msgTransactions68": {
+    "placeholders": {
+      "p0": {
+        "type": "int"
+      }
+    }
+  },
+  "msgFromThePreviousPeriod69": "+{p0}% from the previous period",
+  "@msgFromThePreviousPeriod69": {
+    "description": "+{p0}% kỳ trước",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgFromThePreviousPeriod70": "{p0}% from the previous period",
+  "@msgFromThePreviousPeriod70": {
+    "description": "{p0}% kỳ trước",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgOfSpending71": "{p0}% of spending",
+  "@msgOfSpending71": {
+    "description": "{p0}% tổng chi",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgCashFlowAiForecast72": "Cash flow & AI forecast",
+  "@msgCashFlowAiForecast72": {
+    "description": "Dòng tiền & Dự báo AI"
+  },
+  "msgSpendingOverTheLastWeeksVersus73": "Spending over the last 4 weeks versus forecast",
+  "@msgSpendingOverTheLastWeeksVersus73": {
+    "description": "Chi tiêu 4 tuần qua đối chiếu dự báo"
+  },
+  "msgActual74": "Actual",
+  "@msgActual74": {
+    "description": "Thực tế"
+  },
+  "msgForecast75": "Forecast",
+  "@msgForecast75": {
+    "description": "Dự báo"
+  },
+  "msgThisWeek76": "This week",
+  "@msgThisWeek76": {
+    "description": "Tuần này"
+  },
+  "msgWeek77": "Week {p0}",
+  "@msgWeek77": {
+    "description": "Tuần {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgNextDaysForecast78": "Next 30 days forecast:",
+  "@msgNextDaysForecast78": {
+    "description": "Dự báo 30 ngày tới:"
+  },
+  "msgUnlockTIKhN79": "Unlock Túi Khôn",
+  "@msgUnlockTIKhN79": {
+    "description": "Mở khoá Túi Khôn"
+  },
+  "msgUnsyncedChanges80": "Unsynced changes",
+  "@msgUnsyncedChanges80": {
+    "description": "Có dữ liệu chưa đồng bộ"
+  },
+  "msgChangesWillStayOnThisDevice81": "{p0} changes will stay on this device until you sign back into this account to sync.",
+  "@msgChangesWillStayOnThisDevice81": {
+    "description": "{p0} thay đổi sẽ được giữ trên máy để đồng bộ khi đăng nhập lại đúng tài khoản.",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgKeepOnDeviceAndSignOut83": "Keep on device and sign out",
+  "@msgKeepOnDeviceAndSignOut83": {
+    "description": "Giữ trên máy và đăng xuất"
+  },
+  "msgTIKhNIsLocked84": "Túi Khôn is locked",
+  "@msgTIKhNIsLocked84": {
+    "description": "Túi Khôn đang khoá"
+  },
+  "msgUseFaceIdOrYourFingerprint85": "Use Face ID or your fingerprint to unlock your notebook",
+  "@msgUseFaceIdOrYourFingerprint85": {
+    "description": "Xác thực bằng Face ID / vân tay để mở sổ của bạn"
+  },
+  "msgUnlock86": "Unlock",
+  "@msgUnlock86": {
+    "description": "Mở khoá"
+  },
+  "msgSignInWithPassword87": "Sign in with password",
+  "@msgSignInWithPassword87": {
+    "description": "Đăng nhập bằng mật khẩu"
+  },
+  "msgDownloadingYourDataForOfflineUse88": "Downloading your data for offline use…",
+  "@msgDownloadingYourDataForOfflineUse88": {
+    "description": "Đang tải dữ liệu lần đầu để dùng offline…"
+  },
+  "msgSupabaseConfigurationMissing89": "Supabase configuration missing",
+  "@msgSupabaseConfigurationMissing89": {
+    "description": "Thiếu cấu hình Supabase"
+  },
+  "msgCopyEnvExampleToEnvFill90": "Copy .env.example to .env, fill in SUPABASE_URL and SUPABASE_ANON_KEY, then run:\n\nflutter run --dart-define-from-file=.env",
+  "@msgCopyEnvExampleToEnvFill90": {
+    "description": "Copy .env.example thành .env, điền SUPABASE_URL và SUPABASE_ANON_KEY rồi chạy:\n\nflutter run --dart-define-from-file=.env"
+  },
+  "msgEnterAValidEmailAddress91": "Enter a valid email address",
+  "@msgEnterAValidEmailAddress91": {
+    "description": "Vui lòng nhập email hợp lệ"
+  },
+  "msgForgotPassword92": "Forgot password",
+  "@msgForgotPassword92": {
+    "description": "Quên mật khẩu"
+  },
+  "msgEnterYourRegisteredEmailTI93": "Enter your registered email. Túi Khôn will send\na 6-digit code to reset your password",
+  "@msgEnterYourRegisteredEmailTI93": {
+    "description": "Nhập email đã đăng ký, Túi Khôn sẽ gửi\nmã 6 số để bạn đặt lại mật khẩu"
+  },
+  "msgSendCode94": "Send code",
+  "@msgSendCode94": {
+    "description": "Gửi mã"
+  },
+  "msgTheCodeExpiresInMinutes95": "The code expires in 10 minutes.",
+  "@msgTheCodeExpiresInMinutes95": {
+    "description": "Mã có hiệu lực trong 10 phút."
+  },
+  "msgANewVerificationCodeWasSent96": "A new verification code was sent to {p0}",
+  "@msgANewVerificationCodeWasSent96": {
+    "description": "Mã xác thực mới đã được gửi tới {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgYourEmailIsNotVerifiedYou97": "Your email is not verified. You can resend the code on the next screen.",
+  "@msgYourEmailIsNotVerifiedYou97": {
+    "description": "Email chưa xác thực. Bạn có thể gửi lại mã ở màn tiếp theo."
+  },
+  "msgPersonalFinanceNotebookGeminiAiAssistant99": "Personal finance notebook &\nGemini AI assistant",
+  "@msgPersonalFinanceNotebookGeminiAiAssistant99": {
+    "description": "Quản lý tài chính cá nhân &\nTrợ lý Gemini AI"
+  },
+  "msgOrSignInWith100": "Or sign in with",
+  "@msgOrSignInWith100": {
+    "description": "Hoặc đăng nhập bằng"
+  },
+  "msgPassword101": "Password",
+  "@msgPassword101": {
+    "description": "Mật khẩu"
+  },
+  "msgEnterYourPassword102": "Enter your password",
+  "@msgEnterYourPassword102": {
+    "description": "Vui lòng nhập mật khẩu"
+  },
+  "msgForgotPassword103": "Forgot password?",
+  "@msgForgotPassword103": {
+    "description": "Quên mật khẩu?"
+  },
+  "msgSignIn104": "Sign in",
+  "@msgSignIn104": {
+    "description": "Đăng nhập"
+  },
+  "msgDonTHaveAnAccount105": "Don't have an account?",
+  "@msgDonTHaveAnAccount105": {
+    "description": "Chưa có tài khoản?"
+  },
+  "msgRegisterNow106": "Register now",
+  "@msgRegisterNow106": {
+    "description": "Đăng ký ngay"
+  },
+  "msgYourRecordsArePrivateToYour107": "Your records are private to your account",
+  "@msgYourRecordsArePrivateToYour107": {
+    "description": "Ghi chép riêng theo tài khoản của bạn"
+  },
+  "msgEnterAllDigits108": "Enter all {p0} digits",
+  "@msgEnterAllDigits108": {
+    "description": "Vui lòng nhập đủ {p0} số",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgANewCodeWasSentTo109": "A new code was sent to {p0}",
+  "@msgANewCodeWasSentTo109": {
+    "description": "Đã gửi lại mã tới {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgVerifyEmail110": "Verify email",
+  "@msgVerifyEmail110": {
+    "description": "Xác thực email"
+  },
+  "msgEnterResetCode111": "Enter reset code",
+  "@msgEnterResetCode111": {
+    "description": "Nhập mã đặt lại"
+  },
+  "msgADigitCodeWasSentTo112": "A {p0}-digit code was sent to\n{p1}",
+  "@msgADigitCodeWasSentTo112": {
+    "description": "Mã gồm {p0} số đã được gửi tới\n{p1}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      },
+      "p1": {
+        "type": "String"
+      }
+    }
+  },
+  "msgVerify113": "Verify",
+  "@msgVerify113": {
+    "description": "Xác thực"
+  },
+  "msgContinue114": "Continue",
+  "@msgContinue114": {
+    "description": "Tiếp tục"
+  },
+  "msgResendInS115": "Resend in {p0}s",
+  "@msgResendInS115": {
+    "description": "Gửi lại mã sau {p0}s",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgResendCode116": "Resend code",
+  "@msgResendCode116": {
+    "description": "Gửi lại mã"
+  },
+  "msgNoEmailCheckYourSpamOr117": "No email? Check your spam or promotions folder.",
+  "@msgNoEmailCheckYourSpamOr117": {
+    "description": "Không thấy email? Hãy kiểm tra mục Spam / Quảng cáo."
+  },
+  "msgCreateAccount118": "Create account",
+  "@msgCreateAccount118": {
+    "description": "Tạo tài khoản"
+  },
+  "msgRecordExpensesByVoiceScanReceipts119": "Record expenses by voice, scan receipts\nand get advice from Gemini AI",
+  "@msgRecordExpensesByVoiceScanReceipts119": {
+    "description": "Ghi chép chi tiêu bằng giọng nói, quét hóa đơn\nvà nhận tư vấn từ Gemini AI"
+  },
+  "msgDisplayNameEGMinhQuan120": "Display name (e.g. Minh Quan)",
+  "@msgDisplayNameEGMinhQuan120": {
+    "description": "Tên hiển thị (vd: Minh Quân)"
+  },
+  "msgThisNameWillAppearInThe121": "This name will appear in the app",
+  "@msgThisNameWillAppearInThe121": {
+    "description": "Tên này sẽ hiển thị trong ứng dụng"
+  },
+  "msgEnterADisplayName122": "Enter a display name",
+  "@msgEnterADisplayName122": {
+    "description": "Vui lòng nhập tên hiển thị"
+  },
+  "msgUseThisEmailToSignIn123": "Use this email to sign in and receive verification codes",
+  "@msgUseThisEmailToSignIn123": {
+    "description": "Dùng email để đăng nhập và nhận mã xác thực"
+  },
+  "msgPasswordAtLeastCharacters124": "Password (at least 6 characters)",
+  "@msgPasswordAtLeastCharacters124": {
+    "description": "Mật khẩu (ít nhất 6 ký tự)"
+  },
+  "msgUseAtLeastCharacters125": "Use at least 6 characters",
+  "@msgUseAtLeastCharacters125": {
+    "description": "Mật khẩu cần ít nhất 6 ký tự"
+  },
+  "msgConfirmPassword126": "Confirm password",
+  "@msgConfirmPassword126": {
+    "description": "Nhập lại mật khẩu"
+  },
+  "msgPasswordsDoNotMatch127": "Passwords do not match",
+  "@msgPasswordsDoNotMatch127": {
+    "description": "Mật khẩu nhập lại không khớp"
+  },
+  "msgRegister128": "Register",
+  "@msgRegister128": {
+    "description": "Đăng ký"
+  },
+  "msgTIKhNWillSend129": "Túi Khôn will send a 6-digit verification code to your email.",
+  "@msgTIKhNWillSend129": {
+    "description": "Túi Khôn sẽ gửi mã xác thực 6 số tới email của bạn."
+  },
+  "msgOrRegisterWith130": "Or register with",
+  "@msgOrRegisterWith130": {
+    "description": "Hoặc đăng ký bằng"
+  },
+  "msgAlreadyHaveAnAccount131": "Already have an account?",
+  "@msgAlreadyHaveAnAccount131": {
+    "description": "Đã có tài khoản?"
+  },
+  "msgPasswordChangedSuccessfully132": "Password changed successfully!",
+  "@msgPasswordChangedSuccessfully132": {
+    "description": "Đổi mật khẩu thành công!"
+  },
+  "msgSetANewPassword133": "Set a new password",
+  "@msgSetANewPassword133": {
+    "description": "Đặt mật khẩu mới"
+  },
+  "msgChooseANewPasswordForYour134": "Choose a new password for your Túi Khôn account",
+  "@msgChooseANewPasswordForYour134": {
+    "description": "Chọn mật khẩu mới cho tài khoản Túi Khôn của bạn"
+  },
+  "msgNewPasswordAtLeastCharacters135": "New password (at least 6 characters)",
+  "@msgNewPasswordAtLeastCharacters135": {
+    "description": "Mật khẩu mới (ít nhất 6 ký tự)"
+  },
+  "msgConfirmNewPassword136": "Confirm new password",
+  "@msgConfirmNewPassword136": {
+    "description": "Nhập lại mật khẩu mới"
+  },
+  "msgSavePassword137": "Save password",
+  "@msgSavePassword137": {
+    "description": "Lưu mật khẩu"
+  },
+  "msgShowPassword138": "Show password",
+  "@msgShowPassword138": {
+    "description": "Hiện mật khẩu"
+  },
+  "msgHidePassword139": "Hide password",
+  "@msgHidePassword139": {
+    "description": "Ẩn mật khẩu"
+  },
+  "msgBack140": "Back",
+  "@msgBack140": {
+    "description": "Quay lại"
+  },
+  "msgGoogleSignInIsNotConfigured141": "Google sign-in is not configured. You can register or sign in with email instead.",
+  "@msgGoogleSignInIsNotConfigured141": {
+    "description": "Google chưa được cấu hình. Bạn có thể đăng ký hoặc đăng nhập bằng email trước."
+  },
+  "msgRegisterWithGoogle142": "Register with Google",
+  "@msgRegisterWithGoogle142": {
+    "description": "Đăng ký với Google"
+  },
+  "msgContinueWithGoogle143": "Continue with Google",
+  "@msgContinueWithGoogle143": {
+    "description": "Tiếp tục với Google"
+  },
+  "msgGoogleNotConfigured144": "Google not configured",
+  "@msgGoogleNotConfigured144": {
+    "description": "Google chưa cấu hình"
+  },
+  "msgTransactionSaved145": "Transaction saved",
+  "@msgTransactionSaved145": {
+    "description": "Đã lưu giao dịch"
+  },
+  "msgQuickOverview146": "Quick overview",
+  "@msgQuickOverview146": {
+    "description": "Tổng quan nhanh"
+  },
+  "msgViewAll147": "View all",
+  "@msgViewAll147": {
+    "description": "Xem tất cả"
+  },
+  "msgRecentTransactions148": "Recent transactions",
+  "@msgRecentTransactions148": {
+    "description": "Giao dịch gần đây"
+  },
+  "msgGoodMorning149": "Good morning,",
+  "@msgGoodMorning149": {
+    "description": "Chào buổi sáng,"
+  },
+  "msgGoodAfternoon150": "Good afternoon,",
+  "@msgGoodAfternoon150": {
+    "description": "Chào buổi chiều,"
+  },
+  "msgGoodEvening151": "Good evening,",
+  "@msgGoodEvening151": {
+    "description": "Chào buổi tối,"
+  },
+  "msgYou152": "You",
+  "@msgYou152": {
+    "description": "Bạn"
+  },
+  "msgRecordTodayPlanForTomorrow153": "Record today, plan for tomorrow",
+  "@msgRecordTodayPlanForTomorrow153": {
+    "description": "Ghi chép hôm nay, sống chủ động hơn"
+  },
+  "msgTotalSpendingInMonth154": "Total spending in month {p0}",
+  "@msgTotalSpendingInMonth154": {
+    "description": "Tổng chi tiêu tháng {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgHideAmounts155": "Hide amounts",
+  "@msgHideAmounts155": {
+    "description": "Ẩn số tiền"
+  },
+  "msgShowAmounts156": "Show amounts",
+  "@msgShowAmounts156": {
+    "description": "Hiện số tiền"
+  },
+  "msgNoBudgetSet157": "No budget set",
+  "@msgNoBudgetSet157": {
+    "description": "Chưa đặt ngân sách"
+  },
+  "msgSpent158": "Spent {p0}%",
+  "@msgSpent158": {
+    "description": "Đã chi {p0}%",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgSetALimitInPlanning159": "Set a limit in Planning",
+  "@msgSetALimitInPlanning159": {
+    "description": "Đặt hạn mức trong Kế hoạch"
+  },
+  "msgLimit160": "Limit {p0}",
+  "@msgLimit160": {
+    "description": "Hạn mức {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgLimit161": "Limit ••••",
+  "@msgLimit161": {
+    "description": "Hạn mức ••••"
+  },
+  "msgAddExpense162": "Add\nexpense",
+  "@msgAddExpense162": {
+    "description": "Thêm\nchi tiêu"
+  },
+  "msgIncome163": "Income",
+  "@msgIncome163": {
+    "description": "Thu nhập"
+  },
+  "msgExpenses164": "Expenses",
+  "@msgExpenses164": {
+    "description": "Chi tiêu"
+  },
+  "msgMonthlyNetIncome165": "Monthly net income",
+  "@msgMonthlyNetIncome165": {
+    "description": "Thu − chi tháng"
+  },
+  "msgRecordedBalance166": "Recorded balance",
+  "@msgRecordedBalance166": {
+    "description": "Số dư ghi chép"
+  },
+  "msgALittlePlanningEveryDay167": "A little planning every day",
+  "@msgALittlePlanningEveryDay167": {
+    "description": "Một chút chủ động mỗi ngày"
+  },
+  "msgSummarizingYourRecords168": "Summarizing your records…",
+  "@msgSummarizingYourRecords168": {
+    "description": "Đang tổng hợp ghi chép của bạn…"
+  },
+  "msgYouSpentTodaySeeSuggestionsFrom169": "You spent {p0} today. See suggestions from your advisor.",
+  "@msgYouSpentTodaySeeSuggestionsFrom169": {
+    "description": "Hôm nay bạn đã chi {p0}. Cùng xem gợi ý từ cố vấn.",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgNoTransactionsYetTapToStart170": "No transactions yet. Tap [+] to start recording.",
+  "@msgNoTransactionsYetTapToStart170": {
+    "description": "Chưa có giao dịch. Bấm [+] để bắt đầu ghi chép."
+  },
+  "msgNotificationCenter171": "Notification center",
+  "@msgNotificationCenter171": {
+    "description": "Trung tâm thông báo"
+  },
+  "msgUnreadNotifications172": "{p0} unread notifications",
+  "@msgUnreadNotifications172": {
+    "description": "{p0} thông báo mới chưa đọc",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgYouAreAllCaughtUp173": "You are all caught up",
+  "@msgYouAreAllCaughtUp173": {
+    "description": "Bạn đã xem hết thông báo"
+  },
+  "msgNoNotificationsYet174": "No notifications yet",
+  "@msgNoNotificationsYet174": {
+    "description": "Chưa có thông báo nào"
+  },
+  "msgYesterday175": "Yesterday",
+  "@msgYesterday175": {
+    "description": "Hôm qua"
+  },
+  "msgJustNow176": "Just now",
+  "@msgJustNow176": {
+    "description": "Vừa xong"
+  },
+  "msgMinutesAgo177": "{p0} minutes ago",
+  "@msgMinutesAgo177": {
+    "description": "{p0} phút trước",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgHoursAgo178": "{p0} hours ago",
+  "@msgHoursAgo178": {
+    "description": "{p0} giờ trước",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgDebtPaymentsAreDue179": "Debt payments are due",
+  "@msgDebtPaymentsAreDue179": {
+    "description": "Khoản nợ đã đến hạn"
+  },
+  "msgLater180": "Later",
+  "@msgLater180": {
+    "description": "Để sau"
+  },
+  "msgTheseDebtsAreDueIfYou181": "These debts are due. If you have already paid or collected the money, confirm to update your debt book.",
+  "@msgTheseDebtsAreDueIfYou181": {
+    "description": "Các khoản dưới đây đã đến hạn. Đã trả hoặc đã nhận tiền thì xác nhận để cập nhật sổ nợ nhé."
+  },
+  "msgIOwe182": "I owe {p0}",
+  "@msgIOwe182": {
+    "description": "Tôi nợ {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgOwesMe183": "{p0} owes me",
+  "@msgOwesMe183": {
+    "description": "{p0} nợ tôi",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgPaid184": "Paid",
+  "@msgPaid184": {
+    "description": "Đã trả"
+  },
+  "msgCollected185": "Collected",
+  "@msgCollected185": {
+    "description": "Đã nhận"
+  },
+  "msgWhatWouldYouLikeToRecord186": "What would you like to record?",
+  "@msgWhatWouldYouLikeToRecord186": {
+    "description": "Bạn muốn ghi gì?"
+  },
+  "msgRecordTodayPlanForTomorrow188": "Record today, plan for tomorrow.",
+  "@msgRecordTodayPlanForTomorrow188": {
+    "description": "Ghi lại hôm nay, chủ động ngày mai."
+  },
+  "msgAddExpense189": "Add expense",
+  "@msgAddExpense189": {
+    "description": "Thêm chi tiêu"
+  },
+  "msgAddIncome190": "Add income",
+  "@msgAddIncome190": {
+    "description": "Thêm thu nhập"
+  },
+  "msgRecordByVoice191": "Record by voice",
+  "@msgRecordByVoice191": {
+    "description": "Ghi bằng giọng nói"
+  },
+  "msgScanReceipt192": "Scan receipt",
+  "@msgScanReceipt192": {
+    "description": "Quét hóa đơn"
+  },
+  "msgAiAdvisor193": "AI advisor",
+  "@msgAiAdvisor193": {
+    "description": "Cố vấn AI"
+  },
+  "msgRecordingReminder196": "Recording reminder",
+  "@msgRecordingReminder196": {
+    "description": "Nhắc ghi chép"
+  },
+  "msgEnterAnAmountGreaterThan197": "Enter an amount greater than 0",
+  "@msgEnterAnAmountGreaterThan197": {
+    "description": "Vui lòng nhập số tiền lớn hơn 0"
+  },
+  "msgSelectACategory198": "Select a category",
+  "@msgSelectACategory198": {
+    "description": "Vui lòng chọn danh mục"
+  },
+  "msgEditTransaction199": "Edit transaction",
+  "@msgEditTransaction199": {
+    "description": "Chỉnh sửa giao dịch"
+  },
+  "msgAmountVnd200": "Amount (VND)",
+  "@msgAmountVnd200": {
+    "description": "Số tiền (VND)"
+  },
+  "msg201": "₫",
+  "@msg201": {
+    "description": "đ"
+  },
+  "msgClearAmount202": "Clear amount",
+  "@msgClearAmount202": {
+    "description": "Xóa số tiền"
+  },
+  "msgEnterAWholeAmountInVnd203": "Enter a whole amount in VND",
+  "@msgEnterAWholeAmountInVnd203": {
+    "description": "Nhập số tiền nguyên bằng đồng"
+  },
+  "msgCouldNotLoadDataRetry204": "Could not load data. Retry",
+  "@msgCouldNotLoadDataRetry204": {
+    "description": "Không tải được dữ liệu. Thử lại"
+  },
+  "msgNoCategoriesForThisTransactionType205": "No categories for this transaction type. Add one in Profile → Categories.",
+  "@msgNoCategoriesForThisTransactionType205": {
+    "description": "Chưa có danh mục cho loại giao dịch này. Thêm danh mục trong Cá nhân → Danh mục."
+  },
+  "msgAll206": "All",
+  "@msgAll206": {
+    "description": "Tất cả"
+  },
+  "msgAddAMoneySourceInProfile207": "Add a money source in Profile → Money sources to record transactions.",
+  "@msgAddAMoneySourceInProfile207": {
+    "description": "Thêm nguồn tiền trong Cá nhân → Nguồn tiền để ghi giao dịch."
+  },
+  "msgDateAndTime208": "Date and time",
+  "@msgDateAndTime208": {
+    "description": "Thời gian"
+  },
+  "msgWhatWasThisPaymentFor209": "What was this payment for?",
+  "@msgWhatWasThisPaymentFor209": {
+    "description": "Bạn đã dùng khoản tiền này cho việc gì?"
+  },
+  "msgBreakfast210": "Breakfast",
+  "@msgBreakfast210": {
+    "description": "Ăn sáng"
+  },
+  "msgCoffee211": "Coffee",
+  "@msgCoffee211": {
+    "description": "Cà phê"
+  },
+  "msgGroceries212": "Groceries",
+  "@msgGroceries212": {
+    "description": "Đi chợ"
+  },
+  "msgSaveIncome213": "Save income",
+  "@msgSaveIncome213": {
+    "description": "Lưu khoản thu"
+  },
+  "msgSaveTransaction214": "Save transaction",
+  "@msgSaveTransaction214": {
+    "description": "Lưu giao dịch"
+  },
+  "msgNoBudgetsWereSetLastMonth215": "No budgets were set last month",
+  "@msgNoBudgetsWereSetLastMonth215": {
+    "description": "Tháng trước chưa có ngân sách nào"
+  },
+  "msgCopiedBudgets216": "Copied {p0} budgets",
+  "@msgCopiedBudgets216": {
+    "description": "Đã sao chép {p0} ngân sách",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgDeleteBudget217": "Delete budget?",
+  "@msgDeleteBudget217": {
+    "description": "Xoá ngân sách?"
+  },
+  "msgDeleteTheLimitForThisMonth218": "Delete the \"{p0}\" limit for this month?",
+  "@msgDeleteTheLimitForThisMonth218": {
+    "description": "Xoá hạn mức \"{p0}\" của tháng này?",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgMonth219": "Month {p0}/{p1}",
+  "@msgMonth219": {
+    "description": "Tháng {p0}/{p1}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      },
+      "p1": {
+        "type": "String"
+      }
+    }
+  },
+  "msgAddBudget220": "Add budget",
+  "@msgAddBudget220": {
+    "description": "Thêm ngân sách"
+  },
+  "msgCopy221": "Copy",
+  "@msgCopy221": {
+    "description": "Sao chép"
+  },
+  "msgNoBudgetForThisMonthYet222": "No budget for this month yet.\nSet an overall or category limit. Túi Khôn will remind you at 80% and 100%.",
+  "@msgNoBudgetForThisMonthYet222": {
+    "description": "Chưa đặt ngân sách cho tháng này.\nĐặt hạn mức tổng hoặc cho từng danh mục, Túi Khôn sẽ nhắc khi bạn chi tới 80% và 100%."
+  },
+  "msgYourBudgets223": "Your budgets",
+  "@msgYourBudgets223": {
+    "description": "Ngân sách của bạn"
+  },
+  "msgTotalMonthlySpending224": "Total monthly spending",
+  "@msgTotalMonthlySpending224": {
+    "description": "Tổng chi tiêu tháng"
+  },
+  "msgDeleteBudget225": "Delete budget",
+  "@msgDeleteBudget225": {
+    "description": "Xóa ngân sách"
+  },
+  "msgOverBy226": "Over by {p0}",
+  "@msgOverBy226": {
+    "description": "Vượt {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgEnterALimitGreaterThan227": "Enter a limit greater than 0",
+  "@msgEnterALimitGreaterThan227": {
+    "description": "Nhập hạn mức lớn hơn 0"
+  },
+  "msgEditBudget228": "Edit budget",
+  "@msgEditBudget228": {
+    "description": "Sửa ngân sách"
+  },
+  "msgAppliesTo229": "Applies to",
+  "@msgAppliesTo229": {
+    "description": "Áp dụng cho"
+  },
+  "msgMonthlyLimitVnd230": "Monthly limit (VND)",
+  "@msgMonthlyLimitVnd230": {
+    "description": "Hạn mức trong tháng (VND)"
+  },
+  "msgIOweMoney231": "I owe money",
+  "@msgIOweMoney231": {
+    "description": "Tôi đang nợ"
+  },
+  "msgOthersOweMe232": "Others owe me",
+  "@msgOthersOweMe232": {
+    "description": "Người khác nợ tôi"
+  },
+  "msgTheDebtBookIsARecord233": "The debt book is a record and does not move money automatically. Túi Khôn reminds you one day before and on the due date.",
+  "@msgTheDebtBookIsARecord233": {
+    "description": "Sổ nợ chỉ là ghi chú, không tự trừ tiền. Túi Khôn nhắc bạn trước hạn 1 ngày và đúng ngày hạn."
+  },
+  "msgIOwe234": "I owe ({p0})",
+  "@msgIOwe234": {
+    "description": "Tôi nợ ({p0})",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgOwedToMe235": "Owed to me ({p0})",
+  "@msgOwedToMe235": {
+    "description": "Nợ tôi ({p0})",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgSettled236": "Settled ({p0})",
+  "@msgSettled236": {
+    "description": "Đã tất toán ({p0})",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgNoOpenDebtsYetTapAdd237": "No open debts yet.\nTap \"Add debt\" to record one.",
+  "@msgNoOpenDebtsYetTapAdd237": {
+    "description": "Chưa có khoản nợ nào đang mở.\nBấm \"Thêm khoản nợ\" để ghi lại."
+  },
+  "msgSettled238": "Settled",
+  "@msgSettled238": {
+    "description": "Đã tất toán"
+  },
+  "msgDeleteDebt239": "Delete debt?",
+  "@msgDeleteDebt239": {
+    "description": "Xoá khoản nợ?"
+  },
+  "msgDeleteTheDebtRecordWith240": "Delete the debt record with {p0}?",
+  "@msgDeleteTheDebtRecordWith240": {
+    "description": "Xoá ghi chú nợ với {p0}?",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgFullyPaid241": "Fully paid",
+  "@msgFullyPaid241": {
+    "description": "Đã trả hết"
+  },
+  "msgFullyCollected242": "Fully collected",
+  "@msgFullyCollected242": {
+    "description": "Đã nhận đủ"
+  },
+  "msgRecordPartialPayment243": "Record partial payment",
+  "@msgRecordPartialPayment243": {
+    "description": "Ghi trả một phần"
+  },
+  "msgEdit244": "Edit",
+  "@msgEdit244": {
+    "description": "Sửa"
+  },
+  "msgEnterTheLenderOrBorrowerName245": "Enter the lender or borrower name",
+  "@msgEnterTheLenderOrBorrowerName245": {
+    "description": "Nhập tên người cho vay / đi vay"
+  },
+  "msgEnterAnAmountGreaterThan246": "Enter an amount greater than 0",
+  "@msgEnterAnAmountGreaterThan246": {
+    "description": "Nhập số tiền lớn hơn 0"
+  },
+  "msgAmountCannotBeLessThanWhat247": "Amount cannot be less than what has already been paid",
+  "@msgAmountCannotBeLessThanWhat247": {
+    "description": "Số tiền không được nhỏ hơn phần đã trả"
+  },
+  "msgAddDebt248": "Add debt",
+  "@msgAddDebt248": {
+    "description": "Thêm khoản nợ"
+  },
+  "msgEditDebt249": "Edit debt",
+  "@msgEditDebt249": {
+    "description": "Sửa khoản nợ"
+  },
+  "msgIOwe250": "I owe",
+  "@msgIOwe250": {
+    "description": "Tôi nợ"
+  },
+  "msgOwedToMe251": "Owed to me",
+  "@msgOwedToMe251": {
+    "description": "Nợ tôi"
+  },
+  "msgWhoDoIOwe252": "Who do I owe?",
+  "@msgWhoDoIOwe252": {
+    "description": "Tôi nợ ai?"
+  },
+  "msgWhoOwesMe253": "Who owes me?",
+  "@msgWhoOwesMe253": {
+    "description": "Ai nợ tôi?"
+  },
+  "msgPhoneNumberOptional254": "Phone number (optional)",
+  "@msgPhoneNumberOptional254": {
+    "description": "Số điện thoại (tuỳ chọn)"
+  },
+  "msgNoteOptional255": "Note (optional)",
+  "@msgNoteOptional255": {
+    "description": "Ghi chú (tuỳ chọn)"
+  },
+  "msgDueDate256": "Due date",
+  "@msgDueDate256": {
+    "description": "Hạn trả"
+  },
+  "msgSettledTheDebtWith257": "Settled the debt with {p0}",
+  "@msgSettledTheDebtWith257": {
+    "description": "Đã tất toán khoản nợ với {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgPaymentRecorded258": "Payment recorded",
+  "@msgPaymentRecorded258": {
+    "description": "Đã ghi nhận khoản trả"
+  },
+  "msgConfirmDebtRepayment259": "Confirm debt repayment",
+  "@msgConfirmDebtRepayment259": {
+    "description": "Xác nhận đã trả nợ"
+  },
+  "msgConfirmMoneyCollected260": "Confirm money collected",
+  "@msgConfirmMoneyCollected260": {
+    "description": "Xác nhận đã nhận tiền"
+  },
+  "msgYouOweRemaining261": "You owe {p0}: {p1} remaining",
+  "@msgYouOweRemaining261": {
+    "description": "Bạn nợ {p0}: còn {p1}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      },
+      "p1": {
+        "type": "String"
+      }
+    }
+  },
+  "msgOwesYouRemaining262": "{p0} owes you: {p1} remaining",
+  "@msgOwesYouRemaining262": {
+    "description": "{p0} nợ bạn: còn {p1}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      },
+      "p1": {
+        "type": "String"
+      }
+    }
+  },
+  "msgAmountPaid263": "Amount paid",
+  "@msgAmountPaid263": {
+    "description": "Số tiền đã trả"
+  },
+  "msgRecordAMatchingTransaction264": "Record a matching transaction",
+  "@msgRecordAMatchingTransaction264": {
+    "description": "Ghi kèm vào giao dịch"
+  },
+  "msgAddADebtRepaymentExpense265": "Add a \"Debt repayment\" expense",
+  "@msgAddADebtRepaymentExpense265": {
+    "description": "Thêm một khoản chi \"Trả nợ\""
+  },
+  "msgAddADebtCollectionIncome266": "Add a \"Debt collection\" income",
+  "@msgAddADebtCollectionIncome266": {
+    "description": "Thêm một khoản thu \"Thu nợ\""
+  },
+  "msgAmountMustBeBetweenAnd267": "Amount must be between ₫1 and {p0}",
+  "@msgAmountMustBeBetweenAnd267": {
+    "description": "Số tiền phải từ 1đ đến {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgConfirm268": "Confirm",
+  "@msgConfirm268": {
+    "description": "Xác nhận"
+  },
+  "msgOverdue269": "Overdue",
+  "@msgOverdue269": {
+    "description": "Quá hạn"
+  },
+  "msgDueToday270": "Due today",
+  "@msgDueToday270": {
+    "description": "Đến hạn hôm nay"
+  },
+  "msgDueSoon271": "Due soon",
+  "@msgDueSoon271": {
+    "description": "Sắp đến hạn"
+  },
+  "msgOutstanding272": "Outstanding",
+  "@msgOutstanding272": {
+    "description": "Đang còn nợ"
+  },
+  "msgUndoDebtPayment273": "Undo debt payment",
+  "@msgUndoDebtPayment273": {
+    "description": "Hoàn tác lần trả nợ"
+  },
+  "msgUndoTheOutstandingDebtWillIncrease274": "Undo {p0} ({p1})? The outstanding debt will increase accordingly.{p2}",
+  "@msgUndoTheOutstandingDebtWillIncrease274": {
+    "description": "Hoàn tác {p0} ({p1})? Khoản nợ còn lại sẽ tăng tương ứng.{p2}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      },
+      "p1": {
+        "type": "String"
+      },
+      "p2": {
+        "type": "String"
+      }
+    }
+  },
+  "msgCancel275": "Cancel",
+  "@msgCancel275": {
+    "description": "Hủy"
+  },
+  "msgUndo276": "Undo",
+  "@msgUndo276": {
+    "description": "Hoàn tác"
+  },
+  "msgDebtDetails277": "Debt details",
+  "@msgDebtDetails277": {
+    "description": "Chi tiết khoản nợ"
+  },
+  "msgEditDebtInformation278": "Edit debt information",
+  "@msgEditDebtInformation278": {
+    "description": "Chỉnh sửa khoản nợ"
+  },
+  "msgUndoing279": "Undoing…",
+  "@msgUndoing279": {
+    "description": "Đang hoàn tác…"
+  },
+  "msgRecordRepayment280": "Record repayment",
+  "@msgRecordRepayment280": {
+    "description": "Ghi trả nợ"
+  },
+  "msgRecordCollection281": "Record collection",
+  "@msgRecordCollection281": {
+    "description": "Ghi thu nợ"
+  },
+  "msgHistoryPayments282": "{p0} history • {p1} payments",
+  "@msgHistoryPayments282": {
+    "description": "Lịch sử {p0} nợ • {p1} lần",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      },
+      "p1": {
+        "type": "String"
+      }
+    }
+  },
+  "msgNewest283": "Newest",
+  "@msgNewest283": {
+    "description": "Mới nhất"
+  },
+  "msgOldest284": "Oldest",
+  "@msgOldest284": {
+    "description": "Cũ nhất"
+  },
+  "msgNoPaymentHistoryYet285": "No payment history yet",
+  "@msgNoPaymentHistoryYet285": {
+    "description": "Chưa có lịch sử thanh toán"
+  },
+  "msgEachPaymentYouRecordWillAppear286": "Each payment you record will appear here.",
+  "@msgEachPaymentYouRecordWillAppear286": {
+    "description": "Mỗi lần ghi nhận sẽ xuất hiện tại đây."
+  },
+  "msgPaymentActions287": "Payment actions",
+  "@msgPaymentActions287": {
+    "description": "Thao tác lần thanh toán"
+  },
+  "msgEdit288": "Edit",
+  "@msgEdit288": {
+    "description": "Chỉnh sửa"
+  },
+  "msgPaidBeforeTheUpgrade289": "Paid before the upgrade",
+  "@msgPaidBeforeTheUpgrade289": {
+    "description": "Số tiền trước nâng cấp"
+  },
+  "msgMatchingRecorded290": "Matching {p0} recorded",
+  "@msgMatchingRecorded290": {
+    "description": "Đã ghi khoản {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgRecordOnly291": "Record only",
+  "@msgRecordOnly291": {
+    "description": "Chỉ ghi nhận"
+  },
+  "msgMoneySourceNoLongerAvailable292": "Money source no longer available",
+  "@msgMoneySourceNoLongerAvailable292": {
+    "description": "Nguồn tiền không còn hoạt động"
+  },
+  "msgTotalPaidBeforeTheUpgradeIndividual293": "Total paid before the upgrade; individual payment details are not available.",
+  "@msgTotalPaidBeforeTheUpgradeIndividual293": {
+    "description": "Tổng đã trả trước nâng cấp, không có chi tiết từng lần."
+  },
+  "msgThisPersonOwesMe294": "This person owes me",
+  "@msgThisPersonOwesMe294": {
+    "description": "Người này nợ tôi"
+  },
+  "msgRemaining295": "Remaining",
+  "@msgRemaining295": {
+    "description": "Còn lại"
+  },
+  "msgTotalDebt296": "Total debt",
+  "@msgTotalDebt296": {
+    "description": "Tổng nợ"
+  },
+  "msgCollected297": "Collected",
+  "@msgCollected297": {
+    "description": "Đã thu"
+  },
+  "msgRemaining298": "Remaining {p0}%",
+  "@msgRemaining298": {
+    "description": "Còn lại {p0}%",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgNoDueDate299": "No due date",
+  "@msgNoDueDate299": {
+    "description": "Chưa đặt hạn"
+  },
+  "msgDue300": "Due {p0}",
+  "@msgDue300": {
+    "description": "Hạn {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgSelectAMoneySource301": "Select a money source",
+  "@msgSelectAMoneySource301": {
+    "description": "Chọn nguồn tiền"
+  },
+  "msgEdit304": "Edit {p0}",
+  "@msgEdit304": {
+    "description": "Chỉnh sửa lần {p0} nợ",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgAmountExceedsTheRemainingDebt305": "Amount exceeds the remaining debt ({p0})",
+  "@msgAmountExceedsTheRemainingDebt305": {
+    "description": "Số tiền vượt quá số còn lại ({p0})",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgDate306": "{p0} date: {p1}",
+  "@msgDate306": {
+    "description": "Ngày {p0}: {p1}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      },
+      "p1": {
+        "type": "String"
+      }
+    }
+  },
+  "msgNoteOptional307": "Note (optional)",
+  "@msgNoteOptional307": {
+    "description": "Ghi chú (tùy chọn)"
+  },
+  "msgAmountPaidBeforeTheUpgradeIndividual308": "Amount paid before the upgrade: individual details are unavailable and no income or expense is created.",
+  "@msgAmountPaidBeforeTheUpgradeIndividual308": {
+    "description": "Số tiền trước nâng cấp: không có chi tiết từng lần và không tạo thêm thu/chi."
+  },
+  "msgRecordAMatching309": "Record a matching {p0}",
+  "@msgRecordAMatching309": {
+    "description": "Ghi kèm khoản {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgCreateACorrespondingTransactionRecord310": "Create a corresponding transaction record",
+  "@msgCreateACorrespondingTransactionRecord310": {
+    "description": "Tạo một khoản ghi chép tương ứng"
+  },
+  "msgCouldNotLoadMoneySourcesClose311": "Could not load money sources. Close and try again.",
+  "@msgCouldNotLoadMoneySourcesClose311": {
+    "description": "Không tải được nguồn tiền. Hãy đóng và thử lại."
+  },
+  "msgSaving312": "Saving…",
+  "@msgSaving312": {
+    "description": "Đang lưu…"
+  },
+  "msgUpdate313": "Update",
+  "@msgUpdate313": {
+    "description": "Cập nhật"
+  },
+  "msgNoGoalsYetSetAGoal314": "No goals yet.\nSet a goal (e.g. a laptop for ₫20 million) and record each contribution.",
+  "@msgNoGoalsYetSetAGoal314": {
+    "description": "Chưa có mục tiêu nào.\nĐặt mục tiêu (vd: mua laptop 20 triệu) và ghi lại mỗi lần để dành."
+  },
+  "msgAddTo315": "Add to \"{p0}\"",
+  "@msgAddTo315": {
+    "description": "Nạp thêm vào \"{p0}\"",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgWithdrawFrom316": "Withdraw from \"{p0}\"",
+  "@msgWithdrawFrom316": {
+    "description": "Rút bớt từ \"{p0}\"",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgCongratulationsYouCompletedTheGoal317": "🎉 Congratulations! You completed the \"{p0}\" goal",
+  "@msgCongratulationsYouCompletedTheGoal317": {
+    "description": "🎉 Chúc mừng! Bạn đã hoàn thành mục tiêu \"{p0}\"",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgCompleted318": "Completed 🎉",
+  "@msgCompleted318": {
+    "description": "Đã hoàn thành 🎉"
+  },
+  "msgRemaining319": "{p0} remaining",
+  "@msgRemaining319": {
+    "description": "Còn {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgDue320": "due {p0}",
+  "@msgDue320": {
+    "description": "hạn {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgAddSavings321": "Add savings",
+  "@msgAddSavings321": {
+    "description": "Nạp thêm"
+  },
+  "msgWithdrawSavings322": "Withdraw savings",
+  "@msgWithdrawSavings322": {
+    "description": "Rút bớt"
+  },
+  "msgEnterAGoalName323": "Enter a goal name",
+  "@msgEnterAGoalName323": {
+    "description": "Nhập tên mục tiêu"
+  },
+  "msgEnterATargetAmountGreaterThan324": "Enter a target amount greater than 0",
+  "@msgEnterATargetAmountGreaterThan324": {
+    "description": "Nhập số tiền mục tiêu lớn hơn 0"
+  },
+  "msgDeleteGoal325": "Delete goal?",
+  "@msgDeleteGoal325": {
+    "description": "Xoá mục tiêu?"
+  },
+  "msgDeleteTheGoal326": "Delete the \"{p0}\" goal?",
+  "@msgDeleteTheGoal326": {
+    "description": "Xoá mục tiêu \"{p0}\"?",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgNewGoal327": "New goal",
+  "@msgNewGoal327": {
+    "description": "Mục tiêu mới"
+  },
+  "msgEditGoal328": "Edit goal",
+  "@msgEditGoal328": {
+    "description": "Sửa mục tiêu"
+  },
+  "msgGoalNameEGNewLaptop329": "Goal name (e.g. New laptop)",
+  "@msgGoalNameEGNewLaptop329": {
+    "description": "Tên mục tiêu (vd: Mua laptop)"
+  },
+  "msgTargetAmountVnd330": "Target amount (VND)",
+  "@msgTargetAmountVnd330": {
+    "description": "Số tiền mục tiêu (VND)"
+  },
+  "msgTargetDate331": "Target date",
+  "@msgTargetDate331": {
+    "description": "Hạn hoàn thành"
+  },
+  "msgIcon332": "Icon",
+  "@msgIcon332": {
+    "description": "Biểu tượng"
+  },
+  "msgColor333": "Color",
+  "@msgColor333": {
+    "description": "Màu"
+  },
+  "msgTakePhoto335": "Take photo",
+  "@msgTakePhoto335": {
+    "description": "Chụp ảnh"
+  },
+  "msgChooseFromLibrary336": "Choose from library",
+  "@msgChooseFromLibrary336": {
+    "description": "Chọn từ thư viện"
+  },
+  "msgProfilePhotoUpdated337": "Profile photo updated",
+  "@msgProfilePhotoUpdated337": {
+    "description": "Đã cập nhật ảnh đại diện"
+  },
+  "msgProfileUpdated338": "Profile updated",
+  "@msgProfileUpdated338": {
+    "description": "Đã cập nhật hồ sơ"
+  },
+  "msgUpdateProfile339": "Update profile",
+  "@msgUpdateProfile339": {
+    "description": "Cập nhật hồ sơ"
+  },
+  "msgTapToChangeProfilePhoto340": "Tap to change profile photo",
+  "@msgTapToChangeProfilePhoto340": {
+    "description": "Chạm để đổi ảnh đại diện"
+  },
+  "msgDisplayName341": "Display name",
+  "@msgDisplayName341": {
+    "description": "Tên hiển thị"
+  },
+  "msgSignInEmail342": "Sign-in email",
+  "@msgSignInEmail342": {
+    "description": "Email đăng nhập"
+  },
+  "msgSaveChanges343": "Save changes",
+  "@msgSaveChanges343": {
+    "description": "Lưu thay đổi"
+  },
+  "msgThereAreUnsyncedChangesSigningOut344": "There are {p0} unsynced changes. Signing out keeps them on this device for your next sign-in.",
+  "@msgThereAreUnsyncedChangesSigningOut344": {
+    "description": "Có {p0} thay đổi chưa đồng bộ. Đăng xuất sẽ giữ dữ liệu trên máy cho lần đăng nhập sau.",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgBiometricsAreNotSetUpOn345": "Biometrics are not set up on this device. Configure Face ID or a fingerprint in device settings first.",
+  "@msgBiometricsAreNotSetUpOn345": {
+    "description": "Thiết bị chưa cài Face ID / vân tay. Hãy thiết lập trong Cài đặt của máy trước."
+  },
+  "msgConfirmToEnableTIKh346": "Confirm to enable Túi Khôn app lock",
+  "@msgConfirmToEnableTIKh346": {
+    "description": "Xác nhận để bật khoá Túi Khôn"
+  },
+  "msgLearningHappensOnlyWhenYouChange348": "Learning happens only when you change a category and save the transaction. Rules match the original draft description after normalizing accents, case and whitespace, with merchant-specific rules taking priority. Money sources and amounts are not learned.",
+  "@msgLearningHappensOnlyWhenYouChange348": {
+    "description": "Chỉ học khi bạn đổi danh mục rồi lưu giao dịch. Quy tắc khớp chính xác mô tả bản nháp ban đầu sau khi bỏ dấu, chuyển chữ thường và gộp khoảng trắng; ưu tiên quy tắc riêng của cửa hàng; không học ví hay số tiền."
+  },
+  "msgNoCategoryRulesYet349": "No category rules yet",
+  "@msgNoCategoryRulesYet349": {
+    "description": "Chưa có quy tắc phân loại"
+  },
+  "msgLoadingCategories350": "Loading categories…",
+  "@msgLoadingCategories350": {
+    "description": "Đang tải danh mục…"
+  },
+  "msgCategoryNoLongerExists351": "Category no longer exists",
+  "@msgCategoryNoLongerExists351": {
+    "description": "Danh mục không còn tồn tại"
+  },
+  "msgDeleteRule352": "Delete rule",
+  "@msgDeleteRule352": {
+    "description": "Xóa quy tắc"
+  },
+  "msgHelloHaveYouSpentOrReceived353": "Hello! Have you spent or received any money? Type or use the microphone to describe it naturally in Vietnamese.",
+  "@msgHelloHaveYouSpentOrReceived353": {
+    "description": "Chào bạn! Bạn vừa chi tiêu gì hay có khoản thu nào mới? Hãy gõ hoặc bấm mic nói tự nhiên bằng tiếng Việt nhé."
+  },
+  "msgHowMuchWasThisTransaction354": "How much was this transaction?",
+  "@msgHowMuchWasThisTransaction354": {
+    "description": "Khoản này bao nhiêu tiền?"
+  },
+  "msgPleaseAddTheAmount355": "Please add the amount.",
+  "@msgPleaseAddTheAmount355": {
+    "description": "Bạn bổ sung số tiền giúp mình nhé?"
+  },
+  "msgPleaseProvideMoreDetails356": "Please provide more details.",
+  "@msgPleaseProvideMoreDetails356": {
+    "description": "Bạn nói rõ hơn giúp mình nhé?"
+  },
+  "msgAddDetailsToThisTransaction357": "Add details to this transaction:",
+  "@msgAddDetailsToThisTransaction357": {
+    "description": "Cần bổ sung giao dịch này:"
+  },
+  "msgReviewAndTapSave358": "Review and tap Save:",
+  "@msgReviewAndTapSave358": {
+    "description": "Kiểm tra rồi bấm Lưu nhé:"
+  },
+  "msgUsingTheOfflineParserPleaseReview359": "(Using the offline parser. Please review the result.)",
+  "@msgUsingTheOfflineParserPleaseReview359": {
+    "description": "(Đang dùng bộ phân tích offline, hãy kiểm tra lại.)"
+  },
+  "msgReviewRequired360": "Review required: {p0}",
+  "@msgReviewRequired360": {
+    "description": "Cần kiểm tra: {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgICouldnTHearThatClearly361": "I couldn't hear that clearly. Please try again.",
+  "@msgICouldnTHearThatClearly361": {
+    "description": "Mình chưa nghe rõ, bạn thử nói lại nhé"
+  },
+  "msgSpeechRecognitionIsUnavailableOrMicrophone362": "Speech recognition is unavailable, or microphone permission has not been granted",
+  "@msgSpeechRecognitionIsUnavailableOrMicrophone362": {
+    "description": "Thiết bị chưa hỗ trợ nhận giọng nói hoặc bạn chưa cấp quyền micro"
+  },
+  "msgReceiptImage363": "Receipt image",
+  "@msgReceiptImage363": {
+    "description": "Ảnh hóa đơn"
+  },
+  "msgSavedToYourTIKh364": "Saved to your Túi Khôn notebook!",
+  "@msgSavedToYourTIKh364": {
+    "description": "Đã lưu giao dịch vào sổ Túi Khôn!"
+  },
+  "msgTransactionSaved365": "Transaction saved!",
+  "@msgTransactionSaved365": {
+    "description": "Đã lưu giao dịch!"
+  },
+  "msgEnterManually366": "Enter manually",
+  "@msgEnterManually366": {
+    "description": "Nhập thủ công"
+  },
+  "msgFollowUp367": "Follow-up: {p0}",
+  "@msgFollowUp367": {
+    "description": "Bổ sung: {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgCancelFollowUp368": "Cancel follow-up",
+  "@msgCancelFollowUp368": {
+    "description": "Hủy bổ sung"
+  },
+  "msgTIKhNAssistant369": "Túi Khôn assistant",
+  "@msgTIKhNAssistant369": {
+    "description": "Trợ lý Túi Khôn"
+  },
+  "msgRecordMultipleItemsAndReviewBefore370": "Record multiple items and review before saving",
+  "@msgRecordMultipleItemsAndReviewBefore370": {
+    "description": "Ghi nhiều khoản, duyệt trước khi lưu"
+  },
+  "msgTypeOrSpeakNaturallyInVietnamese371": "Type or speak naturally in Vietnamese",
+  "@msgTypeOrSpeakNaturallyInVietnamese371": {
+    "description": "Gõ hoặc nói tự nhiên bằng tiếng Việt"
+  },
+  "msgNPhK372": "Ăn phở 65k",
+  "@msgNPhK372": {
+    "description": "Ăn phở 65k"
+  },
+  "msgCPhKXNgK373": "Cà phê 35k, đổ xăng 80k",
+  "@msgCPhKXNgK373": {
+    "description": "Cà phê 35k, đổ xăng 80k"
+  },
+  "msgNhNLNgTriU374": "Nhận lương 12 triệu",
+  "@msgNhNLNgTriU374": {
+    "description": "Nhận lương 12 triệu"
+  },
+  "msgScanReceipt375": "SCAN RECEIPT",
+  "@msgScanReceipt375": {
+    "description": "QUÉT HÓA ĐƠN"
+  },
+  "msgTranscribedVoice376": "TRANSCRIBED VOICE",
+  "@msgTranscribedVoice376": {
+    "description": "GIỌNG NÓI ĐÃ DỊCH"
+  },
+  "msgGeminiIsAnalyzing377": "Gemini is analyzing…",
+  "@msgGeminiIsAnalyzing377": {
+    "description": "Gemini đang phân tích..."
+  },
+  "msgSelectTransaction378": "Select transaction",
+  "@msgSelectTransaction378": {
+    "description": "Chọn giao dịch"
+  },
+  "msgPossibleDuplicateReviewBeforeSaving379": "Possible duplicate. Review before saving.",
+  "@msgPossibleDuplicateReviewBeforeSaving379": {
+    "description": "Có thể trùng giao dịch. Kiểm tra trước khi lưu."
+  },
+  "msgAddDetails380": "Add details",
+  "@msgAddDetails380": {
+    "description": "Bổ sung"
+  },
+  "msgSaveSelected381": "Save selected ({p0})",
+  "@msgSaveSelected381": {
+    "description": "Lưu đã chọn ({p0})",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgNoCategorySelected382": "No category selected",
+  "@msgNoCategorySelected382": {
+    "description": "Chưa chọn danh mục"
+  },
+  "msgIncome383": "+ Income",
+  "@msgIncome383": {
+    "description": "+ Thu nhập"
+  },
+  "msgExpense384": "Expense",
+  "@msgExpense384": {
+    "description": "Trừ tiền"
+  },
+  "msgAmountInVnd385": "AMOUNT IN VND",
+  "@msgAmountInVnd385": {
+    "description": "SỐ TIỀN QUY ĐỔI"
+  },
+  "msgSavedToNotebook386": "Saved to notebook",
+  "@msgSavedToNotebook386": {
+    "description": "Đã lưu vào sổ"
+  },
+  "msgTodayAiRequests387": "Today: {p0}/{p1} AI requests",
+  "@msgTodayAiRequests387": {
+    "description": "Hôm nay: {p0}/{p1} lượt AI",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      },
+      "p1": {
+        "type": "String"
+      }
+    }
+  },
+  "msgListening388": "Listening…",
+  "@msgListening388": {
+    "description": "Đang nghe…"
+  },
+  "msgVietnameseExampleCPhK389": "Vietnamese example: cà phê 35k…",
+  "@msgVietnameseExampleCPhK389": {
+    "description": "Ví dụ: cà phê 35k…"
+  },
+  "msgStopRecording390": "Stop recording",
+  "@msgStopRecording390": {
+    "description": "Dừng ghi âm"
+  },
+  "msgSendRecord391": "Send record",
+  "@msgSendRecord391": {
+    "description": "Gửi ghi chép"
+  },
+  "msgTakeReceiptPhoto392": "Take receipt photo",
+  "@msgTakeReceiptPhoto392": {
+    "description": "Chụp ảnh hóa đơn"
+  },
+  "msgChoosePhotoFromLibrary393": "Choose photo from library",
+  "@msgChoosePhotoFromLibrary393": {
+    "description": "Chọn từ thư viện ảnh"
+  },
+  "msgCouldNotOpenReceiptImage394": "Could not open receipt image",
+  "@msgCouldNotOpenReceiptImage394": {
+    "description": "Không mở được ảnh hóa đơn"
+  },
+  "msgConfirmPaymentOf395": "Confirm payment of {p0}",
+  "@msgConfirmPaymentOf395": {
+    "description": "Xác nhận đã trả {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgOnlyMarkAsPaid396": "Only mark as paid",
+  "@msgOnlyMarkAsPaid396": {
+    "description": "Chỉ đánh dấu đã trả"
+  },
+  "msgRecordExpense397": "Record expense",
+  "@msgRecordExpense397": {
+    "description": "Ghi khoản chi"
+  },
+  "msgSelectAnExpenseForThisBill398": "Select an expense for this bill",
+  "@msgSelectAnExpenseForThisBill398": {
+    "description": "Vui lòng chọn khoản chi cho khoản phải trả"
+  },
+  "msgRemindersDoNotCreateExpensesAutomatically399": "Reminders do not create expenses automatically. Confirm each payment yourself.",
+  "@msgRemindersDoNotCreateExpensesAutomatically399": {
+    "description": "Lịch nhắc không tự tạo khoản chi. Bạn xác nhận từng lần thanh toán."
+  },
+  "msgNoBillsYetTapToAdd400": "No bills yet. Tap + to add one.",
+  "@msgNoBillsYetTapToAdd400": {
+    "description": "Chưa có khoản phải trả. Bấm + để thêm."
+  },
+  "msgMarkAsPaid401": "Mark as paid",
+  "@msgMarkAsPaid401": {
+    "description": "Đánh dấu đã trả"
+  },
+  "msgEnterANameAndAnAmount402": "Enter a name and an amount greater than 0",
+  "@msgEnterANameAndAnAmount402": {
+    "description": "Nhập tên và số tiền lớn hơn 0"
+  },
+  "msgBillName403": "Bill name",
+  "@msgBillName403": {
+    "description": "Tên khoản phải trả"
+  },
+  "msgStartDate404": "Start date",
+  "@msgStartDate404": {
+    "description": "Ngày bắt đầu"
+  },
+  "msgOnce405": "Once",
+  "@msgOnce405": {
+    "description": "Một lần"
+  },
+  "msgWeekly406": "Weekly",
+  "@msgWeekly406": {
+    "description": "Hàng tuần"
+  },
+  "msgMonthly407": "Monthly",
+  "@msgMonthly407": {
+    "description": "Hàng tháng"
+  },
+  "msgActive408": "Active",
+  "@msgActive408": {
+    "description": "Đang hoạt động"
+  },
+  "msgCouldNotUpdateRemindersPleaseTry409": "Could not update reminders. Please try again.",
+  "@msgCouldNotUpdateRemindersPleaseTry409": {
+    "description": "Không thể cập nhật lịch nhắc. Vui lòng thử lại."
+  },
+  "msgCouldNotUpdateReminderTimePlease410": "Could not update reminder time. Please try again.",
+  "@msgCouldNotUpdateReminderTimePlease410": {
+    "description": "Không thể cập nhật giờ nhắc. Vui lòng thử lại."
+  },
+  "msgIncomeExpenseDiary412": "Income & expense diary",
+  "@msgIncomeExpenseDiary412": {
+    "description": "Nhật ký thu chi"
+  },
+  "msgEveryDay413": "21:00 every day",
+  "@msgEveryDay413": {
+    "description": "21:00 mỗi ngày"
+  },
+  "msgOneDayBeforeAndOnThe414": "08:00 one day before and on the due date",
+  "@msgOneDayBeforeAndOnThe414": {
+    "description": "08:00 trước hạn một ngày và đúng ngày"
+  },
+  "msgOnTheFirstDayOfThe415": "08:00 on the first day of the month",
+  "@msgOnTheFirstDayOfThe415": {
+    "description": "08:00 ngày đầu tháng"
+  },
+  "msgDailyAtTheSelectedTime416": "Daily at the selected time",
+  "@msgDailyAtTheSelectedTime416": {
+    "description": "Mỗi ngày vào giờ đã chọn"
+  },
+  "msgDiaryReminderTime417": "Diary reminder time",
+  "@msgDiaryReminderTime417": {
+    "description": "Giờ nhắc nhật ký"
+  },
+  "msgAddCategory418": "Add category",
+  "@msgAddCategory418": {
+    "description": "Thêm danh mục"
+  },
+  "msgEnterACategoryName419": "Enter a category name",
+  "@msgEnterACategoryName419": {
+    "description": "Nhập tên danh mục"
+  },
+  "msgDeleteCategory420": "Delete category \"{p0}\"?",
+  "@msgDeleteCategory420": {
+    "description": "Xoá danh mục \"{p0}\"?",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgExistingTransactionsWillBeKeptAnd421": "Existing transactions will be kept and shown as \"Uncategorized\". This category's budgets will be deleted.",
+  "@msgExistingTransactionsWillBeKeptAnd421": {
+    "description": "Các giao dịch cũ vẫn được giữ và chuyển thành \"Chưa phân loại\". Ngân sách của danh mục này sẽ bị xoá."
+  },
+  "msgNewExpenseCategory422": "New expense category",
+  "@msgNewExpenseCategory422": {
+    "description": "Danh mục chi mới"
+  },
+  "msgNewIncomeCategory423": "New income category",
+  "@msgNewIncomeCategory423": {
+    "description": "Danh mục thu mới"
+  },
+  "msgEditCategory424": "Edit category",
+  "@msgEditCategory424": {
+    "description": "Sửa danh mục"
+  },
+  "msgCategoryName425": "Category name",
+  "@msgCategoryName425": {
+    "description": "Tên danh mục"
+  },
+  "msgAddMoneySource426": "Add money source",
+  "@msgAddMoneySource426": {
+    "description": "Thêm nguồn tiền"
+  },
+  "msgTotal427": "Total: {p0}",
+  "@msgTotal427": {
+    "description": "Tổng: {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgMoneySourcesAreLabelsForTracking428": "Money sources are labels for tracking where your money is. Túi Khôn does not connect to banks or e-wallets. Balance = opening balance + income − expenses you record.",
+  "@msgMoneySourcesAreLabelsForTracking428": {
+    "description": "Nguồn tiền chỉ để bạn biết tiền đang nằm ở đâu. Túi Khôn không liên kết ngân hàng hay ví điện tử; số dư = số dư ban đầu + thu − chi bạn đã ghi."
+  },
+  "msgCash429": "Cash",
+  "@msgCash429": {
+    "description": "Tiền mặt"
+  },
+  "msgBankAccount430": "Bank account",
+  "@msgBankAccount430": {
+    "description": "Tài khoản ngân hàng"
+  },
+  "msgEWallet431": "E-wallet",
+  "@msgEWallet431": {
+    "description": "Ví điện tử"
+  },
+  "msgOther432": "Other",
+  "@msgOther432": {
+    "description": "Khác"
+  },
+  "msgEnterAMoneySourceNameE433": "Enter a money source name (e.g. My bank account)",
+  "@msgEnterAMoneySourceNameE433": {
+    "description": "Nhập tên nguồn tiền (vd: TK Vietcombank)"
+  },
+  "msgDelete434": "Delete \"{p0}\"?",
+  "@msgDelete434": {
+    "description": "Xoá \"{p0}\"?",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgIfItHasTransactionsThisSource435": "If it has transactions, this source will be archived instead of deleted. Existing transactions are kept.",
+  "@msgIfItHasTransactionsThisSource435": {
+    "description": "Nếu đã có giao dịch, nguồn tiền sẽ được ẩn đi (giao dịch cũ giữ nguyên) thay vì xoá hẳn."
+  },
+  "msgMoneySourceArchivedTransactionHistoryIs436": "Money source archived; transaction history is preserved",
+  "@msgMoneySourceArchivedTransactionHistoryIs436": {
+    "description": "Đã ẩn nguồn tiền (vẫn giữ lịch sử giao dịch)"
+  },
+  "msgMoneySourceDeleted437": "Money source deleted",
+  "@msgMoneySourceDeleted437": {
+    "description": "Đã xoá nguồn tiền"
+  },
+  "msgEditMoneySource438": "Edit money source",
+  "@msgEditMoneySource438": {
+    "description": "Sửa nguồn tiền"
+  },
+  "msgNameEGBankAccountMomo439": "Name (e.g. Bank account, MoMo)",
+  "@msgNameEGBankAccountMomo439": {
+    "description": "Tên (vd: TK Vietcombank, Ví MoMo)"
+  },
+  "msgOpeningBalanceVnd440": "Opening balance (VND)",
+  "@msgOpeningBalanceVnd440": {
+    "description": "Số dư ban đầu (VND)"
+  },
+  "msgUncategorized441": "Uncategorized",
+  "@msgUncategorized441": {
+    "description": "Chưa phân loại"
+  },
+  "msgSelectStatisticsMonth442": "Select statistics month",
+  "@msgSelectStatisticsMonth442": {
+    "description": "Chọn tháng thống kê"
+  },
+  "msgPreviousMonth444": "Previous month",
+  "@msgPreviousMonth444": {
+    "description": "Tháng trước"
+  },
+  "msgNextMonth445": "Next month",
+  "@msgNextMonth445": {
+    "description": "Tháng sau"
+  },
+  "msgOverview446": "Overview",
+  "@msgOverview446": {
+    "description": "Tổng quan"
+  },
+  "msgTrends447": "Trends",
+  "@msgTrends447": {
+    "description": "Xu hướng"
+  },
+  "msgCalculatedFromRecordsOnThisDevice448": "Calculated from records on this device, including changes waiting to sync.",
+  "@msgCalculatedFromRecordsOnThisDevice448": {
+    "description": "Tính từ ghi chép trên thiết bị, bao gồm mục đang chờ đồng bộ."
+  },
+  "msgTotalSpending449": "Total spending",
+  "@msgTotalSpending449": {
+    "description": "Tổng chi tiêu"
+  },
+  "msgNoSpendingLastMonthForComparison450": "No spending last month for comparison",
+  "@msgNoSpendingLastMonthForComparison450": {
+    "description": "Tháng trước chưa có chi tiêu để so sánh"
+  },
+  "msgComparedWithLastMonth451": "{p0} {p1}% compared with last month",
+  "@msgComparedWithLastMonth451": {
+    "description": "{p0} {p1}% so với tháng trước",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      },
+      "p1": {
+        "type": "String"
+      }
+    }
+  },
+  "msgNoExpensesThisMonthYet452": "No expenses this month yet.",
+  "@msgNoExpensesThisMonthYet452": {
+    "description": "Chưa có chi tiêu trong tháng này."
+  },
+  "msgSpendingByCategoryTotal453": "Spending by category, total {p0}",
+  "@msgSpendingByCategoryTotal453": {
+    "description": "Cơ cấu chi tiêu theo danh mục, tổng {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgTotalSpending454": "Total spending",
+  "@msgTotalSpending454": {
+    "description": "Tổng chi"
+  },
+  "msgVnd455": "VND",
+  "@msgVnd455": {
+    "description": "đồng"
+  },
+  "msgSpendingOverTime456": "Spending over time",
+  "@msgSpendingOverTime456": {
+    "description": "Chi tiêu theo thời gian"
+  },
+  "msgNoExpenseRecordsYet457": "No expense records yet",
+  "@msgNoExpenseRecordsYet457": {
+    "description": "Chưa có ghi chép chi tiêu"
+  },
+  "msgHighestDay458": "Highest day: {p0}",
+  "@msgHighestDay458": {
+    "description": "Ngày cao nhất: {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgMonthlyBudgets459": "Monthly budgets",
+  "@msgMonthlyBudgets459": {
+    "description": "Ngân sách tháng"
+  },
+  "msgThousand460": "{p0} thousand",
+  "@msgThousand460": {
+    "description": "{p0} nghìn",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgDeleteTransaction461": "Delete transaction?",
+  "@msgDeleteTransaction461": {
+    "description": "Xoá giao dịch?"
+  },
+  "msgNoTransactionsMatchTheseFilters462": "No transactions match these filters.",
+  "@msgNoTransactionsMatchTheseFilters462": {
+    "description": "Không có giao dịch nào khớp bộ lọc."
+  },
+  "msgSearchNotes463": "Search notes…",
+  "@msgSearchNotes463": {
+    "description": "Tìm theo ghi chú..."
+  },
+  "msgAll464": "All {p0}",
+  "@msgAll464": {
+    "description": "Tất cả {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgToday465": "Today",
+  "@msgToday465": {
+    "description": "Hôm nay"
+  },
+  "msgViewReceipt466": "View receipt",
+  "@msgViewReceipt466": {
+    "description": "Xem hóa đơn"
+  },
+  "msgSignInToUseLocalData467": "Sign in to use local data",
+  "@msgSignInToUseLocalData467": {
+    "description": "Đăng nhập để dùng dữ liệu cục bộ"
+  },
+  "msgMaximumFileSizeIsMb468": "Maximum file size is 20 MB",
+  "@msgMaximumFileSizeIsMb468": {
+    "description": "Tệp tối đa 20 MB"
+  },
+  "msgTheAccountHasChanged469": "The account has changed",
+  "@msgTheAccountHasChanged469": {
+    "description": "Tài khoản đã thay đổi"
+  },
+  "msgImportedTransactions470": "Imported {p0, plural, one{1 transaction} other{{p0} transactions}}",
+  "@msgImportedTransactions470": {
+    "placeholders": {
+      "p0": {
+        "type": "int"
+      }
+    }
+  },
+  "msgUtfCsvUpToRowsWhole471": "UTF-8 CSV, up to 10,000 rows. Whole VND amounts and ISO 8601 dates with a time zone. Money source = wallet; source = recording method.",
+  "@msgUtfCsvUpToRowsWhole471": {
+    "description": "CSV UTF-8, tối đa 10.000 dòng. Số tiền nguyên VND; ngày ISO 8601 có múi giờ. Nguồn tiền = wallet; source = cách ghi nhận."
+  },
+  "msgRecordingMethodsManualAiVoiceReceipt472": "Recording methods: manual, ai, voice, receipt, debt. Imported debt entries are standalone transactions without a debt payment link.",
+  "@msgRecordingMethodsManualAiVoiceReceipt472": {
+    "description": "Nguồn ghi nhận: manual, ai, voice, receipt, debt. Giao dịch debt nhập vào là giao dịch độc lập, không liên kết thanh toán nợ."
+  },
+  "msgExportFilteredRecords473": "Export filtered records",
+  "@msgExportFilteredRecords473": {
+    "description": "Xuất theo bộ lọc"
+  },
+  "msgTurnOffToExportAllTransactions474": "Turn off to export all transactions",
+  "@msgTurnOffToExportAllTransactions474": {
+    "description": "Tắt để xuất tất cả giao dịch"
+  },
+  "msgSelectDateRangeUtc475": "Select date range (UTC+7)",
+  "@msgSelectDateRangeUtc475": {
+    "description": "Chọn khoảng ngày (UTC+7)"
+  },
+  "msgClearDateFilter476": "Clear date filter",
+  "@msgClearDateFilter476": {
+    "description": "Bỏ lọc ngày"
+  },
+  "msgTransactionType477": "Transaction type",
+  "@msgTransactionType477": {
+    "description": "Loại giao dịch"
+  },
+  "msgRecordingMethod478": "Recording method",
+  "@msgRecordingMethod478": {
+    "description": "Nguồn ghi nhận"
+  },
+  "msgDownloadShareTemplate479": "Download / share template",
+  "@msgDownloadShareTemplate479": {
+    "description": "Tải / chia sẻ mẫu"
+  },
+  "msgExportAll480": "Export all",
+  "@msgExportAll480": {
+    "description": "Xuất tất cả"
+  },
+  "msgChooseCsv481": "Choose CSV",
+  "@msgChooseCsv481": {
+    "description": "Chọn CSV"
+  },
+  "msgRowsErrorsDuplicatesIdConflicts482": "{p0} rows • {p1} errors • {p2} duplicates • {p3} ID conflicts",
+  "@msgRowsErrorsDuplicatesIdConflicts482": {
+    "description": "{p0} dòng • {p1} lỗi • {p2} trùng • {p3} xung đột ID",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      },
+      "p1": {
+        "type": "String"
+      },
+      "p2": {
+        "type": "String"
+      },
+      "p3": {
+        "type": "String"
+      }
+    }
+  },
+  "msgInvalidRowsAndIdsWithDifferent483": "Invalid rows and IDs with different contents cannot be imported. Existing IDs are never updated.",
+  "@msgInvalidRowsAndIdsWithDifferent483": {
+    "description": "Dòng lỗi và ID khác nội dung luôn bị bỏ qua. ID hiện có không được cập nhật."
+  },
+  "msgRowsSelectedPossibleDuplicatesToImport484": "{p0} rows selected • possible duplicates: {p1} • to import: {p2}",
+  "@msgRowsSelectedPossibleDuplicatesToImport484": {
+    "description": "Đã chọn {p0} dòng • có thể trùng: {p1} • sẽ nhập: {p2}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      },
+      "p1": {
+        "type": "String"
+      },
+      "p2": {
+        "type": "String"
+      }
+    }
+  },
+  "msgAPossibleDuplicateHasTheSame485": "A possible duplicate has the same type, amount and mapped money source within 10 minutes, compared with existing and selected records.",
+  "@msgAPossibleDuplicateHasTheSame485": {
+    "description": "Có thể trùng = cùng loại, số tiền, nguồn tiền đã ánh xạ trong vòng 10 phút, đối chiếu dữ liệu hiện có và các dòng đã chọn."
+  },
+  "msgSelectAllValidRows486": "Select all valid rows",
+  "@msgSelectAllValidRows486": {
+    "description": "Chọn tất cả hợp lệ"
+  },
+  "msgDeselectAll487": "Deselect all",
+  "@msgDeselectAll487": {
+    "description": "Bỏ chọn tất cả"
+  },
+  "msgSkipPossibleDuplicatesMinutes488": "Skip possible duplicates (10 minutes)",
+  "@msgSkipPossibleDuplicatesMinutes488": {
+    "description": "Bỏ qua giao dịch có thể trùng (10 phút)"
+  },
+  "msgNotMappedCreateNew489": "Not mapped / create new",
+  "@msgNotMappedCreateNew489": {
+    "description": "Chưa chọn / tạo mới"
+  },
+  "msgConfirmCreationOfUnmappedCategoriesMoney490": "Confirm creation of unmapped categories / money sources (opening balance 0)",
+  "@msgConfirmCreationOfUnmappedCategoriesMoney490": {
+    "description": "Xác nhận tạo danh mục / nguồn tiền chưa ánh xạ (số dư ban đầu 0)"
+  },
+  "msgRow491": "Row {p0}: {p1} {p2}",
+  "@msgRow491": {
+    "description": "Dòng {p0}: {p1} {p2}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      },
+      "p1": {
+        "type": "String"
+      },
+      "p2": {
+        "type": "String"
+      }
+    }
+  },
+  "msgIdExistsWithDifferentContentsSkipped492": "ID exists with different contents — skipped",
+  "@msgIdExistsWithDifferentContentsSkipped492": {
+    "description": "ID đã tồn tại với nội dung khác — bỏ qua"
+  },
+  "msgExistingIdDoNotImportAgain493": "Existing ID — do not import again",
+  "@msgExistingIdDoNotImportAgain493": {
+    "description": "ID hiện có — không nhập lại"
+  },
+  "msgPossibleDuplicateWithinMinutes494": "Possible duplicate within 10 minutes",
+  "@msgPossibleDuplicateWithinMinutes494": {
+    "description": "Có thể trùng trong vòng 10 phút"
+  },
+  "msgValid495": "Valid",
+  "@msgValid495": {
+    "description": "Hợp lệ"
+  },
+  "msgConfirmSelectedRowsForImport496": "Confirm selected rows for import",
+  "@msgConfirmSelectedRowsForImport496": {
+    "description": "Xác nhận nhập các dòng đã chọn"
+  },
+  "msgCouldNotGenerateAiCommentaryCheck497": "Could not generate AI commentary. Check your connection and try again.",
+  "@msgCouldNotGenerateAiCommentaryCheck497": {
+    "description": "Không thể tạo nhận xét AI. Hãy kiểm tra kết nối và thử lại."
+  },
+  "msgSignInToViewLocalReports498": "Sign in to view local reports",
+  "@msgSignInToViewLocalReports498": {
+    "description": "Đăng nhập để xem báo cáo cục bộ"
+  },
+  "msgRecalculateReport499": "Recalculate report",
+  "@msgRecalculateReport499": {
+    "description": "Tính lại báo cáo"
+  },
+  "msgCurrentMonth500": "Current month",
+  "@msgCurrentMonth500": {
+    "description": "Tháng đang diễn ra"
+  },
+  "msgFullCalendarMonthVietnamTime501": "Full calendar month • Vietnam time",
+  "@msgFullCalendarMonthVietnamTime501": {
+    "description": "Toàn tháng • Giờ Việt Nam"
+  },
+  "msgUpdatingOnDeviceTotals502": "Updating on-device totals…",
+  "@msgUpdatingOnDeviceTotals502": {
+    "description": "Đang cập nhật số liệu trên thiết bị…"
+  },
+  "msgFinancialOverview503": "Financial overview",
+  "@msgFinancialOverview503": {
+    "description": "Tổng quan tài chính"
+  },
+  "msgNetIncomeExpenses504": "Net income − expenses",
+  "@msgNetIncomeExpenses504": {
+    "description": "Chênh lệch thu − chi"
+  },
+  "msgComparedWithLastMonth505": "Compared with last month",
+  "@msgComparedWithLastMonth505": {
+    "description": "So với tháng trước"
+  },
+  "msgFullMonthComparison506": "Full-month comparison: {p0}/{p1}",
+  "@msgFullMonthComparison506": {
+    "description": "So sánh toàn tháng {p0}/{p1}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      },
+      "p1": {
+        "type": "String"
+      }
+    }
+  },
+  "msgViewDetails507": "View details",
+  "@msgViewDetails507": {
+    "description": "Xem chi tiết"
+  },
+  "msgNoBudgetsSetForThisMonth508": "No budgets set for this month.",
+  "@msgNoBudgetsSetForThisMonth508": {
+    "description": "Chưa đặt ngân sách tháng này."
+  },
+  "msgAiPerspective509": "AI perspective",
+  "@msgAiPerspective509": {
+    "description": "Góc nhìn từ AI"
+  },
+  "msgGenerating510": "Generating…",
+  "@msgGenerating510": {
+    "description": "Đang tạo…"
+  },
+  "msgUpdateNeeded511": "Update needed",
+  "@msgUpdateNeeded511": {
+    "description": "Cần cập nhật"
+  },
+  "msgSaved512": "Saved",
+  "@msgSaved512": {
+    "description": "Đã lưu"
+  },
+  "msgNotGenerated513": "Not generated",
+  "@msgNotGenerated513": {
+    "description": "Chưa tạo"
+  },
+  "msgAiCommentaryOptional514": "AI commentary (optional)",
+  "@msgAiCommentaryOptional514": {
+    "description": "Nhận xét AI (tùy chọn)"
+  },
+  "msgAnalyzesTheSelectedMonthAndThe515": "Analyzes the selected month and the full preceding month. Saved commentary can be read offline.",
+  "@msgAnalyzesTheSelectedMonthAndThe515": {
+    "description": "Phân tích tháng đang xem và toàn tháng trước. Bản đã lưu đọc được ngoại tuyến."
+  },
+  "msgSomeDataIsUnsyncedOrHas516": "Some data is unsynced or has errors/conflicts. Sync before generating AI commentary.",
+  "@msgSomeDataIsUnsyncedOrHas516": {
+    "description": "Có dữ liệu chưa đồng bộ hoặc lỗi/xung đột. Hãy đồng bộ trước khi tạo nhận xét AI."
+  },
+  "msgThisCommentaryIsOutdatedDataHas517": "This commentary is outdated — data has changed or has not synced.",
+  "@msgThisCommentaryIsOutdatedDataHas517": {
+    "description": "Nhận xét đã cũ — dữ liệu đã thay đổi hoặc chưa đồng bộ."
+  },
+  "msgSaved518": "Saved: {p0}",
+  "@msgSaved518": {
+    "description": "Đã lưu: {p0}",
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "msgGeneratingCommentary519": "Generating commentary…",
+  "@msgGeneratingCommentary519": {
+    "description": "Đang tạo nhận xét…"
+  },
+  "msgGenerateAiCommentary520": "Generate AI commentary",
+  "@msgGenerateAiCommentary520": {
+    "description": "Tạo nhận xét AI"
+  },
+  "msgRegenerateAiCommentary521": "Regenerate AI commentary",
+  "@msgRegenerateAiCommentary521": {
+    "description": "Tạo lại nhận xét AI"
+  },
+  "msgLastMonthSIncome522": "Last month's income",
+  "@msgLastMonthSIncome522": {
+    "description": "Thu nhập tháng trước"
+  },
+  "msgLastMonthSExpenses523": "Last month's expenses",
+  "@msgLastMonthSExpenses523": {
+    "description": "Chi tiêu tháng trước"
+  },
+  "msgNoComparisonDataYet524": "No comparison data yet",
+  "@msgNoComparisonDataYet524": {
+    "description": "Chưa có dữ liệu so sánh"
+  },
+  "msgNoExpensesThisMonth525": "No expenses this month.",
+  "@msgNoExpensesThisMonth525": {
+    "description": "Chưa có chi tiêu trong tháng."
+  },
+  "msgLimitReached526": "Limit reached",
+  "@msgLimitReached526": {
+    "description": "Đã chạm hạn mức"
+  },
+  "msgNearTheLimit527": "Near the limit",
+  "@msgNearTheLimit527": {
+    "description": "Gần chạm hạn mức"
+  },
+  "msgWithinBudget528": "Within budget",
+  "@msgWithinBudget528": {
+    "description": "Trong hạn mức"
+  },
+  "msgOverallBudget529": "Overall budget",
+  "@msgOverallBudget529": {
+    "description": "Ngân sách tổng"
+  },
+  "failure0": "Transaction amount or money source is missing",
+  "failure1": "Payment amount must be greater than 0",
+  "failure2": "The payment link cannot be changed",
+  "failure3": "Payments from before the upgrade cannot create income or expenses",
+  "failure4": "The linked transaction already exists",
+  "failure5": "Debt amount must be greater than 0",
+  "failure6": "This debt has payment history; its borrowing/lending direction cannot be changed",
+  "failure7": "Invalid goal amount",
+  "failure8": "Budget limit must be greater than 0",
+  "failure9": "Payment exceeds the outstanding debt",
+  "failure10": "An expense needs an amount and money source",
+  "failure11": "Invalid debt record",
+  "failure12": "Debt not found",
+  "failure13": "Select an active money source for the matching transaction",
+  "failure14": "Payment no longer exists",
+  "failure15": "Saved amount cannot be negative",
+  "failure16": "Edit this payment in the Debt book to update its linked transaction",
+  "failure17": "A bill payment must be an expense",
+  "failure18": "Undo this payment from the Debt book",
+  "failure19": "Sign in again to sync. Your records remain on this device.",
+  "failure20": "Too many changes. Sync will continue on the next attempt.",
+  "failure21": "An account is required to sync",
+  "failure22": "Sync your data before generating new AI commentary",
+  "failure23": "Google sign-in is not configured (GOOGLE_WEB_CLIENT_ID is missing)",
+  "failure24": "Could not retrieve Google sign-in information",
+  "failure25": "You need to sign in",
+  "failure26": "Maximum of 10,000 transactions",
+  "failure27": "Invalid CSV quotation marks",
+  "failure28": "Unclosed CSV quotation marks",
+  "failure29": "Required columns: {p0}",
+  "@failure29": {
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "failure30": "Select a money source for this transaction",
+  "failure31": "Sign in to save receipts",
+  "failure32": "A bill payment needs a valid expense",
+  "failure33": "The account has changed",
+  "failure34": "Sync and resolve errors/conflicts before generating AI commentary. Saved advice is still available offline.",
+  "failure35": "Sync your data before generating AI commentary.",
+  "failure36": "The server does not support reports for the selected calendar month yet. Try again later.",
+  "failure37": "Device and server data differ. Sync and generate again; previously saved advice is preserved.",
+  "failure38": "Could not generate AI commentary. Check your connection and try again.",
+  "errorUnknown": "Something went wrong. Please try again.",
+  "errorNetwork": "Cannot connect to the server. Check your connection and try again.",
+  "errorInvalidCredentials": "Incorrect email or password",
+  "errorUnverified": "Email has not been verified",
+  "errorRegistered": "This email is already registered. Please sign in.",
+  "errorOtp": "Verification code is incorrect or expired",
+  "errorPasswordShort": "Password is too weak. Use at least 6 characters.",
+  "errorPasswordSame": "New password must differ from the old password",
+  "errorRateLimit": "Too many requests. Please wait and try again.",
+  "errorBlocked": "Your account has been blocked",
+  "errorEmail": "Invalid email address",
+  "errorAuth": "Could not authenticate. Please try again.",
+  "errorGoogleCanceled": "Google sign-in was canceled",
+  "errorGoogleConfig": "Google sign-in is not configured for this app",
+  "errorGoogle": "Google sign-in failed. Please try again.",
+  "errorExists": "This record already exists",
+  "errorPermission": "You do not have permission to perform this action",
+  "errorSave": "Could not save data. Please try again.",
+  "errorAiUnavailable": "AI is not enabled on the server",
+  "errorAi": "AI is temporarily unavailable. Please try again.",
+  "errorAiConfig": "AI has not been configured on the server",
+  "quickAi": "AI quick record",
+  "repaymentHistory": "Repayment history • {count, plural, one{1 payment} other{{count} payments}}",
+  "@repaymentHistory": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "collectionHistory": "Collection history • {count, plural, one{1 payment} other{{count} payments}}",
+  "@collectionHistory": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordExpense": "Expense recorded",
+  "recordIncome": "Income recorded",
+  "editRepayment": "Edit repayment",
+  "editCollection": "Edit collection",
+  "paymentDate": "Repayment date: {date}",
+  "@paymentDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "collectionDate": "Collection date: {date}",
+  "@collectionDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "addMatchingExpense": "Record a matching expense",
+  "addMatchingIncome": "Record a matching income",
+  "undoLinkedEffect": " The linked transaction will be deleted and the money source balance will be updated.",
+  "undoNoCashEffect": " No income or expense will be changed.",
+  "increase": "increased",
+  "decrease": "decreased",
+  "csvColumns": "Incorrect number of columns",
+  "csvType": "Type must be income or expense",
+  "csvAmount": "VND amount must be a positive integer",
+  "csvDate": "ISO 8601 date must include a time zone",
+  "csvWallet": "Money source is missing",
+  "csvSource": "Invalid recording method",
+  "csvId": "ID must be a UUID or blank",
+  "csvMapping": "Map or confirm creation: {name}",
+  "@csvMapping": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "debtTomorrowTitle": "Debt payment due tomorrow",
+  "debtTodayTitle": "Debt payment due today",
+  "diaryNoticeTitle": "Record today",
+  "diaryNoticeBody": "Take a minute to record today’s income and expenses.",
+  "reportNoticeBody": "Review your income and expenses from last month.",
+  "daysOverdue": "{count, plural, one{1 day} other{{count} days}} overdue",
+  "@daysOverdue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dueTomorrow": "Due tomorrow",
+  "daysRemaining": "{count, plural, one{1 day} other{{count} days}} remaining",
+  "@daysRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "archivedSuffix": " · Archived",
+  "incomeLabel": "Income",
+  "expenseLabel": "Expense",
+  "spendingByCategory": "Spending by category",
+  "compactMillion": "{amount}M",
+  "@compactMillion": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "incomeAmount": "Income: {amount}",
+  "@incomeAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "expenseAmount": "Expenses: {amount}",
+  "@expenseAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "pageOf": "Page {page} of {total}",
+  "@pageOf": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "syncError": "Could not sync. Your data is still saved on this device. Check the connection or sign in again to retry.",
+  "errorDetails": "Error details",
+  "notificationChannel": "Túi Khôn reminders",
+  "transaction": "Transaction",
+  "duplicateTitle": "This transaction may already exist",
+  "compareBeforeSaving": "Compare before saving:",
+  "skip": "Skip",
+  "saveAnyway": "Save anyway"
+}

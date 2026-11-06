@@ -1,0 +1,42 @@
+<resources>
+    <string name="widget_title">Túi Khôn — Ghi nhanh</string>
+    <string name="widget_expense">Chi</string>
+    <string name="widget_income">Thu</string>
+    <string name="widget_scan">Quét ảnh</string>
+    <string name="widget_quick_record">Ghi nhanh</string>
+    <string name="widget_description">Ghi chi, quét ảnh hóa đơn và ghi thu.</string>
+    <style name="WidgetAction">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_margin">3dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:padding">4dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">3</item>
+        <item name="android:textColor">@color/widget_on_surface</item>
+        <item name="android:background">@drawable/widget_action_background</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+    <style name="WidgetActionLabel">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">6dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:textColor">@color/widget_on_surface</item>
+    </style>
+    <style name="WidgetAction.Dark" parent="WidgetAction">
+        <item name="android:textColor">#DDEEE3</item>
+        <item name="android:background">@drawable/widget_action_background_dark</item>
+    </style>
+    <style name="WidgetAction.Light" parent="WidgetAction">
+        <item name="android:background">@drawable/widget_action_background_light</item>
+    </style>
+</resources>
