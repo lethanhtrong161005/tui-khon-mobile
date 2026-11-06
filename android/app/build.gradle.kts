@@ -1,7 +1,20 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// Opt-in only: normal builds keep their existing package and debug certificate.
+val teamMode = System.getenv("TUI_KHON_TEAM") == "1"
+val teamDirectory = rootProject.projectDir.parentFile.resolve(".team")
+val teamSigning = Properties()
+if (teamMode) {
+    val signingFile = teamDirectory.resolve("signing.properties")
+    require(signingFile.isFile) { "Team setup missing. Run tool/team.ps1 setup -Bundle <private ZIP>." }
+    signingFile.inputStream().use { teamSigning.load(it) }
+    require(teamDirectory.resolve("team-debug.jks").isFile) { "Team debug keystore missing. Run Team setup again." }
 }
 
 android {
@@ -18,7 +31,8 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.tui_khon_mobile"
+        applicationId = if (teamMode) "com.example.tui_khon_mobile.team" else "com.example.tui_khon_mobile"
+        manifestPlaceholders["appLabel"] = if (teamMode) "Túi Khôn (Nhóm 5)" else "tui_khon_mobile"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -31,11 +45,29 @@ android {
         versionName = flutter.versionName
     }
 
+    if (teamMode) {
+        signingConfigs.getByName("debug") {
+            storeFile = teamDirectory.resolve("team-debug.jks")
+            storePassword = teamSigning.getProperty("storePassword")
+            keyAlias = teamSigning.getProperty("keyAlias")
+            keyPassword = teamSigning.getProperty("keyPassword")
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+}
+
+// Team credentials are for internal debug APKs only.
+if (teamMode) {
+    gradle.taskGraph.whenReady {
+        require(allTasks.none { it.project == project && (it.name.contains("Release", true) || it.name.contains("Profile", true)) }) {
+            "Team signing supports debug builds only. Use tool/team.ps1 build."
         }
     }
 }

@@ -2,6 +2,11 @@
 
 Hướng dẫn cho người nhận source lần đầu. Repo có app Flutter và backend Supabase; không cần Java backend riêng, Firebase hoặc dịch vụ thanh toán. Giao diện dùng SQLite/Drift trên thiết bị rồi đồng bộ với Supabase.
 
+**Thành viên Nhóm 5 trên Windows:** ưu tiên [bộ chạy nhanh Team](docs/TEAM_SETUP.md).
+Dùng cloud, SMTP và OAuth hiện có với ZIP private; không cần tạo lại dịch vụ hoặc
+cài Docker/Supabase CLI. Các mục tạo backend/key bên dưới dành cho người phát triển
+server hoặc chủ động dùng môi trường riêng.
+
 Nếu đã có DB của bản cũ, đọc [hướng dẫn nâng cấp giữ dữ liệu](docs/OFFLINE_UPGRADE.md) trước. Chạy lệnh từ thư mục chứa `pubspec.yaml`, trừ khi khối lệnh ghi rõ chuyển thư mục.
 
 ## Mục lục
@@ -59,28 +64,29 @@ Nguồn: [cài Flutter](https://docs.flutter.dev/get-started/install), [Supabase
 ## 2. Lấy source và chọn nhánh
 
 ```sh
-git clone --branch feature/offline-ai-history https://github.com/lethanhtrong161005/tui-khon-mobile.git
+git clone --branch codex/team-windows-setup https://github.com/lethanhtrong161005/tui-khon-mobile.git
 cd tui-khon-mobile
 git branch --show-current
 git log -1 --oneline
 ```
 
-Bản bàn giao đầy đủ nằm trên **`feature/offline-ai-history`**. Nếu đã clone trước đó:
+Bản chạy chung nhóm nằm trên **`codex/team-windows-setup`**. `dev` đã có ứng dụng
+sau PR #1; nhánh Team bổ sung script/setup chung. Nếu đã clone trước đó:
 
 ```sh
 git fetch origin
-git switch --track origin/feature/offline-ai-history
+git switch --track origin/codex/team-windows-setup
 ```
 
-Nếu đã có nhánh local, dùng `git switch feature/offline-ai-history`. Không dùng
-`dev` (bản khởi tạo) hoặc `feature/supabase-backend` (trước offline) thay thế.
+Nếu đã có nhánh local, dùng `git switch codex/team-windows-setup`. Giữ công việc
+đang làm bằng commit/stash trước khi chuyển nhánh; không bỏ diff để chuyển nhánh.
 Đọc [docs/HANDOFF.md](docs/HANDOFF.md) để lấy context chức năng, kiểm thử và điểm
 bắt đầu cho dark theme/i18n.
 
-**Laptop mới dùng backend local riêng và dữ liệu mẫu mới.** Env/key, Docker DB,
-tài khoản, phiên đăng nhập và SQLite/ảnh trên máy cũ không nằm trong Git. Làm
-mục 5, đăng ký + OTP qua Mailpit rồi tạo demo theo mục 9; lấy key từ backend mới,
-không dùng lại key local của máy khác.
+**Laptop mới trong nhóm dùng cloud chung và bộ cấu hình Team**, mỗi người đăng
+nhập riêng. Env/key, Docker DB, phiên đăng nhập và SQLite/ảnh không nằm trong Git.
+Nếu chủ động phát triển backend local riêng: làm mục 5, đăng ký/OTP qua Mailpit,
+dùng dữ liệu mẫu mới và key local của chính máy đó.
 
 Cài dependencies và test không cần backend:
 

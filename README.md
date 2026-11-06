@@ -4,7 +4,8 @@
 
 Túi Khôn không giữ tiền, liên kết ngân hàng hoặc thực hiện thanh toán. Mọi chức năng dùng được mà không mua gói.
 
-- **Cài source, dựng backend, tạo key và chạy app:** [SETUP.md](SETUP.md).
+- **Thành viên Nhóm 5: clone và chạy bằng cloud có sẵn:** [TEAM_SETUP](docs/TEAM_SETUP.md).
+- **Cài source, phát triển backend hoặc dùng môi trường riêng:** [SETUP.md](SETUP.md).
 - **Context để tiếp tục trên máy khác:** [docs/HANDOFF.md](docs/HANDOFF.md).
 - **Nghiệp vụ:** [docs/NGHIEP_VU.md](docs/NGHIEP_VU.md).
 - **Nâng cấp giữ dữ liệu:** [docs/OFFLINE_UPGRADE.md](docs/OFFLINE_UPGRADE.md).
@@ -53,23 +54,26 @@ Giao diện đọc SQLite, gồm số dư, ngân sách và báo cáo. Mỗi thay
 ### 1. Lấy source và chọn nhánh bàn giao
 
 ```sh
-git clone --branch feature/offline-ai-history https://github.com/lethanhtrong161005/tui-khon-mobile.git
+git clone --branch codex/team-windows-setup https://github.com/lethanhtrong161005/tui-khon-mobile.git
 cd tui-khon-mobile
 git branch --show-current
 git log -1 --oneline
 ```
 
-Nhánh bàn giao là **`feature/offline-ai-history`**. `dev` đang là bản khởi tạo;
-`feature/supabase-backend` là bản trước offline. Nếu đã clone repo vào nhánh khác:
+Nhánh chạy chung nhóm là **`codex/team-windows-setup`**. `dev` đã có source ứng dụng
+sau PR #1; nhánh Team bổ sung bộ chạy Windows và chế độ cài song song. Nếu đã clone
+repo vào nhánh khác, commit/stash công việc của bạn trước rồi chuyển nhánh:
 
 ```sh
 git fetch origin
-git switch --track origin/feature/offline-ai-history
+git switch --track origin/codex/team-windows-setup
 ```
 
-Nếu nhánh local đã tồn tại, dùng `git switch feature/offline-ai-history`.
+Nếu nhánh local đã tồn tại, dùng `git switch codex/team-windows-setup`.
 Đọc [context bàn giao](docs/HANDOFF.md) trước khi phát triển tiếp.
-Laptop mới cần dựng backend và env riêng; Git không mang theo tài khoản hoặc DB local.
+Thành viên Windows dùng ZIP private và script trong [TEAM_SETUP](docs/TEAM_SETUP.md),
+không cần dựng backend lại. Git không mang theo env thật, khóa ký dev, phiên đăng
+nhập hoặc SQLite; mỗi người đăng nhập bằng tài khoản riêng.
 
 ### 2. Cài dependencies
 
@@ -83,6 +87,9 @@ flutter test
 ```
 
 ### 3. Dựng backend và tạo env
+
+**Nhóm 5 dùng cloud đã có:** làm theo [TEAM_SETUP](docs/TEAM_SETUP.md), không cần
+các bước tạo backend/key dưới đây. Những bước này dành cho môi trường riêng.
 
 | Cách | Phù hợp | Env Flutter |
 | --- | --- | --- |
