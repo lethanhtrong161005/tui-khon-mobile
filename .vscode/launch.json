@@ -7,16 +7,9 @@
       "type": "dart",
       "program": "lib/main.dart",
       "flutterMode": "debug",
-      "toolArgs": ["--dart-define-from-file=.env.team"],
-      "env": { "TUI_KHON_TEAM": "1" }
-    },
-    {
-      "name": "Túi Khôn - cá nhân",
-      "request": "launch",
-      "type": "dart",
-      "program": "lib/main.dart",
+      "preLaunchTask": "Tui Khon Team doctor",
       "toolArgs": ["--dart-define-from-file=.env"],
-      "env": { "TUI_KHON_TEAM": "0" }
+      "env": { "TUI_KHON_TEAM": "1" }
     }
   ]
 }

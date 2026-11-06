@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Tui Khon Team - cloud" type="FlutterRunConfigurationType" factoryName="Flutter">
     <option name="filePath" value="$PROJECT_DIR$/lib/main.dart" />
-    <option name="additionalArgs" value="--dart-define-from-file=.env.team" />
+    <option name="additionalArgs" value="--dart-define-from-file=.env" />
     <option name="envs">
       <entry key="TUI_KHON_TEAM" value="1" />
     </option>
