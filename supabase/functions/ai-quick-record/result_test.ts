@@ -57,3 +57,27 @@ Deno.test("explicit amount and a maximum of ten items", () => {
   equal(result.items.length, 10);
   equal(result.drafts[0].amount, 35000);
 });
+
+Deno.test("receipt preserves printed time and never defaults to the first wallet", () => {
+  const result = buildMultiResult([draft({ amount: 62700, date: "2026-10-01", time: "18:55" })],
+    { ...ctx, source: "receipt", text: "", ocrText: "Tổng tiền 62,700. 00" });
+  equal(result.drafts[0].occurred_at, "2026-10-01T18:55:00+07:00");
+  equal(result.drafts[0].wallet_id, null);
+  equal(result.items[0].missing_fields.includes("wallet"), true);
+  equal(result.items[0].missing_fields.includes("amount"), false);
+});
+Deno.test("receipt money must match independent OCR and unknown transfer direction needs review", () => {
+  const result = buildMultiResult([draft({amount:65000})], {
+    ...ctx, text:"",source:"receipt",ocrText:"Chuyển khoản thành công\nSố tiền 62,700.00",
+  });
+  equal(result.items[0].missing_fields.includes("type"),true);
+  equal(result.items[0].missing_fields.includes("amount"),true);
+});
+Deno.test("fractional, excessive or low-confidence amounts cannot silently become valid drafts", () => {
+  for (const amount of [35000.5, 10000000000000]) {
+    const result = buildMultiResult([draft({amount})],ctx);
+    equal(result.drafts[0].amount,0);
+  }
+  const result = buildMultiResult([draft({confidence:0.2})],ctx);
+  equal(result.items[0].missing_fields.includes("review"),true);
+});

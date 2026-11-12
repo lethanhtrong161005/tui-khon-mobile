@@ -1,6 +1,6 @@
 # Context bàn giao Túi Khôn
 
-Cập nhật mới nhất **07/11/2026**: xem mục 13 về `.env`/bundle Team v2 và kết quả Gemini thật. Các mục trước giữ lịch sử các đợt bàn giao; trạng thái mới nhất được ưu tiên.
+Cập nhật mới nhất **12/11/2026**: xem mục 15 về bản bàn giao GitHub và hướng dẫn tự triển khai; mục 14 mô tả safe area, OCR trên thiết bị, hỏi dữ liệu và launcher icon. Các mục trước giữ lịch sử các đợt bàn giao; trạng thái mới nhất được ưu tiên.
 
 ## 1. Đọc trước khi tiếp tục
 
@@ -529,3 +529,108 @@ Còn lại: thử lại ba luồng khi `gemini-flash-latest` hoạt động; ngh
 native trên máy thành viên và UI/dữ liệu SQLite thật. Thành viên dùng v2 clone
 đúng nhánh `codex/shared-env-ai` trong khi chờ PR merge vào `dev`;
 không phát ZIP v2 kèm script v1. SMTP giữ cấu hình/nghiệm thu trước đó.
+
+
+## 14. Safe area, OCR và hỏi dữ liệu — 08/11/2026
+
+Các thay đổi ở working tree `codex/shared-env-ai`, chưa commit/push/PR. Không đổi
+schema, migration, sync RPC, package, khóa ký, backend hoặc cấu hình Team. Chỉ thêm
+`LocalStore.readSnapshot` là transaction chỉ đọc nhất quán, không ghi outbox.
+
+### Giao diện và nhận dạng ảnh
+
+- Menu thêm chừa safe area dưới; nút đóng luôn ở trên, tiêu đề và các thao tác
+  cuộn chung để vẫn dùng được ở 320×568/chữ 200%. Bảng chọn nguồn ảnh dùng Material
+  đặc theo semantic theme, không lộ nội dung màn AI qua nền trong suốt.
+- Safe area nằm ngoài khung nhập; Scaffold xử lý bàn phím. Form sửa giao dịch hiển
+  thị/chọn ngày theo giờ Việt Nam và giữ giờ của bản nháp khi sửa ngày.
+- `google_mlkit_text_recognition` 1.0.1 đọc Latin/Vietnamese native Android/iOS;
+  `image` 4.12.0 chuẩn hóa hướng, JPEG và kích thước tối đa 3200px. Chỉ ảnh gửi
+  Gemini mới giảm còn 1920px. OCR không dùng quota và không cần Gemini.
+- Ảnh lưu local trước, OCR tạo một bản nháp, chỉ người dùng xác nhận mới ghi giao
+  dịch/outbox qua repository. Bộ phân tích ưu tiên tổng thanh toán, bỏ VAT, giảm
+  giá, tiền khách đưa/thừa, mã hàng và số lượng; hỗ trợ `62,700.00`, khoảng trắng
+  trong token và gộp dòng OCR theo tọa độ/độ nghiêng.
+- Thiếu tổng/ngày/nguồn, độ tin cậy thấp hoặc chưa biết chiều chuyển khoản thì
+  yêu cầu sửa, không tự chọn nguồn đầu tiên. Chỉ đề xuất nguồn đang hoạt động và
+  khớp rõ. Bill chuyển khoản không thêm nghiệp vụ chuyển nội bộ/liên kết ngân hàng.
+- Nút **Nhờ AI đọc thêm** là thao tác chủ động, gửi ảnh và OCR tới Function. Lỗi
+  giữ nguyên bản nháp/ảnh để sửa tay. Hợp đồng cũ vẫn dùng được; thêm OCR/time và
+  kiểm tra evidence, số nguyên, ngày, confidence, nguồn và chiều tiền ở server.
+
+### Hỏi dữ liệu và AI
+
+- Màn AI có **Ghi giao dịch / Hỏi chi tiêu**, chung nhập chữ/mic, lịch sử riêng
+  trong phiên và xóa khi đổi tài khoản. Kết quả async của tài khoản cũ bị bỏ.
+- `FinanceQueryRepository` tính từ snapshot SQLite, gồm dữ liệu chưa đồng bộ;
+  kết quả có kỳ, bộ lọc, bằng chứng và nhãn cần cập nhật khi local revision đổi.
+- Hỗ trợ thu/chi, so sánh kỳ liền trước, xếp hạng danh mục, tìm giao dịch, số dư
+  hiện tại, ngân sách tháng, nợ còn lại, kỳ khoản phải trả và mục tiêu tiết kiệm.
+  Nợ/mục tiêu không cộng vào thu/chi; ngân sách tổng và danh mục không cộng trùng.
+- Mẫu phổ biến chạy local. Câu phức tạp dùng `ai-finance-query` để tạo kế hoạch
+  chỉ đọc có allowlist, không sinh/chạy SQL. Chỉ gửi câu hỏi/ngữ cảnh và tên/ID bộ
+  lọc; không gửi toàn bộ ledger hoặc để model tính tiền. Hỏi lại khi chưa rõ hoặc
+  ngoài khả năng; không bỏ bộ lọc khó để trả kết quả rộng hơn. Dùng quota chat
+  hiện có, giữ 50 chat / 20 scan / 10 advisor; không thêm paywall.
+- Hai Functions cũ và Function mới đã deploy lên cloud chung, giữ JWT/Auth và model
+  `gemini-flash-latest`. Transport retry tối đa một lần, tổng dưới 30 giây; quota
+  chỉ trừ một lần cho request ứng dụng, không log nội dung ảnh/model/token.
+
+### Icon và nghiệm thu
+
+- `flutter_launcher_icons` 0.14.4 + script `tool/prepare_launcher_icons.dart` sinh
+  icon Android thường/adaptive và iOS từ logo đã duyệt; nền sáng, vùng an toàn
+  để launcher không cắt biểu tượng. Cả package thường và Team dùng resources này.
+- **458 Flutter test qua**; analyze **0 error/warning**, còn 234 informational lint.
+  **14 Deno test và type-check ba Functions qua**. Không sửa sync/migration nên
+  không chạy lại SQL suites trong lượt này.
+- Native mới nhất chỉ chạy trên **Pixel_8 có sẵn**, không tạo AVD mới: OCR ảnh in
+  tổng hợp đọc đúng 62.700 VND, 01/11/2026 18:55, Vietcombank; menu chữ 200%, safe
+  area, nền bảng chọn ảnh, nhập có bàn phím và hỏi dữ liệu local không ghi giao
+  dịch đều qua. Đây là hai ca native; ca ảnh gốc được đánh dấu skip có chủ đích.
+- Ảnh clipboard gốc trong chat không còn trên đĩa ở đường dẫn đính kèm. Nội dung
+  chép tay của hóa đơn Co.op là fixture parser, không phải nghiệm thu OCR ảnh
+  chụp gốc. Cần cung cấp lại ảnh để chạy ca `ProvidedReceipt`.
+- APK Team entrypoint chính build/cài cập nhật trên Pixel_8 cùng chứng chỉ. Fixture
+  SQLite cô lập giữ nguyên byte/hash, số tiền 62.700 và hai outbox entries sau cài;
+  fixture đã dọn. Không dùng kết quả này để nhận đã kiểm tra dữ liệu tài khoản thật.
+- APK thường cũng build thành công, kiểm tra khớp chứng chỉ với app thường đã có
+  trên Pixel_8 và cài cập nhật bằng `-r`. Fixture SQLite riêng cũng giữ nguyên hash
+  sau cập nhật và đã dọn; không đọc/ghi các bản ghi tài chính của tài khoản thật.
+- iOS đã cập nhật icon, linker flags và build phase chép model Latin từ plugin
+  khóa trong lockfile, giữ target 15.0. Chưa build/nghiệm thu iOS trên macOS.
+- Hướng dẫn kiểm tra: [OCR_QA](OCR_QA.md). Script native chỉ chấp nhận Pixel_8,
+  cài trực tiếp bằng `adb install --no-streaming -r` và attach driver vào app đã
+  chạy, tránh cơ chế launcher Flutter thử uninstall khi installer lỗi. Nếu cài
+  bị từ chối, dừng; không gỡ app hoặc reset dữ liệu để sửa lỗi.
+
+Smoke Gemini thật ngày 08/11: chữ **503 AI_BUSY**, ảnh/cố vấn/hiểu câu hỏi **504
+AI_TIMEOUT**. Bốn lời gọi không thay giao dịch fixture; request thiếu đăng nhập
+bị chặn 401, fixture đã xóa với identity guard. **Gemini thật vẫn chưa qua nghiệm
+thu**, không coi kết quả fallback local hoặc deploy thành công là AI đã hoạt động.
+Bằng chứng private ở `.dart_tool/`, không đưa token/ảnh/DB/APK vào Git.
+
+## 15. Bàn giao GitHub và tự triển khai — 12/11/2026
+
+Theo yêu cầu của chủ dự án, bản bàn giao trên `codex/shared-env-ai` gom source
+OCR/hỏi chi tiêu/icon ở mục 14 cùng hai tài liệu mới:
+
+- [INDEPENDENT_SETUP](INDEPENDENT_SETUP.md): clone đúng bản, tạo Supabase mới,
+  áp đủ migrations, SMTP/OTP, env, Gemini/Google riêng và signing/build APK/iOS.
+- [AI_AGENT_PROMPTS](AI_AGENT_PROMPTS.md): prompt khởi động, thông tin người nhận
+  cần điền, từng chặng thực hiện và prompt tiếp tục khi đổi Agent.
+
+Người nhận tự dựng app riêng dùng các tài liệu này, không nhập ZIP Team, env,
+cloud hoặc khóa ký của nhóm. README/SETUP đã có liên kết. Người gửi cung cấp
+commit SHA đã push để người nhận đối chiếu; các ghi chú chưa commit ở mục 14
+mô tả trạng thái lịch sử ngày 08/11.
+
+Rà soát trước bàn giao đã khôi phục hai giá trị boolean
+`ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS` về `YES` sau khi
+công cụ sinh icon ghi nhầm `AppIcon`; tên app icon vẫn ở setting riêng.
+
+Kiểm tra ngày 12/11: **458 Flutter test**, **14 Deno test** và type-check ba
+Functions qua; analyze không error/warning, còn **234 info lint**. Không sửa
+schema/migration/sync và không thao tác backend trong lượt bàn giao. iOS native
+và Gemini thật vẫn có giới hạn nghiệm thu đã nêu ở mục 14; không suy ra đã qua
+từ commit/push hoặc từ các bộ test này.

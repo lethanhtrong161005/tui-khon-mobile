@@ -4,7 +4,7 @@
 //
 // Body: { "range": 30 | 90 } (mặc định 30), hoặc { "month": "YYYY-MM-01" }.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { readJson, serve } from "../_shared/http.ts";
+import { HttpError, readJson, serve } from "../_shared/http.ts";
 import { advisorPeriod } from "./period.ts";
 import { consumeAiQuota, getUserClient, vnToday } from "../_shared/supabase.ts";
 import { generateJson } from "../_shared/gemini.ts";
@@ -172,6 +172,10 @@ serve(async (req) => {
   });
 
   // Ghép lời khuyên của AI vào số liệu thật; bỏ những danh mục AI tự nghĩ ra
+  if (typeof ai.summary !== "string" || !ai.summary.trim() || !Array.isArray(ai.insights) ||
+      ai.insights.some((i) => !i || typeof i.category !== "string" || typeof i.advice !== "string")) {
+    throw new HttpError(502, "AI_INVALID_RESPONSE", "AI trả về nhận xét không hợp lệ");
+  }
   const insights = (ai.insights ?? [])
     .map((i) => {
       const data = categories.find((c) => c.category === i.category);
@@ -203,7 +207,7 @@ serve(async (req) => {
     forecast: {
       nextMonth,
       baseline,
-      riskCategories: (ai.forecast?.riskCategories ?? []).filter((n) =>
+      riskCategories: (Array.isArray(ai.forecast?.riskCategories) ? ai.forecast.riskCategories : []).filter((n) =>
         knownNames.has(n)
       ).slice(0, 3),
     },

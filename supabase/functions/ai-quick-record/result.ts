@@ -23,6 +23,7 @@ export interface AiDraft {
   wallet?: string | null;
   note: string;
   date: string;
+  time?: string | null;
   merchant?: string | null;
   confidence: number;
   question?: string | null;
@@ -39,11 +40,12 @@ function buildResult(
     text: string;
     today: string;
     source: string;
+    ocrText?: string;
   },
 ) {
   const warnings: string[] = [];
   const confidence = Math.min(1, Math.max(0, Number(ai.confidence) || 0));
-  const rawAmount = Math.round(Number(ai.amount));
+  const rawAmount = typeof ai.amount === "number" && Number.isSafeInteger(ai.amount) && ai.amount <= 9999999999999 ? ai.amount : 0;
   const sourceText = ai.source_text || ctx.text;
   const explicitUnit =
     /(?:\d\s*(?:k|nghìn|ngàn|tr|triệu|củ|đồng|vnd|₫)|\bVND\b)/iu;
@@ -77,10 +79,10 @@ function buildResult(
     (ai.wallet
       ? ctx.wallets.find((w) => sameName(w.name, ai.wallet!))
       : undefined) ??
-      ctx.wallets[0] ?? null;
+      (ctx.source === "receipt" ? null : ctx.wallets[0]) ?? null;
 
   let date = ctx.today;
-  if (/^\d{4}-\d{2}-\d{2}$/.test(ai.date ?? "") && ai.date <= ctx.today) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(ai.date ?? "") && ai.date <= ctx.today && !isNaN(Date.parse(ai.date)) && new Date(ai.date).toISOString().slice(0, 10) === ai.date) {
     date = ai.date;
   } else warnings.push("DATE_ADJUSTED");
 
@@ -107,7 +109,9 @@ function buildResult(
       wallet_id: wallet?.id ?? null,
       wallet_name: wallet?.name ?? null,
       note: (ai.note ?? "").trim().slice(0, 255) || ctx.text.slice(0, 60),
-      occurred_at: date === ctx.today
+      occurred_at: ctx.source === "receipt" && typeof ai.time === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(ai.time)
+        ? `${date}T${ai.time}:00+07:00`
+        : date === ctx.today
         ? new Date().toISOString()
         : `${date}T12:00:00+07:00`,
       source: ctx.source,
@@ -131,6 +135,16 @@ export function buildMultiResult(
       "AI chưa trả về giao dịch hợp lệ",
     );
   }
+  if (drafts.some((draft) => !draft || typeof draft !== "object" || typeof draft.is_transaction !== "boolean" ||
+      typeof draft.amount !== "number" || typeof draft.confidence !== "number" ||
+      typeof draft.note !== "string" || typeof draft.category !== "string" || typeof draft.date !== "string" ||
+      (draft.source_text != null && typeof draft.source_text !== "string") ||
+      (draft.question != null && typeof draft.question !== "string") ||
+      (draft.wallet != null && typeof draft.wallet !== "string") ||
+      (draft.merchant != null && typeof draft.merchant !== "string") ||
+      (draft.missing_fields != null && (!Array.isArray(draft.missing_fields) || draft.missing_fields.some((f) => typeof f !== "string"))))) {
+    throw new HttpError(502, "AI_INVALID_RESPONSE", "AI chưa trả về giao dịch hợp lệ");
+  }
   const results = drafts.slice(0, 10).map((draft) =>
     buildResult(draft, { ...ctx, text: drafts.length === 1 ? ctx.text : "" })
   );
@@ -143,6 +157,11 @@ export function buildMultiResult(
       ...new Set([
         ...(drafts[index].missing_fields || []),
         ...(result.draft?.amount === 0 ? ["amount"] : []),
+        ...(ctx.source === "receipt" && !result.draft?.wallet_id ? ["wallet"] : []),
+        ...(ctx.source === "receipt" && (!drafts[index].date || result.warnings.includes("DATE_ADJUSTED")) ? ["date"] : []),
+        ...(!["income", "expense"].includes(drafts[index].type) ? ["type"] : []),
+        ...(result.confidence < 0.6 ? ["review"] : []),
+        ...receiptReviewFields(drafts[index], ctx),
       ]),
     ],
   }));
@@ -154,4 +173,27 @@ export function buildMultiResult(
     question: results.map((r) => r.question).filter(Boolean).join("\n") || null,
     warnings: [...new Set(results.flatMap((r) => r.warnings))],
   };
+}
+
+/** OCR is independent evidence, never an instruction or a reason to assume the
+ * owner's transfer direction. Unverified image-only suggestions need review. */
+function receiptReviewFields(ai: AiDraft, ctx: Parameters<typeof buildResult>[1]): string[] {
+  if (ctx.source !== "receipt") return [];
+  if (!ctx.ocrText?.trim()) return ["review"];
+  const text = deaccent(ctx.ocrText.toLowerCase());
+  const incoming = /ban da nhan|tien vao|ghi co|credited|received/.test(text);
+  const outgoing = /ban da chuyen|ban da gui|tien ra|ghi no|debited/.test(text);
+  const transfer = /chuyen tien|chuyen khoan|transfer/.test(text) && !/phieu tinh tien|hoa don/.test(text);
+  const candidates = [...ctx.ocrText.replace(/(?<=\d)\s+(?=[.,]\d)|(?<=[.,])\s+(?=\d)/g, "").matchAll(/\d[\d.,]*/g)].flatMap((m) => {
+    let value = m[0];
+    if (/[.,]\d{2}$/.test(value)) {
+      if (!value.endsWith("00")) return [];
+      value = value.slice(0, -3);
+    }
+    return /^\d+(?:[.,]\d{3})*$/.test(value) ? [Number(value.replace(/[.,]/g, ""))] : [];
+  });
+  return [
+    ...(transfer && incoming === outgoing ? ["type"] : []),
+    ...(!candidates.includes(ai.amount) ? ["amount"] : []),
+  ];
 }

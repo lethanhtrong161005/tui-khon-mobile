@@ -21,6 +21,7 @@ Future<TransactionDraft?> showTransactionFormSheet(BuildContext context,
   return showModalBottomSheet<TransactionDraft>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (_) =>
         _TransactionFormSheet(initial: initial, excludingId: excludingId),
@@ -49,6 +50,8 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
   late String? _walletId = widget.initial?.walletId;
   late DateTime _date = widget.initial?.occurredAt ?? DateTime.now();
 
+  DateTime get _vietnamDate => _date.toUtc().add(const Duration(hours: 7));
+
   bool _showAllCategories = false;
   bool _submitting = false;
 
@@ -61,16 +64,18 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
   }
 
   Future<void> _pickDate() async {
+    final vn = _vietnamDate;
+    final today = DateTime.now().toUtc().add(const Duration(hours: 7));
     final picked = await showDatePicker(
       context: context,
-      initialDate: _date,
+      initialDate: DateTime(vn.year, vn.month, vn.day),
       firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
+      lastDate: DateTime(today.year, today.month, today.day),
     );
     if (picked != null) {
       // Keep the current time of day so the order within the day stays natural.
-      setState(() => _date = DateTime(
-          picked.year, picked.month, picked.day, _date.hour, _date.minute));
+      setState(() => _date = DateTime.utc(
+          picked.year, picked.month, picked.day, vn.hour, vn.minute).subtract(const Duration(hours: 7)));
     }
   }
 
@@ -488,7 +493,7 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
                                                                 color: appPalette(context)
                                                                     .onSurfaceVariant)),
                                                         subtitle: Text(
-                                                            '${_date.day.toString().padLeft(2, '0')}/${_date.month.toString().padLeft(2, '0')}/${_date.year}',
+                                                            '${_vietnamDate.day.toString().padLeft(2, '0')}/${_vietnamDate.month.toString().padLeft(2, '0')}/${_vietnamDate.year}',
                                                             style: const TextStyle(
                                                                 fontSize: 13,
                                                                 fontWeight: FontWeight
