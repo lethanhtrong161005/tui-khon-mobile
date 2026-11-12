@@ -22,7 +22,7 @@
 ### Ghi giao dịch
 1. Chọn một trong ba cách ghi:
    - **Gõ hoặc nói**: Ghi nhanh AI → nhập "ăn phở 65k" hoặc bấm mic.
-   - **Quét hóa đơn**: chụp ảnh → ảnh lưu vào kho riêng của user, Gemini đọc tổng tiền.
+   - **Quét hóa đơn**: chụp/chọn ảnh → lưu riêng trên thiết bị → OCR trên máy đọc chữ và tạo bản nháp; khi cần, user bấm “Nhờ AI đọc thêm” để Gemini hỗ trợ.
    - **Nhập tay**: nút ✎ trong màn Ghi nhanh.
 2. App hiện thẻ xác nhận gồm số tiền, danh mục và nguồn tiền. User có thể bấm **Sửa**.
 3. Bấm **Lưu** → số dư, ngân sách và thống kê được cập nhật.
@@ -73,3 +73,27 @@ Những thứ sau **không làm** vì app chỉ là sổ ghi chép:
 - Chia tiền nhóm.
 - Giao dịch định kỳ tự động.
 - Gói trả phí (PRO), xuất bản backup toàn bộ tài khoản, trang quản trị (admin).
+
+
+## 5. OCR và hỏi dữ liệu (08/11/2026)
+
+- Quét hóa đơn và ảnh chuyển khoản là cách nhập **bản nháp thu/chi**. Không tự
+  tạo giao dịch, chuyển tiền hoặc liên kết ngân hàng. Hóa đơn mua hàng lấy tổng
+  cuối cùng; không lấy VAT, giảm giá, tiền khách đưa, tiền thừa hay số lượng làm
+  tổng. Khi chưa biết chiều tiền trong bill chuyển khoản, user phải chọn Thu/Chi.
+- OCR chạy trên thiết bị, có thể dùng offline và không trừ quota AI. Chỉ khi user
+  bấm “Nhờ AI đọc thêm” mới gửi ảnh/OCR tới Gemini và dùng quota scan. Lỗi AI vẫn
+  giữ ảnh và bản nháp để sửa tay. Nguồn không khớp phải chọn rõ, không tự lấy nguồn
+  đầu danh sách. Các mục thiếu/không chắc chắn phải được sửa trước khi lưu.
+- Màn AI có hai chế độ Ghi giao dịch và Hỏi chi tiêu. Chế độ hỏi chỉ xem dữ liệu:
+  thu/chi, so sánh kỳ trước, danh mục, tìm giao dịch, số dư ghi chép, ngân sách
+  tháng, nợ còn lại, khoản phải trả theo từng kỳ và tiến độ mục tiêu.
+- Kết quả tính từ sổ trên thiết bị, gồm dữ liệu chưa đồng bộ, có kỳ/bộ lọc/bằng
+  chứng và cảnh báo khi dữ liệu đổi. Câu phổ biến chạy offline; câu khó cần mạng
+  để AI hiểu ý, dùng chung quota chat. Không tự thực thi SQL hoặc ghi dữ liệu từ
+  câu hỏi. Câu ngoài khả năng/mơ hồ được hỏi lại, không tự bỏ điều kiện lọc.
+- Mặc định thu/chi, ngân sách và khoản phải trả là tháng hiện tại; số dư/nợ/mục
+  tiêu là hiện trạng. Tuần bắt đầu thứ Hai, mốc theo Việt Nam. Nợ và mục tiêu không
+  được cộng thành chi tiêu; nguồn tiền vẫn chỉ là số dư do user ghi chép.
+- Lịch sử chat mới chỉ giữ trong phiên, tách theo chế độ, xóa khi đổi tài khoản.
+  Gemini không khả dụng vẫn có OCR, truy vấn phổ biến, ghi tay và báo cáo local.

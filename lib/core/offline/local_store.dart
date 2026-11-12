@@ -90,6 +90,10 @@ class LocalStore {
         : (jsonDecode(r.read<String>('data')) as Map).cast<String, dynamic>();
   }
 
+  /// Read-only consistent snapshot for notebook questions.
+  Future<Map<String, List<Map<String, dynamic>>>> readSnapshot(List<String> entities) =>
+      _db.transaction(() async => {for (final entity in entities) entity: await rows(entity)});
+
   Future<void> put(String entity, Map<String, dynamic> row) =>
       writeBatch([LocalMutation(entity, row)]);
   Future<void> remove(String entity, String id) => writeBatch([

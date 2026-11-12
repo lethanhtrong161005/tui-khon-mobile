@@ -61,3 +61,6 @@ verify_jwt = true
 
 [functions.ai-advisor]
 verify_jwt = true
+
+[functions.ai-finance-query]
+verify_jwt = true

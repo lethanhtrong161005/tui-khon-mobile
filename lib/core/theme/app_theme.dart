@@ -102,7 +102,7 @@ class AppTheme {
       dividerTheme:
           const DividerThemeData(color: Color(0xFFE5ECE5), thickness: .8),
       bottomSheetTheme: const BottomSheetThemeData(
-          backgroundColor: Colors.transparent,
+          backgroundColor: AppColors.surface,
           modalBarrierColor: Color(0x45122C35),
           showDragHandle: false),
       tabBarTheme: const TabBarThemeData(

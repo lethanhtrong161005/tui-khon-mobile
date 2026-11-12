@@ -448,6 +448,8 @@ class _MultiQuickRecord implements QuickRecordRepository {
   @override
   Future<int?> fetchTodayChatUsage() async => 0;
   @override
+  Future<QuickRecordResult> enhanceReceipt(PickedReceipt receipt, {String? ocrText}) => scanReceipt(receipt);
+  @override
   Future<QuickRecordResult> scanReceipt(PickedReceipt receipt) async =>
       const QuickRecordResult();
   @override

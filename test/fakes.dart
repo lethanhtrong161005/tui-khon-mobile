@@ -50,6 +50,8 @@ class FakeQuickRecordRepository implements QuickRecordRepository {
 
   @override
   Future<int?> fetchTodayChatUsage() async => 0;
+  @override
+  Future<QuickRecordResult> enhanceReceipt(PickedReceipt receipt, {String? ocrText}) => scanReceipt(receipt);
 }
 
 /// Speech recognizer that immediately "hears" [transcript].

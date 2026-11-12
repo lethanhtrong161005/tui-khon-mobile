@@ -6,6 +6,7 @@ Túi Khôn không giữ tiền, liên kết ngân hàng hoặc thực hiện tha
 
 - **Thành viên Nhóm 5: clone và chạy bằng cloud có sẵn:** [TEAM_SETUP](docs/TEAM_SETUP.md).
 - **Cài source, phát triển backend hoặc dùng môi trường riêng:** [SETUP.md](SETUP.md).
+- **Tự dựng app độc lập từ A–Z, Supabase/khóa ký riêng:** [INDEPENDENT_SETUP](docs/INDEPENDENT_SETUP.md), kèm [prompt cho AI Agent](docs/AI_AGENT_PROMPTS.md).
 - **Context để tiếp tục trên máy khác:** [docs/HANDOFF.md](docs/HANDOFF.md).
 - **Nghiệp vụ:** [docs/NGHIEP_VU.md](docs/NGHIEP_VU.md).
 - **Nâng cấp giữ dữ liệu:** [docs/OFFLINE_UPGRADE.md](docs/OFFLINE_UPGRADE.md).

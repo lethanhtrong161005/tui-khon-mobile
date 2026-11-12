@@ -9,7 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/supabase/supabase_providers.dart';
 import '../../../core/offline/local_store.dart';
 
-/// A receipt photo picked from the camera or gallery (already resized ≤1920px).
+/// A private receipt image for local OCR; AI derivatives are resized separately.
 class PickedReceipt {
   final Uint8List bytes;
   final String mimeType;
